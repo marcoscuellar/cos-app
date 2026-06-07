@@ -11,6 +11,11 @@ interface HomeProps {
 export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
   const D = COS_DATA;
   const T = D.today;
+  // Greeting + date follow the user's local time.
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const today = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
   const recent = [D.projects[1], D.projects[4]]; // COS, Personal Brand — two most recently touched
   const inMotion = D.projects.filter((p) => p.status !== "dormant");
   const dormant = D.projects.filter((p) => p.status === "dormant");
@@ -23,7 +28,7 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
   return (
     <div className="wrap">
       <div className="stagger">
-        <div className="kicker">Good morning. It's Sunday, June 7.</div>
+        <div className="kicker">{greeting}. It's {today}.</div>
         <h1 className="disp" style={{ fontSize: "clamp(50px,8vw,98px)", lineHeight: 0.96, margin: "18px 0 44px", maxWidth: "15ch" }}>
           You're allowed to rest — <span className="em ac-coral">you're not allowed to quit.</span>
         </h1>
