@@ -152,10 +152,3 @@ export interface DocRef {
   source?: string;
   summary: string;
 }
-
-/** The optional in-browser AI bridge the prototype used. Absent in production. */
-declare global {
-  interface Window {
-    claude?: { complete: (prompt: string) => Promise<string> };
-  }
-}

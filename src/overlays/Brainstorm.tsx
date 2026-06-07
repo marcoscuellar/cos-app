@@ -58,20 +58,33 @@ export function BrainstormPanel({ project, onClose }: BrainstormProps) {
     const msg = (text || input).trim();
     if (!msg || busy) return;
     setInput("");
-    setMessages((m) => [...m, { role: "me", text: msg }]);
+    const history: Message[] = [...messages, { role: "me", text: msg }];
+    setMessages(history);
     setBusy(true);
+
     let reply: string | null = null;
     try {
-      // Optional in-browser bridge from the prototype. In production swap for
-      // your own LLM endpoint with the same project-aware framing.
-      if (window.claude && window.claude.complete) {
-        const prompt = `You are COS, a calm, sharp thinking partner. You are helping the user brainstorm inside their project "${p.name}" — ${p.why}. Notes: ${(p.notes || []).join(" ")}. Keep replies warm, concrete, and brief (under 130 words). Offer concrete drafts, hooks, or angles. The user is riffing, not asking for a lecture.\n\nUser: ${msg}\n\nCOS:`;
-        reply = await window.claude.complete(prompt);
+      // Calls the /api/brainstorm serverless function, which runs Claude with
+      // the ANTHROPIC_API_KEY server-side. The key never reaches the browser.
+      const res = await fetch("/api/brainstorm", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          project: { id: p.id, name: p.name, why: p.why, notes: p.notes },
+          messages: history,
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { reply?: string };
+        reply = data.reply?.trim() || null;
       }
     } catch {
       reply = null;
     }
+
     if (!reply) {
+      // Graceful fallback when the AI endpoint is unavailable (offline, or the
+      // `vite` dev server without serverless functions).
       await new Promise((r) => setTimeout(r, 650));
       reply = bsFallback(p, msg);
     }

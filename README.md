@@ -14,18 +14,61 @@ typed data module (`src/data.ts`).
 
 ```bash
 npm install
-npm run dev      # start the dev server
-npm run build    # type-check + production build
-npm run preview  # preview the production build
+npm run dev        # Vite dev server (UI only; AI + KV fall back gracefully)
+npm run vercel-dev # full stack incl. /api serverless functions (needs Vercel CLI + env)
+npm run build      # type-check + production build
+npm run preview    # preview the production build
 ```
+
+## Backend (Vercel) — KV storage + server-side AI
+
+All secrets stay **server-side**. The client bundle never sees an API key — it
+only calls two serverless functions under [`api/`](./api):
+
+- **`api/state.ts`** — persists UI position (auth, route, selected project,
+  theme, sidebar state) in **Vercel KV**, keyed by an opaque per-browser id.
+  Reads `KV_REST_API_URL` / `KV_REST_API_TOKEN` from the environment.
+- **`api/brainstorm.ts`** — powers the Brainstorm panel by calling Claude
+  (`claude-opus-4-8`) through the official `@anthropic-ai/sdk`, using
+  `ANTHROPIC_API_KEY`. The key is read from `process.env` on the server only.
+
+The frontend talks to these via `src/storage.ts` (state) and a `fetch` in
+`src/overlays/Brainstorm.tsx` (AI). Both degrade gracefully: if the API is
+unavailable (e.g. plain `vite` dev without KV), state falls back to a
+`localStorage` cache and Brainstorm falls back to a canned, project-aware reply.
+
+### Environment variables
+
+These are configured on the Vercel project and consumed only by `api/`:
+
+| Variable | Used by | Purpose |
+| --- | --- | --- |
+| `ANTHROPIC_API_KEY` | `api/brainstorm.ts` | Authenticates the Claude call |
+| `KV_REST_API_URL` | `api/state.ts` | Vercel KV REST endpoint |
+| `KV_REST_API_TOKEN` | `api/state.ts` | Vercel KV REST token |
+
+None are prefixed with `VITE_`, so Vite never inlines them into the browser
+bundle. For local full-stack dev, pull them from the linked Vercel project:
+
+```bash
+vercel link        # once
+npm run pull-env   # writes .env.local (gitignored) from the project's env vars
+npm run vercel-dev
+```
+
+See [`.env.example`](./.env.example) for the full list.
 
 ## Structure
 
 ```
+api/
+  state.ts             Serverless: persist UI state in Vercel KV
+  brainstorm.ts        Serverless: Claude-powered Brainstorm (server-side key)
 src/
   index.css            Design system — the :root token block is the source of truth
   types.ts             Entity types (Project, Idea, Today, …)
   data.ts              Typed sample data (replaces window.COS_DATA)
+  storage.ts           Client → /api/state, with localStorage fallback
   App.tsx              Root: auth gate, string router, theme + persistence
   Login.tsx            The calm threshold
   components/
@@ -60,10 +103,12 @@ Three themes toggle from the sidebar footer and persist to `localStorage`
 - The **due-date** state is unified: setting a date in Current Context now
   propagates to the Overview tab (the prototype had these as separate local
   state — fixed here by lifting `due` into `ProjectScreen`).
-- **Brainstorm** uses an optional `window.claude.complete` bridge when present and
-  otherwise falls back to a project-aware canned response. Swap in your own LLM
-  endpoint, preserving the project-scoped framing.
-- Replace `src/data.ts` with a real data model + persistence layer.
+- **Brainstorm** calls the `api/brainstorm.ts` serverless function (Claude via
+  `@anthropic-ai/sdk`, server-side key), with a project-aware canned fallback
+  when the endpoint is unavailable.
+- **Persistence** is backed by Vercel KV via `api/state.ts`, with a localStorage
+  cache fallback. Replace `src/data.ts` (the projects/ideas content) with a real
+  data model when wiring up a backend.
 - The prototype's `localStorage` router/state is intentionally kept; migrate to a
   real router when adding deep-linking.
 
