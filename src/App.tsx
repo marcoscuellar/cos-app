@@ -13,16 +13,9 @@ import { SearchScreen } from "./screens/Search";
 import { Reentry } from "./overlays/Reentry";
 import { BrainstormPanel } from "./overlays/Brainstorm";
 import { DocViewer } from "./overlays/DocViewer";
+import { loadState, saveState } from "./storage";
 
 type Route = "home" | "today" | "projects" | "project" | "ideas" | "idea" | "search";
-
-interface PersistedState {
-  authed?: boolean;
-  route?: Route;
-  projectId?: string;
-  theme?: Theme;
-  collapsed?: boolean;
-}
 
 export default function App() {
   const [authed, setAuthed] = useState(false);
@@ -41,27 +34,35 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  // restore position
+  // Gate persistence until the initial load resolves, so we don't overwrite
+  // stored state with defaults on first paint.
+  const [loaded, setLoaded] = useState(false);
+
+  // restore position from Vercel KV (falls back to local cache)
   useEffect(() => {
-    try {
-      const s: PersistedState = JSON.parse(localStorage.getItem("cos-state") || "{}");
+    let active = true;
+    loadState().then((s) => {
+      if (!active || !s) {
+        setLoaded(true);
+        return;
+      }
       if (s.authed) setAuthed(true);
-      if (s.route) setRoute(s.route);
+      if (s.route) setRoute(s.route as Route);
       if (s.projectId) setProjectId(s.projectId);
       if (s.theme) setTheme(s.theme);
       if (s.collapsed) setCollapsed(true);
-    } catch {
-      /* ignore malformed persisted state */
-    }
+      setLoaded(true);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
+
   // persist position
   useEffect(() => {
-    try {
-      localStorage.setItem("cos-state", JSON.stringify({ authed, route, projectId, theme, collapsed }));
-    } catch {
-      /* storage unavailable */
-    }
-  }, [authed, route, projectId, theme, collapsed]);
+    if (!loaded) return;
+    saveState({ authed, route, projectId, theme, collapsed });
+  }, [loaded, authed, route, projectId, theme, collapsed]);
 
   const mainRef = useRef<HTMLElement>(null);
   useEffect(() => {
