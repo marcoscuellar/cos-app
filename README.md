@@ -29,6 +29,11 @@ only calls two serverless functions under [`api/`](./api):
   theme, sidebar state) in **Vercel KV** via its REST API (native `fetch`, no
   SDK dependency), keyed by an opaque per-browser id. Reads `KV_REST_API_URL` /
   `KV_REST_API_TOKEN` from the environment.
+- **`api/login.ts`** — validates sign-in server-side. Demo emails pass through;
+  the **time-limited test account** (`test@costhread.app`) requires its password
+  and is valid for **48 hours after first use** — the first-use timestamp is
+  recorded in KV and the login (and any restored session) is rejected once the
+  window passes. Override the password with `TEST_LOGIN_PASSWORD` if desired.
 - **`api/brainstorm.ts`** — powers the Brainstorm panel by calling Claude
   (`claude-opus-4-8`) through the official `@anthropic-ai/sdk`, using
   `ANTHROPIC_API_KEY`. The key is read from `process.env` on the server only.

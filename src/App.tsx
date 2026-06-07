@@ -43,17 +43,27 @@ export default function App() {
   useEffect(() => {
     let active = true;
     loadState().then((s) => {
-      if (!active || !s) {
-        setLoaded(true);
+      if (!active) {
         return;
       }
-      if (s.authed) setAuthed(true);
-      if (s.route) setRoute(s.route as Route);
-      if (s.projectId) setProjectId(s.projectId);
-      if (s.theme) setTheme(s.theme);
-      if (s.collapsed) setCollapsed(true);
-      if (s.email) setEmail(s.email);
+      if (s) {
+        if (s.authed) setAuthed(true);
+        if (s.route) setRoute(s.route as Route);
+        if (s.projectId) setProjectId(s.projectId);
+        if (s.theme) setTheme(s.theme);
+        if (s.collapsed) setCollapsed(true);
+        if (s.email) setEmail(s.email);
+      }
       setLoaded(true);
+      // Re-validate a restored test session against the 48h window — a persisted
+      // session must not outlive the server-side expiry.
+      const em = (s?.email || "").trim().toLowerCase();
+      if (s?.authed && em === "test@costhread.app") {
+        fetch(`/api/login?email=${encodeURIComponent(em)}`)
+          .then((r) => r.json())
+          .then((d) => { if (active && d && d.expired) setAuthed(false); })
+          .catch(() => { /* leave session as-is if the check can't run */ });
+      }
     });
     return () => {
       active = false;

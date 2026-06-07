@@ -1,9 +1,44 @@
 import { useState } from "react";
 
-/* Login — the calm threshold. Captures the email as the user's identity. */
+const TEST_EMAIL = "test@costhread.app";
+
+/* Login — the calm threshold. Validates through /api/login (which enforces the
+   time-limited test account server-side), then hands the email to App. */
 export function Login({ onEnter }: { onEnter: (email: string) => void }) {
   const [email, setEmail] = useState("marcos.cuellar@cos.app");
-  const submit = () => onEnter(email.trim());
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    if (busy) return;
+    setError("");
+    setBusy(true);
+    try {
+      const r = await fetch("/api/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+      const data = (await r.json()) as { ok?: boolean; email?: string; error?: string };
+      if (r.ok && data.ok) {
+        onEnter(data.email || email.trim());
+        return;
+      }
+      setError(data.error || "Login failed.");
+    } catch {
+      // Endpoint unreachable (e.g. plain `vite` dev). Fail closed for the gated
+      // test account; let demo accounts through so local dev still works.
+      if (email.trim().toLowerCase() === TEST_EMAIL) {
+        setError("Can't verify the test login right now. Try again shortly.");
+      } else {
+        onEnter(email.trim());
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="login">
       <div className="lglow" />
@@ -22,10 +57,18 @@ export function Login({ onEnter }: { onEnter: (email: string) => void }) {
           className="lfield"
           type="password"
           placeholder="Password"
-          defaultValue="········"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
         />
-        <button className="lbtn" onClick={submit}>Continue →</button>
+        {error && (
+          <div style={{ color: "var(--a-coral)", fontSize: 13, margin: "2px 0 8px", fontWeight: 500 }}>
+            {error}
+          </div>
+        )}
+        <button className="lbtn" onClick={submit} disabled={busy}>
+          {busy ? "Continuing…" : "Continue →"}
+        </button>
         <div className="lfoot">Resume where you left off.</div>
       </div>
     </div>
