@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COS — Phase 2: Experience Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro" rel="stylesheet">
+<style>
+  :root{
+    --ink:#111113; --ink-2:#3a3a3e; --ink-3:#6b6b72; --ink-4:#9a9aa1;
+    --line:#e7e7e9; --line-2:#f0f0f1; --paper:#ffffff; --paper-2:#fafafa;
+    --push:#7a4a16; --push-bg:#fbf6ef; --push-line:#ecdcc6;
+    /* wireframe grays */
+    --wf-bg:#f6f6f8; --wf-screen:#ffffff; --wf-line:#e3e3e6; --wf-fill:#fafafb;
+    --wf-bar:#e7e7ea; --wf-bar2:#efeff1; --wf-lbl:#a2a2a9; --wf-ink:#c2c2c8;
+    --display:'Neue Haas Grotesk Display Pro','Helvetica Neue',Helvetica,Arial,sans-serif;
+    --ui:'Inter',-apple-system,system-ui,sans-serif;
+    --maxw:860px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:17px;line-height:1.62;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:#111113;color:#fff}
+
+  .rail{position:fixed;top:0;left:0;right:0;height:3px;background:transparent;z-index:50}
+  .rail i{display:block;height:100%;width:0;background:var(--ink);transition:width .1s linear}
+  .topbar{position:fixed;top:0;left:0;right:0;height:60px;z-index:40;display:flex;align-items:center;
+    justify-content:space-between;padding:0 32px;background:rgba(255,255,255,.82);
+    backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line-2)}
+  .topbar .mark{font-family:var(--display);font-weight:600;letter-spacing:-.02em;font-size:16px;white-space:nowrap}
+  .topbar .mark span{color:var(--ink-4);font-weight:500}
+  .topbar nav{display:flex;gap:18px;align-items:center}
+  .topbar nav a{color:var(--ink-3);text-decoration:none;font-size:13px;font-weight:500}
+  .topbar nav a:hover{color:var(--ink)}
+  .topbar .ph{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4);
+    border:1px solid var(--line);padding:6px 12px;border-radius:20px;white-space:nowrap}
+  @media(max-width:1000px){.topbar nav{display:none}}
+
+  main{max-width:var(--maxw);margin:0 auto;padding:0 32px}
+  section{padding:74px 0;border-bottom:1px solid var(--line-2)}
+  section:last-of-type{border-bottom:none}
+
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);
+    margin-bottom:22px;display:flex;gap:12px;align-items:center}
+  .eyebrow .num{font-family:var(--display);color:var(--ink);font-size:13px;letter-spacing:.04em}
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--ink-4)}
+
+  h1{font-family:var(--display);font-weight:600;letter-spacing:-.035em;line-height:1.02;
+    font-size:clamp(44px,8vw,80px);margin:0 0 28px}
+  h2{font-family:var(--display);font-weight:600;letter-spacing:-.03em;line-height:1.06;
+    font-size:clamp(29px,5vw,44px);margin:0 0 20px}
+  h3{font-family:var(--display);font-weight:600;letter-spacing:-.015em;font-size:19px;margin:30px 0 12px;line-height:1.2;
+    display:flex;align-items:center;gap:10px}
+  h3::before{content:"";width:6px;height:6px;background:var(--ink);border-radius:50%}
+  p{margin:0 0 18px;color:var(--ink-2);max-width:68ch}
+  p.lead{font-size:21px;line-height:1.55;color:var(--ink);max-width:62ch}
+  ul.body{margin:0 0 18px;padding-left:20px;color:var(--ink-2);max-width:68ch}
+  ul.body li{margin-bottom:8px}
+  strong{color:var(--ink);font-weight:600}
+  em{font-style:normal;color:var(--ink);background:linear-gradient(transparent 62%,#ececef 62%);padding:0 2px}
+
+  .hero{padding:128px 0 60px;border-bottom:1px solid var(--line-2)}
+  .hero .kicker{font-family:var(--display);font-weight:500;font-size:15px;color:var(--ink-3);margin-bottom:26px}
+  .hero h1 .dim{color:var(--ink-4)}
+  .hero .sub{font-size:22px;color:var(--ink-2);line-height:1.5;max-width:58ch;margin-top:2px}
+  .meta{display:flex;gap:30px;flex-wrap:wrap;margin-top:42px;padding-top:24px;border-top:1px solid var(--line)}
+  .meta div{display:flex;flex-direction:column;gap:3px}
+  .meta .k{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4)}
+  .meta .v{font-size:15px;color:var(--ink);font-weight:500}
+
+  /* the four UX questions answered per surface */
+  .ux{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);
+    border-radius:14px;overflow:hidden;margin:24px 0}
+  .ux div{background:var(--paper);padding:18px 20px}
+  .ux .k{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);margin-bottom:7px}
+  .ux .v{font-size:14.5px;color:var(--ink-2);line-height:1.5}
+  .ux .v b{color:var(--ink);font-weight:600}
+  @media(max-width:600px){.ux{grid-template-columns:1fr}}
+
+  .push{background:var(--push-bg);border:1px solid var(--push-line);border-radius:14px;padding:20px 22px;margin:26px 0}
+  .push .hd{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+  .push .hd .dot{width:7px;height:7px;border-radius:50%;background:var(--push)}
+  .push .hd b{font-family:var(--display);font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--push)}
+  .push p{color:#5c4427;margin:0 0 10px;font-size:15px}
+  .push p:last-child{margin:0}
+  .push .rec{font-weight:600;color:#4a3414}
+
+  .rec-block{background:#111113;color:#fff;border-radius:16px;padding:28px 30px;margin:28px 0}
+  .rec-block .l{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#8b8b93;margin-bottom:11px}
+  .rec-block .big{font-family:var(--display);font-weight:600;letter-spacing:-.02em;font-size:23px;line-height:1.24;margin-bottom:10px;max-width:40ch}
+  .rec-block p{color:#c9c9d0;margin:0;max-width:62ch;font-size:15px}
+
+  /* ----------------- WIREFRAME SYSTEM ----------------- */
+  .wf{background:var(--wf-bg);border:1px solid var(--line);border-radius:16px;padding:16px;margin:26px 0}
+  .wf-top{display:flex;gap:6px;align-items:center;margin-bottom:13px;padding:0 4px}
+  .wf-top i{width:9px;height:9px;border-radius:50%;background:#dcdce0}
+  .wf-top .cap{margin-left:10px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4);font-weight:600}
+  .wf-screen{background:var(--wf-screen);border:1px solid var(--wf-line);border-radius:11px;padding:18px;display:flex;flex-direction:column;gap:14px}
+  .wf-screen.app{flex-direction:row;padding:0;overflow:hidden}
+  .wf-lbl{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--wf-lbl);font-weight:700;display:block;margin-bottom:9px}
+  .wf-region{display:flex;flex-direction:column;gap:13px}
+  .blk{background:var(--wf-fill);border:1px solid var(--wf-line);border-radius:9px;padding:13px 15px}
+  .blk.dash{border-style:dashed;background:#fff}
+  .blk.solid{background:#111113;border-color:#111113}
+  .blk.solid .t{color:#fff}.blk.solid .bar{background:#3a3a3e}
+  .t{font-family:var(--display);font-size:14.5px;font-weight:600;color:var(--ink-2);letter-spacing:-.01em}
+  .t.sm{font-size:13px}
+  .sub{font-size:12.5px;color:var(--ink-4);margin-top:3px}
+  .bar{height:7px;border-radius:4px;background:var(--wf-bar);margin-top:8px}
+  .bar.b2{background:var(--wf-bar2)}
+  .bar.w90{width:90%}.bar.w80{width:80%}.bar.w70{width:70%}.bar.w60{width:60%}.bar.w50{width:50%}.bar.w40{width:40%}.bar.w30{width:30%}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--ink-3);
+    background:#fff;border:1px solid var(--wf-line);border-radius:20px;padding:4px 10px;letter-spacing:.01em}
+  .pill .d{width:6px;height:6px;border-radius:50%;background:var(--ink-4)}
+  .row{display:flex;gap:10px}
+  .row.wrap{flex-wrap:wrap}
+  .col{display:flex;flex-direction:column;gap:10px;flex:1}
+  .grow{flex:1}
+  .btn{display:inline-flex;align-items:center;gap:7px;font-family:var(--display);font-size:12.5px;font-weight:600;
+    color:#fff;background:#111113;border-radius:8px;padding:8px 13px;letter-spacing:-.005em}
+  .btn.ghost{background:#fff;color:var(--ink-2);border:1px solid var(--wf-line)}
+  .chatbar{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #d6d6da;
+    border-radius:13px;padding:14px 16px}
+  .chatbar .ph{font-size:14px;color:#aeaeb5}
+  .chatbar .send{width:30px;height:30px;border-radius:8px;background:#111113}
+  .tabs{display:flex;gap:5px;flex-wrap:wrap;border-bottom:1px solid var(--wf-line);padding-bottom:0}
+  .tab{font-size:12px;color:var(--ink-4);padding:7px 11px;border-radius:7px 7px 0 0;font-weight:500;white-space:nowrap}
+  .tab.on{color:var(--ink);background:var(--wf-fill);border:1px solid var(--wf-line);border-bottom-color:#fff;margin-bottom:-1px;font-weight:600}
+  /* mini sidebar */
+  .wf-side{width:180px;background:#fafafb;border-right:1px solid var(--wf-line);padding:16px 13px;display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+  .wf-main{flex:1;padding:18px;display:flex;flex-direction:column;gap:13px;min-width:0}
+  .nav-i{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-3);padding:7px 9px;border-radius:8px;font-weight:500}
+  .nav-i .ic{width:13px;height:13px;border-radius:4px;background:var(--wf-bar);flex-shrink:0}
+  .nav-i.on{background:#fff;border:1px solid var(--wf-line);color:var(--ink);font-weight:600}
+  .nav-i.on .ic{background:var(--ink)}
+  .nav-sec{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--wf-lbl);font-weight:700;margin:12px 0 4px 9px}
+  .wf-note{font-size:13px;color:var(--ink-4);margin-top:11px;display:flex;gap:9px;align-items:flex-start;max-width:64ch}
+  .wf-note b{color:var(--ink-3);font-weight:600}
+  .wf-note::before{content:"";width:18px;height:1px;background:var(--ink-4);margin-top:10px;flex-shrink:0}
+
+  /* idea/stage track */
+  .track{display:flex;align-items:center;gap:0;margin:4px 0}
+  .track .s{font-size:10.5px;font-weight:600;color:var(--ink-4);letter-spacing:.02em;position:relative;padding:0 14px 0 0}
+  .track .s.on{color:var(--ink)}
+  .track .s::after{content:"›";margin-left:14px;color:#d2d2d6}
+  .track .s:last-child::after{display:none}
+
+  /* lifecycle states */
+  .states{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:22px 0}
+  .states div{background:var(--paper);padding:16px 16px}
+  .states .nm{font-family:var(--display);font-size:16px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+  .states .nm .d{width:8px;height:8px;border-radius:50%}
+  .states .ds{font-size:12.5px;color:var(--ink-3);margin-top:7px;line-height:1.45}
+  @media(max-width:680px){.states{grid-template-columns:1fr 1fr}}
+
+  /* sitemap */
+  .map{background:var(--wf-bg);border:1px solid var(--line);border-radius:14px;padding:24px;margin:24px 0;text-align:center}
+  .map .nowbox{display:inline-block;font-family:var(--display);font-weight:600;font-size:16px;color:#fff;background:#111113;padding:11px 22px;border-radius:10px}
+  .map .lvl{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:18px;position:relative}
+  .map .node{font-family:var(--display);font-weight:600;font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--wf-line);padding:10px 18px;border-radius:9px}
+  .map .node span{display:block;font-family:var(--ui);font-size:11px;color:var(--ink-4);font-weight:500;margin-top:2px}
+  .map .omni{margin-top:16px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+  .map .omni .o{font-size:12px;color:var(--ink-3);background:#fff;border:1px dashed var(--wf-line);padding:7px 14px;border-radius:20px;font-weight:500}
+  .map .stem{font-size:11px;color:var(--ink-4);margin-top:10px;letter-spacing:.04em}
+
+  .closer{padding:80px 0 110px}
+  .closer .pull{font-family:var(--display);font-weight:600;letter-spacing:-.02em;font-size:clamp(26px,4.2vw,38px);line-height:1.14;max-width:24ch;margin-bottom:8px}
+  .ql{list-style:none;margin:20px 0}
+  .ql li{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-2);color:var(--ink-2);font-size:15.5px;max-width:66ch}
+  .ql li::before{content:"→";font-family:var(--display);font-weight:600;color:var(--ink-4)}
+  footer{padding:40px 0;color:var(--ink-4);font-size:12.5px;text-align:center}
+  .docnav{display:inline-flex;gap:10px;margin-top:18px}
+  .docnav a{text-decoration:none;font-family:var(--display);font-weight:600;font-size:14px;padding:11px 17px;border-radius:9px}
+  .docnav a.solid{background:#111;color:#fff}.docnav a.ghost{border:1px solid var(--line);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="rail"><i id="rail"></i></div>
+<div class="topbar">
+  <div class="mark">COS <span>· Experience Architecture</span></div>
+  <nav>
+    <a href="#home">Homepage</a>
+    <a href="#project">Project</a>
+    <a href="#reentry">Re-entry</a>
+    <a href="#ideas">Ideas</a>
+    <a href="#lifecycle">Lifecycle</a>
+    <a href="#nav">Navigation</a>
+  </nav>
+  <div class="ph">Phase 2 · Wireframes</div>
+</div>
+
+<main>
+  <header class="hero" data-screen-label="P2 / Hero">
+    <div class="kicker">Experience Architecture — Phase 2 · June 2026</div>
+    <h1>What the user sees,<br><span class="dim">clicks, and continues.</span></h1>
+    <p class="sub">The system from Phase 1, now turned outward. Six surfaces, described only by what's on screen and what's clickable — with low-fidelity wireframes. No visual design yet; structure first.</p>
+    <div class="meta">
+      <div><span class="k">Primary object</span><span class="v">Project (user-facing)</span></div>
+      <div><span class="k">Fidelity</span><span class="v">Wireframe / structure</span></div>
+      <div><span class="k">Internal model</span><span class="v">Invisible to the user</span></div>
+      <div><span class="k">Surfaces</span><span class="v">Six</span></div>
+    </div>
+  </header>
+
+  <!-- PRINCIPLES -->
+  <section id="principles">
+    <div class="eyebrow">Three rules for the experience</div>
+    <p class="lead">Everything below obeys three rules. They're how we keep the architecture from leaking into the interface.</p>
+    <ul class="body">
+      <li><strong>Projects are what the user sees.</strong> No "threads," no "events," no "context objects." The user works with Projects, Ideas, and People — concrete, warm, familiar nouns. The clever model stays backstage.</li>
+      <li><strong>The user never faces a blank screen on return.</strong> Every surface opens already answering "where was I?" Continuity is the default state, not a feature you go find.</li>
+      <li><strong>One obvious next move, everywhere.</strong> Every screen ends in a single recommended action. The user should never have to decide <em>what to decide</em>.</li>
+    </ul>
+  </section>
+
+  <!-- 1 HOMEPAGE -->
+  <section id="home">
+    <div class="eyebrow"><span class="num">01</span> Homepage Architecture</div>
+    <h2>Open the app → "pick up<br>where you left off."</h2>
+    <p class="lead">The homepage answers one question — <em>what matters right now?</em> — and leads with continuity. It is not a dashboard of metrics; it's a calm desk with your work laid out where you left it, and a place to start talking.</p>
+
+    <div class="wf">
+      <div class="wf-top"><i></i><i></i><i></i><span class="cap">Homepage — "Now"</span></div>
+      <div class="wf-screen">
+        <div>
+          <div class="t" style="font-size:13px;color:var(--ink-4);font-weight:500">Good morning. It's Friday, June 6.</div>
+          <div class="t" style="font-size:22px;margin-top:6px">Where would you like to pick up?</div>
+        </div>
+        <div class="chatbar"><span class="ph">Ask COS, or capture a thought…</span><span class="send"></span></div>
+
+        <div>
+          <span class="wf-lbl">Continue where you left off</span>
+          <div class="row">
+            <div class="blk grow">
+              <div class="t">GLVE</div>
+              <div class="sub">You were drafting the six-engine spec · 3 days ago</div>
+              <div class="bar w80"></div>
+              <div class="row" style="margin-top:11px;align-items:center"><span class="btn">Continue →</span><span class="pill"><span class="d"></span>In motion</span></div>
+            </div>
+            <div class="blk grow">
+              <div class="t">COS</div>
+              <div class="sub">You decided COS is chat-first · yesterday</div>
+              <div class="bar w70"></div>
+              <div class="row" style="margin-top:11px;align-items:center"><span class="btn">Continue →</span><span class="pill"><span class="d"></span>In motion</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span class="wf-lbl">Projects in motion</span>
+          <div class="row wrap">
+            <span class="pill"><span class="d"></span>GLVE</span><span class="pill"><span class="d"></span>COS</span>
+            <span class="pill"><span class="d"></span>Recruiting OS</span><span class="pill"><span class="d"></span>Personal Brand</span>
+            <span class="pill" style="opacity:.55"><span class="d"></span>Ōllin · dormant</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="grow">
+            <span class="wf-lbl">Ideas brewing · 3</span>
+            <div class="blk dash"><div class="t sm">Relationship OS</div><div class="bar w60"></div></div>
+          </div>
+          <div class="grow">
+            <span class="wf-lbl">Needs attention</span>
+            <div class="blk"><div class="t sm">GLVE — blocked on pricing input</div><div class="sub">You haven't opened Ōllin in 3 weeks</div></div>
+          </div>
+        </div>
+
+        <div>
+          <span class="wf-lbl">Recent activity</span>
+          <div class="bar w90"></div><div class="bar w80 b2"></div><div class="bar w50 b2"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ux">
+      <div><div class="k">What the user sees</div><div class="v">A greeting, the <b>chat box</b>, and <b>resume cards</b> first — then projects in motion, ideas brewing, what needs attention, recent activity. Newest and most-resumable at the top.</div></div>
+      <div><div class="k">What the user clicks</div><div class="v"><b>Continue →</b> drops them back exactly where they stopped. The chat box to ask or capture. A project pill to jump in. An attention item to resolve it.</div></div>
+      <div><div class="k">How they navigate</div><div class="v">From here, everything is one click: into any project, into ideas, or straight into conversation. The homepage is a launchpad, never a place you get stuck reading.</div></div>
+      <div><div class="k">How they continue</div><div class="v">The two resume cards <em>are</em> the continuity feature. They restore your last focus and offer the next action — no hunting, no reconstructing.</div></div>
+    </div>
+
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>One product decision for you</b></div>
+      <p>You called this the homepage; functionally it's <strong>"Now."</strong> The win is that it's cross-project by default — you see where you left off across <em>everything</em>, not a folder you must pick first. Projects stay the thing you click; "Now" is just the room you walk into.</p>
+      <p class="rec">Decision needed: is the chat box a <em>command bar</em> (ask &amp; navigate) or also <em>capture</em> (drop a thought that gets filed later)? My recommendation: both — one calm input, two jobs.</p>
+    </div>
+  </section>
+
+  <!-- 2 PROJECT -->
+  <section id="project">
+    <div class="eyebrow"><span class="num">02</span> Project Architecture</div>
+    <h2>Open a project →<br>Current Context first.</h2>
+    <p class="lead">A project never opens on a wall of files. It opens on <em>Current Context</em> — the living answer to "where am I with this?" Everything else (research, files, people, decisions) is one quiet tab away, but the first thing you see is the state of the work.</p>
+
+    <div class="wf">
+      <div class="wf-top"><i></i><i></i><i></i><span class="cap">Project — GLVE</span></div>
+      <div class="wf-screen app">
+        <div class="wf-side">
+          <div class="chatbar" style="padding:9px 11px"><span class="ph" style="font-size:11px">Ask…</span></div>
+          <div class="nav-i on"><span class="ic"></span>Home</div>
+          <div class="nav-sec">Projects</div>
+          <div class="nav-i"><span class="ic"></span>GLVE</div>
+          <div class="nav-i"><span class="ic"></span>COS</div>
+          <div class="nav-i"><span class="ic"></span>Recruiting OS</div>
+          <div class="nav-i"><span class="ic"></span>Personal Brand</div>
+          <div class="nav-sec">More</div>
+          <div class="nav-i"><span class="ic"></span>Ideas</div>
+          <div class="nav-i"><span class="ic"></span>Memory</div>
+        </div>
+        <div class="wf-main">
+          <div class="row" style="align-items:center;justify-content:space-between">
+            <div><div class="t" style="font-size:20px">GLVE</div><div class="sub">A go-to-market engine for enterprise sales · why it matters</div></div>
+            <span class="pill"><span class="d"></span>In motion</span>
+          </div>
+          <div class="tabs">
+            <span class="tab on">Current Context</span><span class="tab">Overview</span><span class="tab">Ideas</span>
+            <span class="tab">Research</span><span class="tab">Knowledge</span><span class="tab">Files</span>
+            <span class="tab">People</span><span class="tab">Decisions</span><span class="tab">Timeline</span><span class="tab">Activity</span>
+          </div>
+          <div class="blk">
+            <span class="wf-lbl">Current focus</span>
+            <div class="t sm">Finishing the six-engine spec before the pricing review</div>
+            <div class="row" style="margin-top:14px;gap:18px">
+              <div class="grow"><span class="wf-lbl">Recent progress</span><div class="bar w90"></div><div class="bar w70 b2"></div><div class="bar w80 b2"></div></div>
+              <div class="grow"><span class="wf-lbl">Blockers</span><div class="t sm" style="color:var(--push)">Waiting on pricing input</div>
+                <span class="wf-lbl" style="margin-top:12px">Open questions · 2</span><div class="bar w60 b2"></div></div>
+            </div>
+            <div class="blk solid" style="margin-top:14px">
+              <span class="wf-lbl" style="color:#7a7a82">Next recommended action</span>
+              <div class="row" style="align-items:center;justify-content:space-between"><div class="t">Draft engine #5, then send pricing the spec</div><span class="btn ghost">Start →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ux">
+      <div><div class="k">What the user sees</div><div class="v">Project name, a one-line <b>why it matters</b>, a status pill — then the <b>Current Context</b> card: current focus, recent progress, blockers, open questions, and a highlighted <b>next action</b>.</div></div>
+      <div><div class="k">What the user clicks</div><div class="v">The <b>tabs</b> to move between facets (Overview, Research, Knowledge, Files, People, Decisions, Timeline, Activity). The <b>Start →</b> button to act. The scoped <b>Ask</b> to query just this project.</div></div>
+      <div><div class="k">How they navigate</div><div class="v">Left rail jumps between projects. Within a project, tabs are the only navigation — flat, no nesting, no folders. Current Context is always the default tab.</div></div>
+      <div><div class="k">How they continue</div><div class="v">Recent progress restores momentum; the next action removes the "what now?" gap. They can act in one click or ask the project a question in plain language.</div></div>
+    </div>
+
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>Where I'd hold the line</b></div>
+      <p>Ten tabs is a lot. Most will sit empty most of the time, and a row of empty tabs reads as homework. <strong>Show only the facets that have content</strong> — a project with no decisions yet simply doesn't show a Decisions tab. The structure exists; it just doesn't nag.</p>
+      <p class="rec">Recommendation: Current Context is permanent; every other tab appears only once it has something in it.</p>
+    </div>
+  </section>
+
+  <!-- 3 RE-ENTRY -->
+  <section id="reentry">
+    <div class="eyebrow"><span class="num">03</span> Re-entry Experience</div>
+    <h2>The moment of return,<br>handled for you.</h2>
+    <p class="lead">When you come back to something after a gap, COS meets you with a short <em>welcome-back panel</em> instead of a cold screen. How much it says scales with how long you've been gone.</p>
+
+    <div class="wf">
+      <div class="wf-top"><i></i><i></i><i></i><span class="cap">Re-entry panel — returning to Ōllin after 3 weeks</span></div>
+      <div class="wf-screen">
+        <div class="blk dash">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div class="t">Welcome back to Ōllin</div><span class="pill">Away 3 weeks</span>
+          </div>
+          <div style="margin-top:13px"><span class="wf-lbl">What changed while you were away</span>
+            <div class="bar w90"></div><div class="bar w70 b2"></div></div>
+          <div style="margin-top:13px"><span class="wf-lbl">Where you stopped</div>
+            <div class="t sm">You were deciding whether Ōllin needs its own brand</div></div>
+          <div class="row" style="margin-top:15px;gap:9px"><span class="btn">Pick up where you left off →</span><span class="btn ghost">Just browsing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Depth scales with absence</h3>
+    <p>Same panel, three intensities. The system reads how long you've been gone and says only as much as you need.</p>
+    <div class="states" style="grid-template-columns:repeat(3,1fr)">
+      <div><div class="nm"><span class="d" style="background:#cfcfd4"></span>~3 days</div><div class="ds"><b>Nudge.</b> One line — "here's where you stopped" + the next action. You remember the rest.</div></div>
+      <div><div class="nm"><span class="d" style="background:#9a9aa1"></span>~3 weeks</div><div class="ds"><b>Briefing.</b> What changed, open loops re-surfaced, the why restated, next action offered. (Shown above.)</div></div>
+      <div><div class="nm"><span class="d" style="background:#5a5a61"></span>~3 months</div><div class="ds"><b>Reconstruction.</b> Full re-onboarding — identity, the story so far, current state, and "do you still want this?"</div></div>
+    </div>
+
+    <div class="ux">
+      <div><div class="k">What the user sees</div><div class="v">A calm panel at the top of the project (or homepage): <b>time away</b>, <b>what changed</b>, <b>where you stopped</b> — never the raw, cold screen.</div></div>
+      <div><div class="k">What the user clicks</div><div class="v"><b>Pick up where you left off →</b> restores their last focus. Or <b>Just browsing</b> to dismiss and look around freely.</div></div>
+      <div><div class="k">How they recover context</div><div class="v">The panel <em>is</em> the recovery — it answers the five questions before they're asked. No digging through history to reconstruct the thread.</div></div>
+      <div><div class="k">How they continue</div><div class="v">One button drops them into the exact next action. Re-entry ends where work begins.</div></div>
+    </div>
+
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>The humane half</b></div>
+      <p>After a long absence, every panel offers a second door: <strong>"Still want this?"</strong> Archiving a dormant project should feel as light as resuming one. Returning isn't only about picking things up — it's permission to put them down without guilt.</p>
+    </div>
+  </section>
+
+  <!-- 4 IDEAS -->
+  <section id="ideas">
+    <div class="eyebrow"><span class="num">04</span> Idea Lifecycle (as experienced)</div>
+    <h2>A small, deliberate<br>incubator.</h2>
+    <p class="lead">Ideas live apart from projects. The screen is intentionally small — at most three ideas are actively <em>brewing</em> at once. Everything else waits as a quiet spark until you have room.</p>
+
+    <div class="wf">
+      <div class="wf-top"><i></i><i></i><i></i><span class="cap">Ideas Brewing — 3 of 3 active</span></div>
+      <div class="wf-screen">
+        <div class="row wrap">
+          <div class="blk grow" style="min-width:160px">
+            <div class="t sm">Relationship OS</div>
+            <div class="sub">Why: keep relationships warm at scale</div>
+            <div class="track" style="margin-top:9px"><span class="s">Spark</span><span class="s on">Brewing</span><span class="s">Exploring</span><span class="s">Ready</span></div>
+            <div class="row" style="margin-top:10px"><span class="btn ghost">Analyze</span></div>
+          </div>
+          <div class="blk grow" style="min-width:160px">
+            <div class="t sm">Ice Cream Shop</div>
+            <div class="sub">Why: a tangible offline counterweight</div>
+            <div class="track" style="margin-top:9px"><span class="s">Spark</span><span class="s">Brewing</span><span class="s on">Exploring</span><span class="s">Ready</span></div>
+            <div class="row" style="margin-top:10px"><span class="btn ghost">Analyze</span></div>
+          </div>
+          <div class="blk grow" style="min-width:160px">
+            <div class="t sm">New Agent Concept</div>
+            <div class="sub">Why: COS's assistant, productized</div>
+            <div class="track" style="margin-top:9px"><span class="s">Spark</span><span class="s on">Brewing</span><span class="s">Exploring</span><span class="s">Ready</span></div>
+            <div class="row" style="margin-top:10px"><span class="btn ghost">Analyze</span></div>
+          </div>
+        </div>
+        <div>
+          <span class="wf-lbl">Sparks · waiting, uncapped</span>
+          <div class="row wrap">
+            <span class="pill" style="opacity:.7">Voice-first journaling</span><span class="pill" style="opacity:.7">Family archive</span><span class="pill" style="opacity:.7">COS for teams</span>
+          </div>
+        </div>
+        <div class="wf-note"><b>Heat shown only on Analyze.</b> No ambient temperature gauges — you ask, COS assesses momentum and tells you how hot it is.</div>
+      </div>
+    </div>
+
+    <h3>How an idea moves</h3>
+    <div class="track" style="margin:8px 0 4px;flex-wrap:wrap">
+      <span class="s on">Spark</span><span class="s on">Brewing</span><span class="s on">Exploring</span><span class="s on">Testing</span><span class="s on">Ready</span><span class="s on">→ Project</span>
+    </div>
+    <p>Sparks are unlimited — capture freely. Only <strong>Brewing</strong> and <strong>Exploring</strong> count toward the limit of three, because those are the stages that cost real attention. When an idea earns it, <strong>Ready → Project</strong> graduates it into the main workspace.</p>
+
+    <div class="ux">
+      <div><div class="k">What the user sees</div><div class="v">Three active idea cards, each with <b>why it matters</b> and its <b>stage</b>. Below: a loose pile of sparks waiting their turn.</div></div>
+      <div><div class="k">What the user clicks</div><div class="v"><b>Analyze</b> to reveal heat/momentum on demand. <b>Promote</b> an idea to the next stage, or <b>graduate</b> a Ready idea into a Project. <b>Shelve</b> to retire one.</div></div>
+      <div><div class="k">How they navigate</div><div class="v">Ideas is one top-level destination. An idea opens to its own small page (why · status · open questions · related projects) — the same shape as a project, lighter.</div></div>
+      <div><div class="k">How they continue</div><div class="v">Returning to a brewing idea triggers the same re-entry panel — "here's where this idea was going" — so even half-formed thoughts are resumable.</div></div>
+    </div>
+
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>The exit that keeps the incubator clean</b></div>
+      <p>Shelving an idea asks one question — <strong>"what did you learn?"</strong> — and saves the answer as Knowledge before it goes. Ideas get a dignified death with a takeaway, so the incubator never becomes the hoard you're escaping. The "max 3" is framed as <em>focus</em>, never a <em>quota</em>.</p>
+    </div>
+  </section>
+
+  <!-- 5 PROJECT LIFECYCLE -->
+  <section id="lifecycle">
+    <div class="eyebrow"><span class="num">05</span> Project Lifecycle (as experienced)</div>
+    <h2>Projects breathe.<br>Dormant isn't dead.</h2>
+    <p class="lead">A project the user hasn't touched in weeks isn't a failure — it's resting. COS shows lifecycle as a quiet status, never a guilt-trip, and makes both reviving and retiring easy.</p>
+
+    <div class="states">
+      <div><div class="nm"><span class="d" style="background:#1a7f4b"></span>In motion</div><div class="ds">Active, events flowing. Appears at the top of Home and in "Projects in motion."</div></div>
+      <div><div class="nm"><span class="d" style="background:#b88114"></span>Blocked</div><div class="ds">Waiting on something external. Surfaces under "Needs attention" with the blocker named.</div></div>
+      <div><div class="nm"><span class="d" style="background:#9a9aa1"></span>Dormant</div><div class="ds">Untouched a while. Fades back, kept warm. A gentle "still want this?" appears on return.</div></div>
+      <div><div class="nm"><span class="d" style="background:#111113"></span>Shipped</div><div class="ds">Done or released. Archived with its learnings extracted to Knowledge.</div></div>
+    </div>
+
+    <div class="wf">
+      <div class="wf-top"><i></i><i></i><i></i><span class="cap">Dormant project prompt — Ōllin</span></div>
+      <div class="wf-screen">
+        <div class="blk dash">
+          <div class="t sm">Ōllin has been quiet for 3 weeks.</div>
+          <div class="sub">Last: you were deciding whether it needs its own brand.</div>
+          <div class="row" style="margin-top:13px;gap:9px"><span class="btn">Pick it back up →</span><span class="btn ghost">Let it rest</span><span class="btn ghost">Archive</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ux">
+      <div><div class="k">What the user sees</div><div class="v">A small <b>status pill</b> on every project. Dormant projects gently recede rather than flashing red. The story is calm, not anxious.</div></div>
+      <div><div class="k">What the user clicks</div><div class="v"><b>Pick it back up</b>, <b>Let it rest</b>, or <b>Archive</b>. Three honest choices — no project is ever trapped in a guilt-loop of overdue badges.</div></div>
+      <div><div class="k">How they navigate</div><div class="v">Dormant projects leave "in motion" but stay one search away in Memory. Nothing is deleted by neglect; it just quiets down.</div></div>
+      <div><div class="k">How they continue</div><div class="v">Reviving a dormant project runs the deepest re-entry tier — a full reconstruction — so a 3-month gap still resumes in seconds.</div></div>
+    </div>
+  </section>
+
+  <!-- 6 NAVIGATION / IA -->
+  <section id="nav">
+    <div class="eyebrow"><span class="num">06</span> Information Architecture &amp; Navigation</div>
+    <h2>A thin spine.<br>Three doors.</h2>
+    <p class="lead">The whole app is reachable from a quiet left rail and one always-present input. Three primary destinations; everything else is found by searching or by following a project — not by hunting through menus.</p>
+
+    <div class="map">
+      <div class="nowbox">Now · Home</div>
+      <div class="stem">— continue where you left off —</div>
+      <div class="lvl">
+        <div class="node">Projects<span>GLVE · COS · Ōllin · Recruiting OS · Personal Brand</span></div>
+        <div class="node">Ideas<span>brewing, max 3 active</span></div>
+      </div>
+      <div class="omni">
+        <span class="o">Ask — always present (ask · capture · navigate)</span>
+        <span class="o">Memory — search everything (people · knowledge · decisions)</span>
+      </div>
+    </div>
+
+    <p><strong>People and Knowledge are not top-level menu items</strong> — they're reached <em>through</em> a project (the People and Knowledge tabs) or <em>through</em> Memory search. This keeps the spine to three doors and protects the calm. Every screen also carries the omnipresent <strong>Ask</strong> input, so the user can navigate or capture from anywhere without returning home.</p>
+
+    <div class="ux">
+      <div><div class="k">What the user sees</div><div class="v">A slim left rail: <b>Home</b>, a short <b>Projects</b> list, <b>Ideas</b>, <b>Memory</b> — and a pinned <b>Ask</b> field at the top. Nothing else competes.</div></div>
+      <div><div class="k">What the user clicks</div><div class="v">A project to enter it; Home to return to Now; Ask to talk or capture; Memory to find anything by name, time, or person.</div></div>
+      <div><div class="k">How they navigate</div><div class="v">By <b>meaning</b> ("my GLVE stuff"), <b>time</b> ("last week"), or <b>person</b> ("this client") — the three ways anyone actually looks for their own work. Never by folder or path.</div></div>
+      <div><div class="k">How they recover</div><div class="v">If they can't remember where something lives, they don't browse — they Ask, or search Memory, and COS brings the thread back with its context attached.</div></div>
+    </div>
+  </section>
+
+  <!-- CLOSER -->
+  <section class="closer">
+    <div class="eyebrow">Decisions before we design screens</div>
+    <div class="pull">Approve the structure, and Phase 3 becomes the visual design.</div>
+    <ul class="ql">
+      <li>Is the chat box on Home a command bar, a capture box, or both? (I recommend both.)</li>
+      <li>Do project tabs hide when empty, or always show all ten? (I recommend hide-when-empty.)</li>
+      <li>Is "Now" the right name for the homepage, or do we keep calling it Home?</li>
+      <li>Three primary destinations (Home · Projects · Ideas) — does that feel too lean, or exactly right?</li>
+    </ul>
+    <p style="margin-top:22px">Once these are settled, Phase 3 is the part you've been waiting for: the white-canvas, Neue-Haas, editorial visual design — and a clickable prototype of these exact six surfaces.</p>
+    <div class="docnav">
+      <a class="ghost" href="Architecture.html">← Phase 1 · The system</a>
+    </div>
+  </section>
+</main>
+
+<footer>COS — Context Operating System · Phase 2: Experience Architecture · Structure before visuals · v1</footer>
+
+<script>
+  const rail=document.getElementById('rail');
+  const upd=()=>{const h=document.documentElement;const sc=h.scrollTop/(h.scrollHeight-h.clientHeight);rail.style.width=(sc*100)+'%';};
+  document.addEventListener('scroll',upd,{passive:true});upd();
+</script>
+</body>
+</html>

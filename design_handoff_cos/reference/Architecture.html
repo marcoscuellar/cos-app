@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COS — Phase 1: Operating System Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/neue-haas-grotesk-display-pro" rel="stylesheet">
+<style>
+  :root{
+    --ink:#111113; --ink-2:#3a3a3e; --ink-3:#6b6b72; --ink-4:#9a9aa1;
+    --line:#e7e7e9; --line-2:#f0f0f1; --paper:#ffffff; --paper-2:#fafafa;
+    --push:#7a4a16; --push-bg:#fbf6ef; --push-line:#ecdcc6;
+    --display:'Neue Haas Grotesk Display Pro','Helvetica Neue',Helvetica,Arial,sans-serif;
+    --ui:'Inter',-apple-system,system-ui,sans-serif;
+    --maxw:780px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:17px;line-height:1.62;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:#111113;color:#fff}
+
+  .rail{position:fixed;top:0;left:0;right:0;height:3px;background:transparent;z-index:50}
+  .rail i{display:block;height:100%;width:0;background:var(--ink);transition:width .1s linear}
+  .topbar{position:fixed;top:0;left:0;right:0;height:60px;z-index:40;display:flex;align-items:center;
+    justify-content:space-between;padding:0 32px;background:rgba(255,255,255,.82);
+    backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line-2)}
+  .topbar .mark{font-family:var(--display);font-weight:600;letter-spacing:-.02em;font-size:16px}
+  .topbar .mark span{color:var(--ink-4);font-weight:500}
+  .topbar nav{display:flex;gap:18px;align-items:center}
+  .topbar nav a{color:var(--ink-3);text-decoration:none;font-size:13px;font-weight:500}
+  .topbar nav a:hover{color:var(--ink)}
+  .topbar .ph{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4);
+    border:1px solid var(--line);padding:6px 12px;border-radius:20px;white-space:nowrap}
+  .topbar .mark{white-space:nowrap}
+  @media(max-width:980px){.topbar nav{display:none}}
+
+  main{max-width:var(--maxw);margin:0 auto;padding:0 32px}
+  section{padding:74px 0;border-bottom:1px solid var(--line-2)}
+  section:last-of-type{border-bottom:none}
+
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);
+    margin-bottom:22px;display:flex;gap:12px;align-items:center}
+  .eyebrow .num{font-family:var(--display);color:var(--ink);font-size:13px;letter-spacing:.04em}
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--ink-4)}
+
+  h1{font-family:var(--display);font-weight:600;letter-spacing:-.035em;line-height:1.02;
+    font-size:clamp(44px,8vw,82px);margin:0 0 28px}
+  h2{font-family:var(--display);font-weight:600;letter-spacing:-.03em;line-height:1.06;
+    font-size:clamp(29px,5vw,44px);margin:0 0 22px}
+  h3{font-family:var(--display);font-weight:600;letter-spacing:-.02em;font-size:22px;margin:40px 0 12px;line-height:1.2}
+  p{margin:0 0 18px;color:var(--ink-2);max-width:66ch}
+  p.lead{font-size:21px;line-height:1.55;color:var(--ink);max-width:60ch}
+  ul.body,ol.body{margin:0 0 18px;padding-left:20px;color:var(--ink-2);max-width:66ch}
+  ul.body li,ol.body li{margin-bottom:9px}
+  strong{color:var(--ink);font-weight:600}
+  em{font-style:normal;color:var(--ink);background:linear-gradient(transparent 62%,#ececef 62%);padding:0 2px}
+
+  .hero{padding:128px 0 64px;border-bottom:1px solid var(--line-2)}
+  .hero .kicker{font-family:var(--display);font-weight:500;font-size:15px;color:var(--ink-3);margin-bottom:28px}
+  .hero h1 .dim{color:var(--ink-4)}
+  .hero .sub{font-size:22px;color:var(--ink-2);line-height:1.5;max-width:56ch;margin-top:4px}
+  .meta{display:flex;gap:30px;flex-wrap:wrap;margin-top:44px;padding-top:24px;border-top:1px solid var(--line)}
+  .meta div{display:flex;flex-direction:column;gap:3px}
+  .meta .k{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4)}
+  .meta .v{font-size:15px;color:var(--ink);font-weight:500}
+
+  .pull{font-family:var(--display);font-weight:600;letter-spacing:-.02em;
+    font-size:clamp(26px,4.4vw,38px);line-height:1.14;color:var(--ink);margin:14px 0 8px;max-width:19ch}
+  .note{border-left:2px solid var(--ink);padding:4px 0 4px 22px;margin:26px 0;color:var(--ink-2)}
+  .note .l{display:block;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px}
+
+  /* WHERE I PUSH BACK callout */
+  .push{background:var(--push-bg);border:1px solid var(--push-line);border-radius:14px;padding:22px 24px;margin:28px 0}
+  .push .hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .push .hd .dot{width:7px;height:7px;border-radius:50%;background:var(--push)}
+  .push .hd b{font-family:var(--display);font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--push)}
+  .push p{color:#5c4427;margin:0 0 12px;font-size:15.5px}
+  .push p:last-child{margin:0}
+  .push .rec{font-weight:600;color:#4a3414}
+
+  /* recommendation block (positive) */
+  .rec-block{background:#111113;color:#fff;border-radius:16px;padding:30px 32px;margin:30px 0}
+  .rec-block .l{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#8b8b93;margin-bottom:12px}
+  .rec-block .big{font-family:var(--display);font-weight:600;letter-spacing:-.02em;font-size:24px;line-height:1.22;margin-bottom:12px;max-width:36ch}
+  .rec-block p{color:#c9c9d0;margin:0;max-width:60ch;font-size:15.5px}
+
+  /* five-question grid */
+  .qgrid{border-top:1px solid var(--line);margin:30px 0}
+  .qrow{display:grid;grid-template-columns:34px 1fr;gap:18px;padding:18px 0;border-bottom:1px solid var(--line)}
+  .qrow .n{font-family:var(--display);font-size:14px;color:var(--ink-4);font-weight:600;padding-top:3px}
+  .qrow .q{font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:-.01em;color:var(--ink);line-height:1.25}
+  .qrow .a{color:var(--ink-3);font-size:15px;margin-top:5px}
+
+  /* object tiers diagram */
+  .tier{border:1px solid var(--line);border-radius:14px;margin:16px 0;overflow:hidden}
+  .tier .th{padding:13px 20px;background:var(--paper-2);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
+  .tier .th b{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .tier .th span{font-size:12px;color:var(--ink-4);font-weight:500;max-width:46ch;text-align:right}
+  .tier .row{display:flex;flex-wrap:wrap;gap:10px;padding:18px 20px}
+  .chip{border:1px solid var(--line);border-radius:10px;padding:11px 15px;min-width:130px;flex:1}
+  .chip b{font-family:var(--display);font-size:15.5px;font-weight:600;display:block;letter-spacing:-.01em}
+  .chip span{font-size:12.5px;color:var(--ink-3);display:block;margin-top:2px;line-height:1.4}
+  .chip.muted{background:var(--paper-2);border-style:dashed}
+
+  /* anatomy list */
+  .anat{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:26px 0}
+  .anat .hd{padding:15px 22px;border-bottom:1px solid var(--line);background:var(--paper-2);display:flex;justify-content:space-between;align-items:center}
+  .anat .hd b{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .anat .hd span{font-size:12px;color:var(--ink-4);font-weight:500}
+  .anat ul{list-style:none}
+  .anat li{display:grid;grid-template-columns:210px 1fr;gap:14px;padding:13px 22px;border-bottom:1px solid var(--line-2);align-items:baseline}
+  .anat li:last-child{border-bottom:none}
+  .anat li .f{font-size:14px;font-weight:600;color:var(--ink);font-family:var(--display);letter-spacing:-.005em}
+  .anat li .d{font-size:13.5px;color:var(--ink-3)}
+  @media(max-width:560px){.anat li{grid-template-columns:1fr;gap:3px}}
+
+  /* lifecycle flow */
+  .flow{display:flex;gap:0;margin:28px 0;overflow-x:auto;padding-bottom:6px}
+  .stage{flex:1;min-width:108px;border:1px solid var(--line);border-right:none;padding:15px 14px;position:relative}
+  .stage:last-child{border-right:1px solid var(--line);border-radius:0 12px 12px 0}
+  .stage:first-child{border-radius:12px 0 0 12px}
+  .stage .s{font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4)}
+  .stage .t{font-family:var(--display);font-size:16px;font-weight:600;margin-top:6px;letter-spacing:-.01em}
+  .stage .x{font-size:12px;color:var(--ink-3);margin-top:5px;line-height:1.4}
+  .stage::after{content:"→";position:absolute;right:-9px;top:16px;color:var(--ink-4);font-size:13px;z-index:2;background:var(--paper);padding:1px}
+  .stage:last-child::after{display:none}
+  .stage.exit{border-style:dashed;background:var(--paper-2)}
+
+  /* absence tiers */
+  .tiers3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:26px 0}
+  .tiers3 div{background:var(--paper);padding:20px}
+  .tiers3 .a{font-family:var(--display);font-size:13px;font-weight:600;color:var(--ink-4);letter-spacing:.02em}
+  .tiers3 .b{font-family:var(--display);font-size:19px;font-weight:600;margin:7px 0 8px;letter-spacing:-.01em}
+  .tiers3 .c{font-size:13.5px;color:var(--ink-3);line-height:1.5}
+  @media(max-width:640px){.tiers3{grid-template-columns:1fr}}
+
+  /* alternative architectures */
+  .alt{border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:16px 0}
+  .alt .tag{font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4)}
+  .alt h4{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.015em;margin:7px 0 10px}
+  .alt p{font-size:14.5px;color:var(--ink-2);margin:0 0 12px}
+  .alt .pc{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .alt .pc div span{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:5px}
+  .alt .pc .pro span{color:#1a7f4b}.alt .pc .con span{color:#b2402a}
+  .alt .pc p{font-size:13.5px;color:var(--ink-3);margin:0}
+  @media(max-width:560px){.alt .pc{grid-template-columns:1fr;gap:12px}}
+
+  /* risk list */
+  .risks{list-style:none;border-top:1px solid var(--line);margin:24px 0}
+  .risks>li{padding:20px 0;border-bottom:1px solid var(--line)}
+  .risks .rh{display:flex;gap:14px;align-items:baseline}
+  .risks .rh .n{font-family:var(--display);font-size:13px;color:var(--ink-4);font-weight:600;min-width:26px}
+  .risks .rh .t{font-family:var(--display);font-size:19px;font-weight:600;letter-spacing:-.012em;line-height:1.25}
+  .risks .rd{margin:8px 0 0 40px;color:var(--ink-2);font-size:15px;max-width:62ch}
+  .risks .sev{margin-left:40px;margin-top:9px;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--push);display:inline-block}
+
+  .closer{padding:84px 0 110px}
+  .closer .pull{max-width:24ch}
+  .ql{list-style:none;margin:22px 0}
+  .ql li{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-2);color:var(--ink-2);font-size:15.5px;max-width:64ch}
+  .ql li::before{content:"?";font-family:var(--display);font-weight:600;color:var(--ink-4)}
+  footer{padding:40px 0;color:var(--ink-4);font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="rail"><i id="rail"></i></div>
+<div class="topbar">
+  <div class="mark">COS <span>· Context Operating System</span></div>
+  <nav>
+    <a href="#thesis">Thesis</a>
+    <a href="#objects">Objects</a>
+    <a href="#primacy">Primacy</a>
+    <a href="#context">Context</a>
+    <a href="#reentry">Re-entry</a>
+    <a href="#lifecycles">Lifecycles</a>
+    <a href="#ai">AI</a>
+    <a href="#risks">Risks</a>
+  </nav>
+  <div class="ph">Phase 1 · No UI</div>
+</div>
+
+<main>
+  <header class="hero" data-screen-label="Doc / Hero">
+    <div class="kicker">Operating System Design — Phase 1 · June 2026</div>
+    <h1>Design the system,<br><span class="dim">not the screens.</span></h1>
+    <p class="sub">People don't lose information. They lose context. This document designs COS as a continuity layer — and argues with you about how to build it.</p>
+    <div class="meta">
+      <div><span class="k">Deliverable</span><span class="v">Architecture, not UI</span></div>
+      <div><span class="k">Stance</span><span class="v">Thought partner, not executor</span></div>
+      <div><span class="k">North star</span><span class="v">Re-entry cost → 0</span></div>
+      <div><span class="k">Sections</span><span class="v">Ten</span></div>
+    </div>
+  </header>
+
+  <!-- HOW TO READ -->
+  <section id="read">
+    <div class="eyebrow">How to read this</div>
+    <p class="lead">You asked me to challenge your assumptions, not execute them. So this isn't a transcription of your notes — it's a position.</p>
+    <p>Where I agree with you, I build on it. Where I think you're about to make an expensive mistake, you'll see a <strong>Where I push back</strong> block. The single most important argument in here is in §2 and §5: <em>Current Context is not something the user stores — it is something the system computes from a stream of events.</em> If we get that one idea right, COS works. If we get it wrong, COS becomes another tool people have to maintain, and it dies.</p>
+  </section>
+
+  <!-- 1 THESIS -->
+  <section id="thesis">
+    <div class="eyebrow"><span class="num">01</span> Product Thesis</div>
+    <h2>COS holds the state of your<br>mind between sessions.</h2>
+    <p class="lead">The scarce resource is not information, storage, or even time. It is <em>re-acquisition of context</em> — the mental cost of rebuilding where you were every time you return.</p>
+    <p>Every existing tool optimizes the wrong half. Notion, Drive, Obsidian, Asana — all excellent at <strong>putting things somewhere</strong>. None of them help you <strong>return</strong>. The expensive moment is never "I lost the file." It's the morning after a week away, looking at a project you know is yours, unable to reload the thread into working memory.</p>
+    <p>So the thesis: <strong>COS is the cache for your working memory.</strong> It remembers the live state of each thread you care about and hands it back to you intact, instantly, on return — scaled to how long you've been gone. Its job is continuity. Its only metric is the cognitive cost of re-entry.</p>
+    <div class="rec-block">
+      <div class="l">The one-sentence thesis</div>
+      <div class="big">COS is a continuity layer that lets you return to any project, idea, or relationship after any gap and resume in seconds — without reconstructing it from scratch.</div>
+      <p>Remember what matters · reconnect to where you left off · continue without starting over.</p>
+    </div>
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>Where I push back — the name</b></div>
+      <p>"Operating System" is a great brand and a risky promise. A real OS schedules processes, allocates resources, and brokers everything that runs. COS does none of that — and if we let the metaphor lead, we'll over-build (workflow engines, automations, an app platform) and lose the calm. What you've actually invented is closer to a <strong>context cache</strong> or a <strong>re-entry layer.</strong></p>
+      <p class="rec">Recommendation: keep "COS" as the name and the ambition, but internally hold the discipline that we are building <em>one</em> capability — context recovery — not an operating system for your whole life. Every feature must pass the test: "does this lower re-entry cost?" If not, it's scope creep wearing the OS metaphor.</p>
+    </div>
+  </section>
+
+  <!-- 2 OBJECT MODEL -->
+  <section id="objects">
+    <div class="eyebrow"><span class="num">02</span> Core Object Model</div>
+    <h2>Six nouns is close.<br>Here's the fix.</h2>
+    <p>Your proposed objects — Project, Idea, Person, Note, Knowledge, Decision — are mostly right. But a flat list of six hides the two relationships that actually make COS work. Objects aren't peers; they live in tiers, and one of them isn't stored at all.</p>
+
+    <div class="tier">
+      <div class="th"><b>Tier 0 — The stream <span style="color:var(--ink-3)">(the source of truth)</span></b><span>Everything else is derived from this</span></div>
+      <div class="row">
+        <div class="chip"><b>Event</b><span>An atomic timestamped "something happened." The molecule of continuity.</span></div>
+        <div class="chip"><b>Capture</b><span>Raw input: a voice memo, a thought, a meeting. Your "Note", reframed as an inbox state, not a filing destination.</span></div>
+      </div>
+    </div>
+    <div class="tier">
+      <div class="th"><b>Tier 1 — Containers <span style="color:var(--ink-3)">(where attention lives)</span></b><span>Hold a goal and gather everything related to it</span></div>
+      <div class="row">
+        <div class="chip"><b>Project</b><span>A live context container with a goal in motion. The center of gravity.</span></div>
+        <div class="chip"><b>Idea</b><span>A pre-project container. Same shape, lower commitment — incubation, not execution.</span></div>
+      </div>
+    </div>
+    <div class="tier">
+      <div class="th"><b>Tier 2 — Crystallizations <span style="color:var(--ink-3)">(what thinking produces)</span></b><span>Deliberate, durable outputs — created by the user, not auto-captured</span></div>
+      <div class="row">
+        <div class="chip"><b>Knowledge</b><span>A distilled conclusion. What you learned and why it matters.</span></div>
+        <div class="chip"><b>Decision</b><span>A choice made, with reasoning, so it's never re-litigated.</span></div>
+      </div>
+    </div>
+    <div class="tier">
+      <div class="th"><b>Cross-cutting</b><span>Belongs to no single container</span></div>
+      <div class="row">
+        <div class="chip"><b>Person</b><span>A human attached to many projects, carrying the state of your relationship.</span></div>
+        <div class="chip muted"><b>Context</b><span>Not stored. <em>Computed</em> on demand from the stream. See §5.</span></div>
+      </div>
+    </div>
+
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>Where I push back — three corrections</b></div>
+      <p><strong>1. "Note" is not an object — it's a state.</strong> A note is raw capture on its way to becoming something (knowledge, a decision, an event on a project). If we treat Note as a permanent destination, COS rots into the exact junk drawer you're trying to escape. Model it as <em>Capture → triaged → it becomes another object or an event.</em></p>
+      <p><strong>2. The most fundamental object is the Event, and you didn't list it.</strong> Continuity is reconstructed from a timeline of what happened. If activity is the raw material for Current Context, then the event stream is the foundation the whole system stands on — more primitive than Project.</p>
+      <p><strong>3. Context is not an object you store.</strong> It is a <em>view</em> computed from events, regenerated every time you look. This is the central architectural commitment of COS. Storing context means maintaining it; maintaining it means it goes stale; stale context is worse than none.</p>
+      <p class="rec">Recommendation: adopt the four-tier model. Promote Event to a first-class primitive, demote Note to Capture, and make Context a computed view — never a stored record.</p>
+    </div>
+  </section>
+
+  <!-- 2R PRIMACY -->
+  <section id="primacy">
+    <div class="eyebrow"><span class="num">02 · Re-examined</span> The Primacy Question</div>
+    <h2>Is <span style="color:var(--ink-4)">Project</span> really<br>the primary object?</h2>
+    <p class="lead">You believe Projects are primary because everything attaches to them. You also suspect Context might be the true core, with Projects as just one of its forms. You're circling something real — let me separate it cleanly, because "primary" is doing four different jobs in that sentence.</p>
+
+    <h3>"Primary" means four different things</h3>
+    <p>The whole confusion comes from one word carrying four meanings. Pull them apart and Project, Context, and Event stop competing — each wins a different axis.</p>
+    <div class="anat">
+      <div class="hd"><b>Four senses of "primary"</b><span>They are not the same question</span></div>
+      <ul>
+        <li><div class="f">Primary substrate</div><div class="d">What everything is derived from → the <strong>Event stream.</strong></div></li>
+        <li><div class="f">Primary container</div><div class="d">What things attach to → a <strong>Thread</strong> (Project is its commonest species).</div></li>
+        <li><div class="f">Primary output</div><div class="d">What you actually pay for → <strong>Context.</strong></div></li>
+        <li><div class="f">Primary surface</div><div class="d">How you re-enter → <strong>Now</strong> (present-tense, cross-thread).</div></li>
+      </ul>
+    </div>
+
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>Where I push back — Project is a species, not the root</b></div>
+      <p>Project feels primary because it's the <em>most common</em> container — but "most common" isn't "most fundamental." Make Project the root and three cracks open immediately:</p>
+      <p><strong>The orphan problem.</strong> Capture happens <em>before</em> a project exists. A stray thought, a person you just met, a lesson learned — if everything must live under a project, you force premature filing, which is the precise friction that empties every second brain.</p>
+      <p><strong>The cross-cutting problem.</strong> Your highest-value continuity is often <em>between</em> projects: a Person who spans five of them, Knowledge reused everywhere, "what I'm focused on this week" that cuts across three. A project-rooted tree can't hold these without duplication.</p>
+      <p><strong>Your own model already leaks.</strong> Ideas aren't projects. People aren't projects. You listed them as peers — which means Project was never actually the root; it was just the loudest node.</p>
+    </div>
+
+    <h3>The more fundamental object: a thread of attention</h3>
+    <p>Under Project, Idea, Person, and Area-of-life sits one shared shape: a <strong>continuous line of concern toward something you care about</strong> — a <em>thread</em>. Each accumulates events, carries a why, and emits context on return. Project isn't the root; it's the dominant <em>species</em> of the thread.</p>
+    <div class="tier">
+      <div class="th"><b>Threads — one object, several species</b><span>All gather events · all emit context</span></div>
+      <div class="row">
+        <div class="chip"><b>Project</b><span>A thread with a goal in motion. The dominant species.</span></div>
+        <div class="chip"><b>Idea</b><span>A provisional thread — concern before commitment.</span></div>
+        <div class="chip"><b>Person</b><span>A relationship thread — your context on a human, across everything.</span></div>
+        <div class="chip"><b>Area</b><span>A standing thread with no end — Health, Family, Personal Brand.</span></div>
+      </div>
+    </div>
+    <p>This is a revision of my own §2: I'd filed Person under "cross-cutting." It's cleaner to say <strong>Person is simply a non-project thread.</strong> "Relationship OS" isn't a feature you bolt on — it's what you get for free the moment a Person is a first-class thread.</p>
+
+    <h3>Now — is Context the core object?</h3>
+    <p>Your sharper instinct: maybe Context is the real product and projects are just one way it shows up. <strong>Yes — almost entirely. But Context is not an object. It's the product's output, and that distinction is load-bearing.</strong></p>
+    <p>The PIM literature you're reading lands on the same point: the hard problem isn't storage, it's <em>maintaining the connection between information and a future moment of need.</em> That connection — material bound to a future you who needs it — <strong>is</strong> context. It is a relationship, computed in the present tense, not a record sitting in a table.</p>
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>Where I push back — don't make Context an "object"</b></div>
+      <p>The instant you model Context as a stored object, someone has to keep it accurate — and you're back inside the maintenance trap COS exists to escape. Context can't be the "core object" for the same reason a reflection can't be furniture. It's <strong>emitted, not stored.</strong></p>
+      <p class="rec">So the grammar of the system: <strong>Context is the verb. Thread is the noun. Event is the substrate.</strong> The product is the verb; the navigable objects are the nouns; the truth is the substrate.</p>
+    </div>
+
+    <h3>The resolution</h3>
+    <p>Three layers, each "primary" in its own sense — and now they cooperate instead of competing.</p>
+    <div class="flow">
+      <div class="stage"><div class="s">Substrate</div><div class="t">Event</div><div class="x">What happened. The source of truth everything derives from.</div></div>
+      <div class="stage"><div class="s">Container</div><div class="t">Thread</div><div class="x">A line of attention that gathers events. Project · Idea · Person · Area.</div></div>
+      <div class="stage"><div class="s">Output</div><div class="t">Context</div><div class="x">The present-tense state a thread emits on return. The product itself.</div></div>
+    </div>
+
+    <div class="rec-block">
+      <div class="l">What this changes</div>
+      <div class="big">Context is the product. The Thread is the primary object — and "Now," not the project list, is the true center of the app.</div>
+      <p>Re-entry — your north star — is inherently <em>cross-thread</em> and <em>present-tense</em>, which is exactly what a Thread+Context model produces and a Project-rooted tree cannot. The homepage isn't "a list of projects." It's <strong>Now</strong>: the computed context across every live thread, with one recommended action.</p>
+    </div>
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>One caution — don't over-rotate</b></div>
+      <p>This is an argument about <em>architecture</em>, not <em>vocabulary</em>. Never show users a generic "Thread." It's cold, and it would undo the warmth that makes COS feel personal. Internally the root is the Thread; on the surface, users still see <strong>Projects, Ideas, People</strong> — concrete, familiar, human. Project stays the default word and the most-used hub. We change the foundation, not the furniture.</p>
+    </div>
+  </section>
+
+  <!-- 3 IA -->
+  <section id="ia">
+    <div class="eyebrow"><span class="num">03</span> Information Architecture</div>
+    <h2>A graph underneath,<br>a hub on the surface.</h2>
+    <p>The data is a <strong>graph</strong>: a Person spans many projects, Knowledge is used by several, an Event can touch a project and a person at once. But a graph presented as a graph is overwhelming — the opposite of calm. So the architecture splits cleanly:</p>
+    <ul class="body">
+      <li><strong>Underneath — a graph.</strong> Objects link freely. Multi-homing is normal: nothing has exactly one parent.</li>
+      <li><strong>On the surface — a hub.</strong> The user always navigates from <em>one thing they're thinking about</em>, and everything related is already gathered around it. The Project is the primary hub; Person and Knowledge are secondary hubs reached through it or through search.</li>
+    </ul>
+    <p>The organizing principle is <strong>meaning-first</strong>: you navigate by the thing in your head ("my GLVE stuff"), never by location. There are no folders, no paths, no databases exposed. Three retrieval axes cover every "where is…" question:</p>
+    <div class="anat">
+      <div class="hd"><b>The three retrieval axes</b><span>Every search resolves on one of these</span></div>
+      <ul>
+        <li><div class="f">By container</div><div class="d">"Where is my GLVE stuff?" → the Project hub gathers it.</div></li>
+        <li><div class="f">By time</div><div class="d">"What was I doing last week?" → the stream, filtered by recency.</div></li>
+        <li><div class="f">By person</div><div class="d">"What's going on with this client?" → the Person hub.</div></li>
+      </ul>
+    </div>
+    <p>Cross-project objects need two homes that stay in sync: a <strong>global library</strong> (all Knowledge, all Decisions, all People) and a <strong>local view</strong> (the same objects surfaced inside each project that uses them). Same object, two windows — never two copies.</p>
+  </section>
+
+  <!-- 4 NAV -->
+  <section id="nav">
+    <div class="eyebrow"><span class="num">04</span> Navigation Architecture</div>
+    <h2>Navigation is temporal,<br>not just spatial.</h2>
+    <p>"Where was I?" is a <em>time</em> question, not a <em>place</em> question. So COS opens on time — a re-entry surface — before it offers places. The spine stays deliberately thin to protect the calm.</p>
+    <div class="anat">
+      <div class="hd"><b>The spine</b><span>Three primary destinations, two always-present surfaces</span></div>
+      <ul>
+        <li><div class="f">Now — primary</div><div class="d">Home. "What matters right now" + continue where you left off. The default landing.</div></li>
+        <li><div class="f">Projects — primary</div><div class="d">The containers in motion. GLVE, COS, Ōllin, Recruiting OS, Personal Brand.</div></li>
+        <li><div class="f">Ideas — primary</div><div class="d">The incubator. Capped, deliberately small.</div></li>
+        <li><div class="f">Ask — always present</div><div class="d">The chat/command surface. Reachable from anywhere, owns nothing.</div></li>
+        <li><div class="f">Memory — always present</div><div class="d">Global search across the graph: people, knowledge, decisions, the whole stream.</div></li>
+      </ul>
+    </div>
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>Where I push back — fewer doors</b></div>
+      <p>Your earlier sketch put People and Knowledge in the top nav. I'd pull them out. Every top-level destination is a small tax on calm and a decision the user has to make. People and Knowledge are <em>facets</em> — you reach them through a project or through Memory search, not from a permanent menu item. Three primary doors (Now, Projects, Ideas) plus an omnipresent Ask and Memory is the whole map.</p>
+      <p class="rec">Recommendation: 3 destinations, not 6. Defend the spine ruthlessly — every new top-level item must displace an existing one.</p>
+    </div>
+  </section>
+
+  <!-- 5 CONTEXT MODEL -->
+  <section id="context">
+    <div class="eyebrow"><span class="num">05</span> Context Model</div>
+    <h2>What "context" actually is.</h2>
+    <p class="lead">Context is the minimal set of information needed to resume a thread without reconstruction. Define it precisely or the product has no spine.</p>
+    <p>Context has five layers. They map exactly to the five questions every object must answer — which is not a coincidence; the questions <em>are</em> the context model.</p>
+    <div class="qgrid">
+      <div class="qrow"><div class="n">L1</div><div><div class="q">Identity — what is this?</div><div class="a">A one-sentence standing description. No archaeology.</div></div></div>
+      <div class="qrow"><div class="n">L2</div><div><div class="q">Motivation — why does it matter?</div><div class="a">The reason it exists, so the <em>why</em> survives the gap, not just the <em>what</em>.</div></div></div>
+      <div class="qrow"><div class="n">L3</div><div><div class="q">State — where does it stand?</div><div class="a">Status, blockers, open questions, open decisions.</div></div></div>
+      <div class="qrow"><div class="n">L4</div><div><div class="q">Momentum — what happened recently?</div><div class="a">The last few moves, summarized — your short-term memory, restored.</div></div></div>
+      <div class="qrow"><div class="n">L5</div><div><div class="q">Horizon — what happens next?</div><div class="a">One recommended action. The first domino, pre-placed.</div></div></div>
+    </div>
+    <p>Your proposed Current Context fields — Current Focus, Last Activity, Open Questions, Open Decisions, Blockers, Recent Progress, Next Recommended Action — slot cleanly into these layers. They're the right fields. The architectural question is not <em>what</em> the fields are; it's <em>who fills them.</em></p>
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>Where I push back — context must be computed, and it must decay</b></div>
+      <p><strong>Computed, not authored.</strong> If the user has to write and update Current Context by hand, they won't, and within two weeks every project lies to them. Current Context must be <em>generated from the event stream</em> — assembled, summarized, and re-derived every time it's viewed. The user's job is to do the work and let COS narrate it back; not to maintain a status field.</p>
+      <p><strong>Time-aware.</strong> Context isn't static — its <em>recovery depth should scale with how long you've been gone.</em> Back after an hour? A one-line nudge. Back after three months? A full re-onboarding. A model that returns the same briefing regardless of absence is broken. (This drives §6.)</p>
+      <p class="rec">Recommendation: Current Context is a computed, decaying, time-scaled view over events. Manual fields exist only as <em>seeds</em> (you set the goal once); everything live is derived.</p>
+    </div>
+  </section>
+
+  <!-- 6 RE-ENTRY -->
+  <section id="reentry">
+    <div class="eyebrow"><span class="num">06</span> Re-entry Model</div>
+    <h2>The signature mechanic.</h2>
+    <p class="lead">Re-entry is not a screen. It's a moment that recurs everywhere — opening the app, reopening a project, returning to an idea — and COS treats it as sacred. The user never faces a blank canvas on return.</p>
+    <h3>The re-entry contract</h3>
+    <ul class="body">
+      <li>Never a cold start. Returning always begins with a warm one.</li>
+      <li>Always answer the five questions before the user has to ask them.</li>
+      <li>Always compute a <strong>diff since last seen</strong> — what changed while you were away.</li>
+      <li>Always end with exactly one recommended next action.</li>
+    </ul>
+    <h3>Recovery depth scales with absence</h3>
+    <p>The "3 days / 3 weeks / 3 months" insight from your notes is the core mechanic. Each tier is a different product behavior, not just more text.</p>
+    <div class="tiers3">
+      <div><div class="a">≈ 3 Days</div><div class="b">Nudge</div><div class="c">You remember most of it. A one-line "here's where you stopped" + the next action. Minimal, gets out of the way.</div></div>
+      <div><div class="a">≈ 3 Weeks</div><div class="b">Briefing</div><div class="c">The thread has faded. A short narrative of what changed, open loops re-surfaced, the why restated, next action proposed.</div></div>
+      <div><div class="a">≈ 3 Months</div><div class="b">Reconstruction</div><div class="c">You've effectively forgotten. A full re-onboarding: identity, motivation, the arc of what happened, current state, and a gentle "do you still want this?"</div></div>
+    </div>
+    <p>Re-entry runs at three scopes: <strong>app-level</strong> (the morning open → the homepage), <strong>project-level</strong> (reopening GLVE), and <strong>idea-level</strong> (returning to a brewing idea). Same contract, different radius.</p>
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>Where I push back — re-entry must also let things die</b></div>
+      <p>A perfect memory that resurfaces <em>everything</em> recreates the overwhelm you're escaping. Part of re-entry is permission to <strong>not</strong> return — surfacing "you haven't touched Ōllin in 3 months; archive, or pick it back up?" Forgetting is a feature. The system should make letting go as easy as resuming.</p>
+      <p class="rec">Recommendation: pair every reconstruction with a graceful-exit option. Re-entry is two doors, not one.</p>
+    </div>
+  </section>
+
+  <!-- 7 + 8 LIFECYCLES -->
+  <section id="lifecycles">
+    <div class="eyebrow"><span class="num">07 · 08</span> Project &amp; Idea Lifecycles</div>
+    <h2>Things breathe. Honor it.</h2>
+
+    <h3>Project lifecycle</h3>
+    <p>Projects are not permanent monuments — they have states, and the most important one is missing from most tools: <strong>Dormant.</strong> A project you haven't touched in weeks isn't a failure; it's resting. COS should treat dormancy as a normal state with dignity, not a guilt-inducing red badge.</p>
+    <div class="flow">
+      <div class="stage"><div class="s">01</div><div class="t">Forming</div><div class="x">Graduated from an idea; goal being set.</div></div>
+      <div class="stage"><div class="s">02</div><div class="t">In motion</div><div class="x">Active. Events flowing. Live context.</div></div>
+      <div class="stage"><div class="s">03</div><div class="t">Blocked</div><div class="x">Waiting on something external.</div></div>
+      <div class="stage"><div class="s">04</div><div class="t">Dormant</div><div class="x">Resting. Not dead. Recoverable.</div></div>
+      <div class="stage exit"><div class="s">05</div><div class="t">Shipped / Archived</div><div class="x">Done or released — learnings extracted.</div></div>
+    </div>
+
+    <h3>Idea lifecycle</h3>
+    <p>Your funnel — Spark → Brewing → Exploring → Testing → Ready → Project — is good. Two refinements make it honest.</p>
+    <div class="flow">
+      <div class="stage"><div class="s">01</div><div class="t">Spark</div><div class="x">Captured. A backlog with no limit.</div></div>
+      <div class="stage"><div class="s">02</div><div class="t">Brewing</div><div class="x">Active attention. Counts toward the 3.</div></div>
+      <div class="stage"><div class="s">03</div><div class="t">Exploring</div><div class="x">Researching. Counts toward the 3.</div></div>
+      <div class="stage"><div class="s">04</div><div class="t">Testing</div><div class="x">Trying it for real.</div></div>
+      <div class="stage"><div class="s">05</div><div class="t">Ready</div><div class="x">Earned commitment.</div></div>
+      <div class="stage"><div class="s">06</div><div class="t">Project</div><div class="x">Graduates to the center.</div></div>
+    </div>
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>Where I push back — two fixes to the funnel</b></div>
+      <p><strong>1. The "max 3" should cap active attention, not the whole funnel.</strong> If the limit counts every Spark, capture becomes punitive and people stop using the inbox. Let Sparks accumulate freely; cap only the <em>Brewing/Exploring</em> stages at 3. That's a true WIP limit — it constrains focus, not capture.</p>
+      <p><strong>2. The funnel has no dignified exit.</strong> Right now an idea can only succeed (→ Project) or rot silently in place. Most ideas should die — and when they do, the <em>learning</em> should be extracted as Knowledge before the idea is shelved. Add a <strong>Shelved / Released</strong> exit that asks "what did we learn?" Otherwise the incubator becomes the hoard you're trying to prevent.</p>
+      <p class="rec">Recommendation: WIP-limit the middle, not the mouth; and give ideas a death with a takeaway.</p>
+    </div>
+  </section>
+
+  <!-- 9 AI -->
+  <section id="ai">
+    <div class="eyebrow"><span class="num">09</span> AI Behavior Model</div>
+    <h2>A supporting character<br>with a strict job description.</h2>
+    <p>AI is not the product; it's the layer that makes context computable. Define its posture precisely or it will quietly eat the interface.</p>
+    <div class="anat">
+      <div class="hd"><b>Three postures, in order of trust</b><span>Most work is invisible</span></div>
+      <ul>
+        <li><div class="f">Ambient (silent)</div><div class="d">Continuously assembles Current Context, summarizes activity, maintains memory. The user rarely sees it work — they just find context already there.</div></li>
+        <li><div class="f">Invited (on demand)</div><div class="d">The chat/Ask surface. Answers, recovers, brainstorms — but only when called. Never speaks first here.</div></li>
+        <li><div class="f">Proactive (rationed)</div><div class="d">Re-entry briefings, blocker detection, "you haven't touched this." Strictly capped — a budget of nudges, not a stream.</div></li>
+      </ul>
+    </div>
+    <h3>The non-negotiable: legibility</h3>
+    <p>If you can't trust the memory, you can't outsource it. Every AI-generated summary must be <strong>traceable to its source events</strong> — "why am I being told this?" always has an answer one tap away. An external brain that hallucinates is worse than no external brain, because it corrupts your real memory with false confidence.</p>
+    <div class="push">
+      <div class="hd"><span class="dot"></span><b>Where I push back — the boundary that protects the product</b></div>
+      <p>AI <strong>assembles and reminds. It does not decide, and it does not author.</strong> The moment COS starts making decisions or writing your knowledge for you, the user stops being the thinker and the product becomes "another AI workspace" — exactly what you said COS is not. Brainstorming is allowed, but only when explicitly invited, and the output is always clearly the machine's draft, never silently merged into your memory.</p>
+      <p class="rec">Recommendation: hard rule — AI may summarize, surface, and suggest; it may never decide, file, or crystallize Knowledge/Decisions without an explicit human act.</p>
+    </div>
+  </section>
+
+  <!-- 10 RISKS -->
+  <section id="risks">
+    <div class="eyebrow"><span class="num">10</span> Risks, Blind Spots &amp; Alternatives</div>
+    <h2>The ways this fails.</h2>
+    <p class="lead">If COS dies, here is the most likely autopsy — in order of lethality.</p>
+    <ul class="risks">
+      <li>
+        <div class="rh"><span class="n">R1</span><span class="t">The signal problem — COS isn't where the work happens.</span></div>
+        <div class="sev">Existential</div>
+        <div class="rd">Computed context needs a rich event stream. But the real work happens in code, Figma, docs, calls, your head — not in COS. With thin signal, Current Context degrades into manual upkeep, and then it's just Notion with extra steps. <strong>This is the central bet.</strong> Three escapes: (a) become the work surface (heavy, fights the calm); (b) become an aggregator that ingests events from the tools you already use; (c) lean on lightweight check-ins — a 30-second daily/weekly "what moved" that's pleasant enough to actually do. My lean: <strong>(b) + (c)</strong> — integrate where possible, and design check-in as a ritual, not a chore.</div>
+      </li>
+      <li>
+        <div class="rh"><span class="n">R2</span><span class="t">Capture friction kills external brains.</span></div>
+        <div class="sev">High</div>
+        <div class="rd">Every second-brain graveyard has the same cause of death: logging became work. If getting context <em>in</em> costs more than the context is worth, the system empties out. Capture must be near-zero-effort (voice, quick capture, passive ingestion) and triage must be optional, not required.</div>
+      </li>
+      <li>
+        <div class="rh"><span class="n">R3</span><span class="t">Trust collapse from a single wrong summary.</span></div>
+        <div class="sev">High</div>
+        <div class="rd">The first time the re-entry briefing confidently tells you something false, you stop believing all of it — and an external brain you don't trust is dead weight. Legibility (§9) is the mitigation, but the deeper rule is conservatism: COS should under-claim, cite sources, and say "I'm not sure" rather than fabricate continuity.</div>
+      </li>
+      <li>
+        <div class="rh"><span class="n">R4</span><span class="t">The WIP limit reads as punishment.</span></div>
+        <div class="sev">Medium</div>
+        <div class="rd">"Maximum 3 ideas" is the right constraint and the wrong feeling if delivered as a wall. Framed as protection ("focus is the point"), it's a gift; framed as a quota, it's anxiety. Tone is load-bearing here.</div>
+      </li>
+      <li>
+        <div class="rh"><span class="n">R5</span><span class="t">Single-player by conviction — but life is multiplayer.</span></div>
+        <div class="sev">Medium</div>
+        <div class="rd">The whole thesis is intimate and solo, which is a real, defensible position. But projects involve clients, candidates, family. Decide <em>now</em> to be unapologetically single-player and let "People" be your context on others — not shared workspaces. Bolting on collaboration later will distort the architecture; commit to the constraint.</div>
+      </li>
+      <li>
+        <div class="rh"><span class="n">R6</span><span class="t">Blind spot — the product is emotional, not just functional.</span></div>
+        <div class="sev">Blind spot</div>
+        <div class="rd">These aren't "tasks." They're someone's life, identity, and unfinished ambitions. Re-entry after 3 months can carry guilt ("I abandoned this"). COS's tone has to hold that gently — continuity without shame. Most productivity tools fail here by accident; for COS it's central.</div>
+      </li>
+    </ul>
+
+    <h3>Three alternative architectures</h3>
+    <p>Before committing, steelman the roads not taken. Each is a coherent way to build COS; the recommendation is a hybrid.</p>
+
+    <div class="alt">
+      <span class="tag">Alternative A</span>
+      <h4>Stream-first / journal</h4>
+      <p>Everything is a timestamped event in one log. Projects and context are <em>views</em> over the stream. (Think a disciplined Roam / activity-log.)</p>
+      <div class="pc">
+        <div class="pro"><span>Strengths</span><p>Zero filing. Continuity is native — the timeline <em>is</em> the product. Matches the computed-context thesis perfectly.</p></div>
+        <div class="con"><span>Weaknesses</span><p>Weak at standing identity ("what is this project, at rest?"). Pure streams are hard to navigate by meaning.</p></div>
+      </div>
+    </div>
+    <div class="alt">
+      <span class="tag">Alternative B</span>
+      <h4>Document-first</h4>
+      <p>Each project is a living document; Current Context is the top section. (A disciplined Notion.)</p>
+      <div class="pc">
+        <div class="pro"><span>Strengths</span><p>Familiar, flexible, immediately legible. Easy to adopt.</p></div>
+        <div class="con"><span>Weaknesses</span><p>Maintenance burden — context is authored, so it goes stale. This is the exact trap COS exists to escape.</p></div>
+      </div>
+    </div>
+    <div class="alt">
+      <span class="tag">Alternative C</span>
+      <h4>Agent / memory-first</h4>
+      <p>COS is mostly a conversational agent over a memory store; the UI is chat plus retrieved cards.</p>
+      <div class="pc">
+        <div class="pro"><span>Strengths</span><p>Lowest capture friction. Matches a chat-first instinct. Recovery feels like asking a person.</p></div>
+        <div class="con"><span>Weaknesses</span><p>Trust/legibility problems (R3). AI dominates — violates "AI is a supporting layer." Hard to browse.</p></div>
+      </div>
+    </div>
+
+    <div class="rec-block">
+      <div class="l">My recommended architecture</div>
+      <div class="big">Computed context over an event stream, presented through calm project hubs.</div>
+      <p>Take the <strong>stream as source of truth</strong> (Alt A) so context is always computed and never maintained. Present it through <strong>project hubs</strong> (the legibility of Alt B) so navigation stays meaning-first and calm. Use the <strong>agent</strong> (Alt C) as a lens over the stream — invited, legible, bounded — never as the whole interface. Crystallizations (Knowledge, Decisions) are the only things the user deliberately authors. Everything else, COS derives.</p>
+    </div>
+  </section>
+
+  <!-- CLOSER -->
+  <section class="closer">
+    <div class="eyebrow">Open questions for you</div>
+    <div class="pull">Before Phase 2, four decisions only you can make.</div>
+    <ul class="ql">
+      <li>The signal bet (R1): do we integrate with your existing tools, design a check-in ritual, or both? This is the make-or-break decision and it shapes everything downstream.</li>
+      <li>Single-player by conviction (R5): are you willing to commit to no real-time collaboration in v1, and treat People purely as <em>your</em> context on others?</li>
+      <li>The OS scope discipline (§1): do you accept "context recovery is the one job," and that we'll cut anything that doesn't lower re-entry cost?</li>
+      <li>Capture model (R2): voice-first, quick-capture, passive ingestion — what's the lowest-friction way <em>you</em> personally would actually log what happened?</li>
+    </ul>
+    <p style="margin-top:24px">Answer those and Phase 2 becomes the context model in motion — flows, states, and only then, screens. The goal was never organization. The goal is continuity.</p>
+  </section>
+</main>
+
+<footer>COS — Context Operating System · Phase 1: Operating System Design · Architecture before UI · v2</footer>
+
+<script>
+  const rail=document.getElementById('rail');
+  const upd=()=>{const h=document.documentElement;const sc=h.scrollTop/(h.scrollHeight-h.clientHeight);rail.style.width=(sc*100)+'%';};
+  document.addEventListener('scroll',upd,{passive:true});upd();
+</script>
+</body>
+</html>
