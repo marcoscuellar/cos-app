@@ -11,11 +11,20 @@ interface HomeProps {
 export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
   const D = COS_DATA;
   const T = D.today;
-  // Greeting + date follow the user's local time.
+  // Greeting + date follow the user's home timezone (Chicago / Central Time),
+  // so they're correct no matter what device or timezone the app is opened from.
+  const TZ = "America/Chicago";
   const now = new Date();
-  const hour = now.getHours();
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(now),
+  );
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const today = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  const today = new Intl.DateTimeFormat(undefined, {
+    timeZone: TZ,
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(now);
   const recent = [D.projects[1], D.projects[4]]; // COS, Personal Brand — two most recently touched
   const inMotion = D.projects.filter((p) => p.status !== "dormant");
   const dormant = D.projects.filter((p) => p.status === "dormant");
