@@ -23,6 +23,7 @@ export default function App() {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [theme, setTheme] = useState<Theme>("bold");
   const [collapsed, setCollapsed] = useState(false);
+  const [email, setEmail] = useState("marcos.cuellar@cos.app");
   const [reentry, setReentry] = useState<Project | null>(null);
   const [ideaId, setIdeaId] = useState<string | null>(null);
   const [brainstorm, setBrainstorm] = useState<Project | null>(null);
@@ -51,6 +52,7 @@ export default function App() {
       if (s.projectId) setProjectId(s.projectId);
       if (s.theme) setTheme(s.theme);
       if (s.collapsed) setCollapsed(true);
+      if (s.email) setEmail(s.email);
       setLoaded(true);
     });
     return () => {
@@ -61,8 +63,8 @@ export default function App() {
   // persist position
   useEffect(() => {
     if (!loaded) return;
-    saveState({ authed, route, projectId, theme, collapsed });
-  }, [loaded, authed, route, projectId, theme, collapsed]);
+    saveState({ authed, route, projectId, theme, collapsed, email });
+  }, [loaded, authed, route, projectId, theme, collapsed, email]);
 
   const mainRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -103,7 +105,9 @@ export default function App() {
     goProject(id);
   };
 
-  if (!authed) return <Login onEnter={() => { setAuthed(true); setRoute("home"); }} />;
+  if (!authed) {
+    return <Login onEnter={(e) => { if (e) setEmail(e); setAuthed(true); setRoute("home"); }} />;
+  }
 
   const project = projectId ? D.projects.find((p) => p.id === projectId) : null;
   const idea = ideaId ? D.ideas.find((i) => i.id === ideaId) : null;
@@ -111,7 +115,7 @@ export default function App() {
   return (
     <div className="app">
       <Sidebar route={route} projectId={projectId} theme={theme} setTheme={setTheme}
-        collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)}
+        collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} userEmail={email}
         onNav={goNav} onProject={onProjectClick} onAsk={() => goNav("search")} />
       <main className="main" ref={mainRef}>
         {route === "home" && <HomeScreen onProject={goProject} onNav={goNav} onContinue={onContinue} />}

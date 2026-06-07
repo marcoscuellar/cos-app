@@ -12,10 +12,24 @@ interface SidebarProps {
   onNav: (route: string) => void;
   onProject: (id: string) => void;
   onAsk: () => void;
+  userEmail: string;
 }
 
-export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setTheme, collapsed, onToggle }: SidebarProps) {
+// Turn an email into a display name: "marcos.cuellar@cos.app" → "Marcos Cuellar".
+function displayName(email: string): string {
+  const local = (email.split("@")[0] || email).trim();
+  const name = local
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+  return name || "You";
+}
+
+export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setTheme, collapsed, onToggle, userEmail }: SidebarProps) {
   const D = COS_DATA;
+  const name = displayName(userEmail);
+  const initial = (name[0] || "?").toUpperCase();
   return (
     <aside className={"sb" + (collapsed ? " collapsed" : "")}>
       <div className="sb-mark">
@@ -55,9 +69,9 @@ export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setT
           <button className={theme === "mono" ? "on" : ""} onClick={() => setTheme("mono")}>Mono</button>
           <button className={theme === "slate" ? "on" : ""} onClick={() => setTheme("slate")}>Slate</button>
         </div>
-        <div className="sb-user">
-          <div className="av">F</div>
-          <div className="nm">Founder<span>Personal workspace</span></div>
+        <div className="sb-user" title={userEmail}>
+          <div className="av">{initial}</div>
+          <div className="nm">{name}<span>{userEmail}</span></div>
         </div>
       </div>
     </aside>
