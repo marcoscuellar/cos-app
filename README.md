@@ -26,8 +26,9 @@ All secrets stay **server-side**. The client bundle never sees an API key — it
 only calls two serverless functions under [`api/`](./api):
 
 - **`api/state.ts`** — persists UI position (auth, route, selected project,
-  theme, sidebar state) in **Vercel KV**, keyed by an opaque per-browser id.
-  Reads `KV_REST_API_URL` / `KV_REST_API_TOKEN` from the environment.
+  theme, sidebar state) in **Vercel KV** via its REST API (native `fetch`, no
+  SDK dependency), keyed by an opaque per-browser id. Reads `KV_REST_API_URL` /
+  `KV_REST_API_TOKEN` from the environment.
 - **`api/brainstorm.ts`** — powers the Brainstorm panel by calling Claude
   (`claude-opus-4-8`) through the official `@anthropic-ai/sdk`, using
   `ANTHROPIC_API_KEY`. The key is read from `process.env` on the server only.
