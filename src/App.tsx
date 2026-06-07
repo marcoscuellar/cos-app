@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { COS_DATA } from "./data";
-import type { Accent, DocRef, Project, Theme } from "./types";
+import type { Accent, DocRef, Project, Theme, User } from "./types";
 import { Sidebar } from "./components/Sidebar";
 import { Login } from "./Login";
 import { HomeScreen } from "./screens/Home";
@@ -10,67 +10,82 @@ import { ProjectScreen } from "./screens/ProjectDetail";
 import { IdeasScreen } from "./screens/Ideas";
 import { IdeaDetail } from "./screens/IdeaDetail";
 import { SearchScreen } from "./screens/Search";
+import { AdminUsers } from "./screens/AdminUsers";
+import { InviteAccept } from "./screens/InviteAccept";
 import { Reentry } from "./overlays/Reentry";
 import { BrainstormPanel } from "./overlays/Brainstorm";
 import { DocViewer } from "./overlays/DocViewer";
 import { loadState, saveState } from "./storage";
+import { whoami, logout } from "./auth";
 
 type Route = "home" | "today" | "projects" | "project" | "ideas" | "idea" | "search";
+const TEST_EMAIL = "test@costhread.app";
 
 export default function App() {
+  const path = window.location.pathname;
+
   const [authed, setAuthed] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [route, setRoute] = useState<Route>("home");
   const [projectId, setProjectId] = useState<string | null>(null);
   const [theme, setTheme] = useState<Theme>("bold");
   const [collapsed, setCollapsed] = useState(false);
-  const [email, setEmail] = useState("marcos.cuellar@cos.app");
+  const [email, setEmail] = useState("");
   const [reentry, setReentry] = useState<Project | null>(null);
   const [ideaId, setIdeaId] = useState<string | null>(null);
   const [brainstorm, setBrainstorm] = useState<Project | null>(null);
   const [doc, setDoc] = useState<{ d: DocRef; accent: Accent } | null>(null);
   const [searchSeed, setSearchSeed] = useState("");
+  const [loaded, setLoaded] = useState(false);
   const D = COS_DATA;
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  // Gate persistence until the initial load resolves, so we don't overwrite
-  // stored state with defaults on first paint.
-  const [loaded, setLoaded] = useState(false);
-
-  // restore position from Vercel KV (falls back to local cache)
+  // Restore session (token-based) + UI prefs.
   useEffect(() => {
     let active = true;
-    loadState().then((s) => {
-      if (!active) {
-        return;
+    (async () => {
+      const session = await whoami();
+      if (!active) return;
+      if (session) {
+        setUser(session.user);
+        setIsAdmin(session.isAdmin);
+        setEmail(session.user.email);
+        setAuthed(true);
       }
+      const s = await loadState();
+      if (!active) return;
       if (s) {
-        if (s.authed) setAuthed(true);
         if (s.route) setRoute(s.route as Route);
         if (s.projectId) setProjectId(s.projectId);
         if (s.theme) setTheme(s.theme);
         if (s.collapsed) setCollapsed(true);
-        if (s.email) setEmail(s.email);
+        if (!session && s.email) setEmail(s.email);
+      }
+      // Tokenless test account: restore + re-validate the 48h window.
+      if (!session && s?.authed && (s.email || "").trim().toLowerCase() === TEST_EMAIL) {
+        try {
+          const r = await fetch(`/api/login?email=${encodeURIComponent(TEST_EMAIL)}`);
+          const d = await r.json();
+          if (active && !(d && d.expired)) {
+            setAuthed(true);
+            setUser({ name: "Test User", email: TEST_EMAIL, role: "user", createdAt: 0, active: true, lastLogin: null });
+          }
+        } catch {
+          /* leave as-is */
+        }
       }
       setLoaded(true);
-      // Re-validate a restored test session against the 48h window — a persisted
-      // session must not outlive the server-side expiry.
-      const em = (s?.email || "").trim().toLowerCase();
-      if (s?.authed && em === "test@costhread.app") {
-        fetch(`/api/login?email=${encodeURIComponent(em)}`)
-          .then((r) => r.json())
-          .then((d) => { if (active && d && d.expired) setAuthed(false); })
-          .catch(() => { /* leave session as-is if the check can't run */ });
-      }
-    });
+    })();
     return () => {
       active = false;
     };
   }, []);
 
-  // persist position
+  // Persist UI prefs (+ authed/email, which the tokenless test account relies on).
   useEffect(() => {
     if (!loaded) return;
     saveState({ authed, route, projectId, theme, collapsed, email });
@@ -81,52 +96,83 @@ export default function App() {
     if (mainRef.current) mainRef.current.scrollTop = 0;
   }, [route, projectId, ideaId]);
 
-  const goProject = (id: string) => {
-    setProjectId(id);
-    setRoute("project");
-  };
-  const goIdea = (id: string) => {
-    setIdeaId(id);
-    setRoute("idea");
-  };
-  const goNav = (r: string) => {
-    if (r === "search") setSearchSeed("");
-    setRoute(r as Route);
-  };
+  const goProject = (id: string) => { setProjectId(id); setRoute("project"); };
+  const goIdea = (id: string) => { setIdeaId(id); setRoute("idea"); };
+  const goNav = (r: string) => { if (r === "search") setSearchSeed(""); setRoute(r as Route); };
 
-  // "Continue" — dormant / long-absence projects trigger re-entry; active ones go straight in.
   const onContinue = (id: string, fromInside?: boolean) => {
     const p = D.projects.find((x) => x.id === id);
     if (!p) return;
-    if (!fromInside && (p.status === "dormant" || p.away === "3 weeks")) {
-      setReentry(p);
-    } else {
-      goProject(id);
-    }
+    if (!fromInside && (p.status === "dormant" || p.away === "3 weeks")) setReentry(p);
+    else goProject(id);
   };
-  // sidebar / index click — dormant projects greet you with re-entry, active ones open directly.
   const onProjectClick = (id: string) => {
     const p = D.projects.find((x) => x.id === id);
     if (p && p.status === "dormant") setReentry(p);
     else goProject(id);
   };
-  const resumeFromReentry = (id: string) => {
-    setReentry(null);
-    goProject(id);
+  const resumeFromReentry = (id: string) => { setReentry(null); goProject(id); };
+
+  const onAuthed = (u: User) => {
+    setUser(u);
+    setEmail(u.email);
+    setIsAdmin(u.role === "admin");
+    setAuthed(true);
+    setRoute("home");
+  };
+  const onSignOut = () => {
+    logout();
+    setAuthed(false);
+    setUser(null);
+    setIsAdmin(false);
   };
 
-  if (!authed) {
-    return <Login onEnter={(e) => { if (e) setEmail(e); setAuthed(true); setRoute("home"); }} />;
+  // ---- public path: invite acceptance (no auth required) ----
+  if (path.startsWith("/invite")) return <InviteAccept />;
+
+  // Avoid a flash of the login screen before the session check resolves.
+  if (!loaded) return <div style={{ height: "100vh", background: "var(--canvas)" }} />;
+
+  // ---- admin path ----
+  if (path === "/admin/users") {
+    if (!authed) return <Login onAuthed={onAuthed} />;
+    if (!isAdmin) {
+      return (
+        <div className="login">
+          <div className="login-inner fade-in" style={{ textAlign: "center" }}>
+            <div className="lmark" style={{ justifyContent: "center" }}><div className="cos-logo">COS</div></div>
+            <h1>Not authorized.</h1>
+            <p className="lsub" style={{ marginInline: "auto" }}>This page is for admins only.</p>
+            <a className="lbtn" href="/" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>Back to COS</a>
+          </div>
+        </div>
+      );
+    }
+    return <AdminUsers onBack={() => { window.location.href = "/"; }} />;
   }
+
+  if (!authed) return <Login onAuthed={onAuthed} />;
 
   const project = projectId ? D.projects.find((p) => p.id === projectId) : null;
   const idea = ideaId ? D.ideas.find((i) => i.id === ideaId) : null;
 
   return (
     <div className="app">
-      <Sidebar route={route} projectId={projectId} theme={theme} setTheme={setTheme}
-        collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} userEmail={email}
-        onNav={goNav} onProject={onProjectClick} onAsk={() => goNav("search")} />
+      <Sidebar
+        route={route}
+        projectId={projectId}
+        theme={theme}
+        setTheme={setTheme}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((c) => !c)}
+        userName={user?.name || ""}
+        userEmail={email}
+        isAdmin={isAdmin}
+        onSignOut={onSignOut}
+        onNav={goNav}
+        onProject={onProjectClick}
+        onAsk={() => goNav("search")}
+      />
       <main className="main" ref={mainRef}>
         {route === "home" && <HomeScreen onProject={goProject} onNav={goNav} onContinue={onContinue} />}
         {route === "today" && <TodayScreen onProject={goProject} />}

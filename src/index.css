@@ -535,3 +535,29 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 @media(prefers-reduced-motion:reduce){.fade-in,.stagger>*,.reentry,.overlay{animation:none}}
 
 .spacer-l{height:56px}.spacer-m{height:38px}.spacer-s{height:24px}
+
+/* ---------- sidebar: admin link + sign out ---------- */
+.sb-admin{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;color:var(--ink-3);
+  font-size:13.5px;font-weight:500;text-decoration:none;transition:background .12s,color .12s}
+.sb-admin:hover{background:var(--paper-2);color:var(--ink)}
+.sb-admin svg{width:17px;height:17px;stroke:currentColor;flex-shrink:0}
+.sb.collapsed .sb-admin{justify-content:center;padding:10px}
+.sb.collapsed .sb-admin .nav-lbl{display:none}
+.sb-user .sb-signout{margin-left:auto;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
+  color:var(--ink-4);flex-shrink:0;transition:background .12s,color .12s}
+.sb-user .sb-signout:hover{background:var(--paper-3);color:var(--ink)}
+.sb-user .sb-signout svg{width:14px;height:14px;stroke:currentColor}
+.sb.collapsed .sb-user .sb-signout{display:none}
+
+/* ---------- admin: users table + form labels ---------- */
+.flbl{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);font-weight:700;margin-bottom:6px}
+select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(--ink)}
+.utable{width:100%;border-collapse:collapse;font-size:13.5px}
+.utable th{text-align:left;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);
+  font-weight:700;padding:14px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+.utable td{padding:13px 16px;border-bottom:1px solid var(--line-2);color:var(--ink-2);vertical-align:middle}
+.utable tbody tr:last-child td{border-bottom:none}
+.utable tbody tr:hover{background:var(--paper-2)}
+.rolepill{font-size:11px;font-weight:600;text-transform:capitalize;color:var(--ink-3);background:var(--paper-3);
+  border-radius:20px;padding:3px 10px}
+.rolepill.admin{color:var(--a-violet);background:var(--a-violet-bg)}

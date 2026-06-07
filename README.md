@@ -29,11 +29,27 @@ only calls two serverless functions under [`api/`](./api):
   theme, sidebar state) in **Vercel KV** via its REST API (native `fetch`, no
   SDK dependency), keyed by an opaque per-browser id. Reads `KV_REST_API_URL` /
   `KV_REST_API_TOKEN` from the environment.
-- **`api/login.ts`** — validates sign-in server-side. Demo emails pass through;
-  the **time-limited test account** (`test@costhread.app`) requires its password
-  and is valid for **48 hours after first use** — the first-use timestamp is
-  recorded in KV and the login (and any restored session) is rejected once the
-  window passes. Override the password with `TEST_LOGIN_PASSWORD` if desired.
+### User management
+
+Real users live in **Vercel KV** as `users:{email}` (`name`, `email`, bcrypt
+`password`, `role`, `createdAt`, `active`, `lastLogin`). Auth is enforced
+server-side; the client only holds a signed session token.
+
+- **`api/login.ts`** — looks up the KV user record and verifies the bcrypt
+  password, issues an HMAC-signed session token (`AUTH_SECRET`), and stamps
+  `lastLogin`. The admin (`APP_ADMIN_EMAIL`) is bootstrapped on first login from
+  `APP_ADMIN_PASSWORD`. Also keeps the **48h test account** (`test@costhread.app`).
+- **`api/auth.ts`** — whoami: verifies the token and returns the current user +
+  admin flag (used to gate the admin UI and re-validate sessions on load).
+- **`api/users.ts`** — admin-only: list users, invite (24h link), activate /
+  deactivate. Admin is determined by `APP_ADMIN_EMAIL`.
+- **`api/invite.ts`** — validates an invite token and creates the account
+  (bcrypt-hashed password); invites expire 24h after creation.
+- Admin UI at **`/admin/users`**; invite acceptance at **`/invite?token=…`**
+  (both SPA routes, served via the `vercel.json` rewrite).
+
+> **Setup:** add `APP_ADMIN_EMAIL`, `APP_ADMIN_PASSWORD`, and `AUTH_SECRET` to
+> the Vercel project env, then sign in once as the admin to seed the account.
 - **`api/brainstorm.ts`** — powers the Brainstorm panel by calling Claude
   (`claude-opus-4-8`) through the official `@anthropic-ai/sdk`, using
   `ANTHROPIC_API_KEY`. The key is read from `process.env` on the server only.

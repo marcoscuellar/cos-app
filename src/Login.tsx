@@ -1,11 +1,14 @@
 import { useState } from "react";
+import type { User } from "./types";
+import { login as doLogin } from "./auth";
 
 const TEST_EMAIL = "test@costhread.app";
 
-/* Login — the calm threshold. Validates through /api/login (which enforces the
-   time-limited test account server-side), then hands the email to App. */
-export function Login({ onEnter }: { onEnter: (email: string) => void }) {
-  const [email, setEmail] = useState("marcos.cuellar@cos.app");
+/* Login — validates through /api/login (KV-backed users + the time-limited test
+   account), stores the session token, and hands the user up to App. */
+export function Login({ onAuthed }: { onAuthed: (user: User) => void }) {
+  // Prefilled with the admin email for convenience; editable.
+  const [email, setEmail] = useState("marcosmcuellar@gmail.com");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -15,25 +18,18 @@ export function Login({ onEnter }: { onEnter: (email: string) => void }) {
     setError("");
     setBusy(true);
     try {
-      const r = await fetch("/api/login", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-      const data = (await r.json()) as { ok?: boolean; email?: string; error?: string };
-      if (r.ok && data.ok) {
-        onEnter(data.email || email.trim());
+      const res = await doLogin(email.trim(), password);
+      if (res.ok && res.user) {
+        onAuthed(res.user);
         return;
       }
-      setError(data.error || "Login failed.");
+      setError(res.error || "Login failed.");
     } catch {
-      // Endpoint unreachable (e.g. plain `vite` dev). Fail closed for the gated
-      // test account; let demo accounts through so local dev still works.
-      if (email.trim().toLowerCase() === TEST_EMAIL) {
-        setError("Can't verify the test login right now. Try again shortly.");
-      } else {
-        onEnter(email.trim());
-      }
+      setError(
+        email.trim().toLowerCase() === TEST_EMAIL
+          ? "Can't verify the test login right now. Try again shortly."
+          : "Login is unavailable right now.",
+      );
     } finally {
       setBusy(false);
     }

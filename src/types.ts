@@ -1,3 +1,12 @@
+export interface User {
+  name: string;
+  email: string;
+  role: "admin" | "user";
+  createdAt: number;
+  active: boolean;
+  lastLogin: number | null;
+}
+
 export type Accent = "violet" | "mint" | "coral" | "amber" | "blue";
 export type ProjectStatus = "in-motion" | "blocked" | "dormant";
 export type IdeaStage = "Spark" | "Brewing" | "Exploring" | "Testing" | "Ready";

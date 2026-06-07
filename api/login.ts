@@ -1,49 +1,39 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { kvGetRaw, kvSet } from "../lib/server/kv";
+import {
+  getUser,
+  saveUser,
+  touchLastLogin,
+  verifyPassword,
+  hashPassword,
+  roleFor,
+  publicUser,
+} from "../lib/server/users";
+import { signToken, authConfigured, adminEmail } from "../lib/server/auth";
 
-// Server-side login check. The test account's password and 48h expiry window are
-// enforced here (never in the client bundle). The first-use timestamp lives in
-// Vercel KV via the REST API. Demo (non-test) emails keep the open behavior.
-
-const KV_URL = process.env.KV_REST_API_URL;
-const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+// Login is KV-backed: it looks up the users:{email} record and verifies the
+// bcrypt password. Two special cases: a time-limited test account, and a
+// one-time admin bootstrap seeded from env (APP_ADMIN_EMAIL/APP_ADMIN_PASSWORD).
 
 const TEST_EMAIL = "test@costhread.app";
-// Override in the Vercel env if you want; defaults to the provisioned password.
 const TEST_PASSWORD = process.env.TEST_LOGIN_PASSWORD || "costhread2026";
-const WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
-const FIRST_USE_KEY = "login:test@costhread.app:first-use";
+const TEST_WINDOW_MS = 48 * 60 * 60 * 1000;
+const TEST_FIRST_USE_KEY = "login:test@costhread.app:first-use";
 
-async function kvCommand(command: (string | number)[]): Promise<unknown> {
-  const r = await fetch(KV_URL as string, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${KV_TOKEN}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(command),
-  });
-  if (!r.ok) throw new Error(`KV request failed: ${r.status}`);
-  const data = (await r.json()) as { result?: unknown; error?: string };
-  if (data.error) throw new Error(data.error);
-  return data.result ?? null;
-}
-
-function normEmail(v: unknown): string {
+function norm(v: unknown): string {
   return typeof v === "string" ? v.trim().toLowerCase() : "";
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Read-only status probe — used to re-validate a restored test session on load.
-  // Never records a first-use timestamp.
+  // Read-only test-session status probe (re-validates a restored test session).
   if (req.method === "GET") {
-    const email = normEmail(req.query.email);
+    const email = norm(req.query.email);
     if (email !== TEST_EMAIL) return res.status(200).json({ ok: true, expired: false });
-    if (!KV_URL || !KV_TOKEN) return res.status(503).json({ error: "Storage not configured." });
     try {
-      const stored = await kvCommand(["GET", FIRST_USE_KEY]);
+      const stored = await kvGetRaw(TEST_FIRST_USE_KEY);
       const firstUse = stored != null ? Number(stored) : null;
-      const expired = firstUse != null && Date.now() >= firstUse + WINDOW_MS;
-      return res.status(200).json({ ok: !expired, expired, expiresAt: firstUse ? firstUse + WINDOW_MS : null });
+      const expired = firstUse != null && Date.now() >= firstUse + TEST_WINDOW_MS;
+      return res.status(200).json({ ok: !expired, expired });
     } catch {
       return res.status(502).json({ error: "Storage unavailable." });
     }
@@ -54,39 +44,74 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { email: rawEmail, password } = (req.body ?? {}) as { email?: string; password?: string };
-  const email = normEmail(rawEmail);
+  const body = (req.body ?? {}) as { email?: string; password?: string };
+  const email = norm(body.email);
+  const password = typeof body.password === "string" ? body.password : "";
   if (!email) return res.status(400).json({ ok: false, error: "Enter your email." });
 
-  // Non-test accounts keep the existing open demo behavior.
-  if (email !== TEST_EMAIL) {
-    return res.status(200).json({ ok: true, email });
-  }
-
-  // Test account: require the password, then enforce the 48h window.
-  if (password !== TEST_PASSWORD) {
-    return res.status(401).json({ ok: false, error: "Incorrect email or password." });
-  }
-  if (!KV_URL || !KV_TOKEN) {
-    return res.status(503).json({ ok: false, error: "Login is temporarily unavailable." });
-  }
-  try {
-    const now = Date.now();
-    // Record first use exactly once (NX = set only if absent), then read back the
-    // canonical value so concurrent first logins agree on the same start time.
-    await kvCommand(["SET", FIRST_USE_KEY, String(now), "NX"]);
-    const stored = await kvCommand(["GET", FIRST_USE_KEY]);
-    const firstUse = Number(stored) || now;
-    const expiresAt = firstUse + WINDOW_MS;
-
-    if (now >= expiresAt) {
-      return res.status(403).json({
-        ok: false,
-        expired: true,
-        error: "This test login has expired — it was valid for 48 hours after first use.",
-      });
+  // 1) Time-limited test account (48h after first use).
+  if (email === TEST_EMAIL) {
+    if (password !== TEST_PASSWORD) {
+      return res.status(401).json({ ok: false, error: "Incorrect email or password." });
     }
-    return res.status(200).json({ ok: true, email: TEST_EMAIL, expiresAt });
+    try {
+      const now = Date.now();
+      await kvSet(TEST_FIRST_USE_KEY, String(now), { nx: true });
+      const stored = await kvGetRaw(TEST_FIRST_USE_KEY);
+      const firstUse = Number(stored) || now;
+      if (now >= firstUse + TEST_WINDOW_MS) {
+        return res.status(403).json({
+          ok: false,
+          expired: true,
+          error: "This test login has expired — it was valid for 48 hours after first use.",
+        });
+      }
+      return res
+        .status(200)
+        .json({ ok: true, user: { name: "Test User", email: TEST_EMAIL, role: "user", active: true, createdAt: 0, lastLogin: null } });
+    } catch {
+      return res.status(502).json({ ok: false, error: "Login is temporarily unavailable." });
+    }
+  }
+
+  // 2) Real users from KV.
+  try {
+    let user = await getUser(email);
+
+    // Bootstrap: seed the admin account from env on first login.
+    if (!user && email === adminEmail()) {
+      const seedPw = process.env.APP_ADMIN_PASSWORD || "";
+      if (!seedPw) return res.status(403).json({ ok: false, error: "Admin account is not set up yet." });
+      if (password !== seedPw) return res.status(401).json({ ok: false, error: "Incorrect email or password." });
+      user = {
+        name: "Admin",
+        email,
+        password: await hashPassword(seedPw),
+        role: "admin",
+        createdAt: Date.now(),
+        active: true,
+        lastLogin: null,
+      };
+      await saveUser(user);
+    }
+
+    if (!user) return res.status(401).json({ ok: false, error: "Incorrect email or password." });
+    if (!user.active) return res.status(403).json({ ok: false, error: "This account has been deactivated." });
+
+    const ok = await verifyPassword(password, user.password);
+    if (!ok) return res.status(401).json({ ok: false, error: "Incorrect email or password." });
+
+    // Keep the stored role in sync with APP_ADMIN_EMAIL.
+    const role = roleFor(email);
+    if (user.role !== role) {
+      user.role = role;
+      await saveUser(user);
+    }
+
+    await touchLastLogin(email);
+
+    const token = authConfigured() ? signToken({ sub: email, role, name: user.name }) : null;
+    return res.status(200).json({ ok: true, token, user: publicUser({ ...user, lastLogin: Date.now() }) });
   } catch {
     return res.status(502).json({ ok: false, error: "Login is temporarily unavailable." });
   }
