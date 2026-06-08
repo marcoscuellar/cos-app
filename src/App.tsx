@@ -23,9 +23,15 @@ const TEST_EMAIL = "test@costhread.app";
 
 export default function App() {
   const path = window.location.pathname;
-
-  const [authed, setAuthed] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+const [authed, setAuthed] = useState(true);
+const [user, setUser] = useState<User | null>({
+  name: "Demo User",
+  email: "demo@cos.app",
+  role: "admin",
+  createdAt: 0,
+  active: true,
+  lastLogin: null,
+});
   const [isAdmin, setIsAdmin] = useState(false);
   const [route, setRoute] = useState<Route>("home");
   const [projectId, setProjectId] = useState<string | null>(null);
