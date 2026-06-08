@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getInvite, deleteInvite, getUser, saveUser, hashPassword, roleFor } from "../lib/server/users";
-import { signToken, authConfigured } from "../lib/server/auth";
+import { getInvite, deleteInvite, getUser, saveUser, hashPassword, roleFor } from "../lib/server/users.js";
+import { signToken, authConfigured } from "../lib/server/auth.js";
 
 // Invite acceptance. GET validates a token (for the setup page); POST creates
 // the account (bcrypt-hashed password) and consumes the one-time invite.

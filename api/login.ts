@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { kvGetRaw, kvSet } from "../lib/server/kv";
+import { kvGetRaw, kvSet } from "../lib/server/kv.js";
 import {
   getUser,
   saveUser,
@@ -8,8 +8,8 @@ import {
   hashPassword,
   roleFor,
   publicUser,
-} from "../lib/server/users";
-import { signToken, authConfigured, adminEmail } from "../lib/server/auth";
+} from "../lib/server/users.js";
+import { signToken, authConfigured, adminEmail } from "../lib/server/auth.js";
 
 // Login is KV-backed: it looks up the users:{email} record and verifies the
 // bcrypt password. Two special cases: a time-limited test account, and a

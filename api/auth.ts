@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { verifyToken, bearer, isAdminEmail } from "../lib/server/auth";
-import { getUser, publicUser } from "../lib/server/users";
+import { verifyToken, bearer, isAdminEmail } from "../lib/server/auth.js";
+import { getUser, publicUser } from "../lib/server/users.js";
 
 // Whoami — verifies the session token and returns the current user + admin flag.
 export default async function handler(req: VercelRequest, res: VercelResponse) {

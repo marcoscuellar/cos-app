@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { verifyToken, bearer, isAdminEmail, newInviteToken } from "../lib/server/auth";
-import { listUsers, setActive, getUser, createInvite, publicUser, INVITE_TTL_SEC } from "../lib/server/users";
+import { verifyToken, bearer, isAdminEmail, newInviteToken } from "../lib/server/auth.js";
+import { listUsers, setActive, getUser, createInvite, publicUser, INVITE_TTL_SEC } from "../lib/server/users.js";
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
