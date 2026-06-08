@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import type { Accent, ProjectStatus } from "../types";
+import type { Accent, LabAccent, ProjectStatus } from "../types";
 import { Icon } from "./Icon";
 
-export function Eyebrow({ children, accent }: { children: ReactNode; accent?: Accent }) {
+export function Eyebrow({ children, accent }: { children: ReactNode; accent?: Accent | LabAccent }) {
   return (
     <span className={"eyebrow" + (accent ? " ac-" + accent : "")}>
       <span className="d" />

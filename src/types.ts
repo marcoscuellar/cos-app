@@ -1,4 +1,8 @@
 export type Accent = "violet" | "mint" | "coral" | "amber" | "blue";
+// The Research Lab ships its own richer palette (mapped to ac-* tokens in CSS).
+export type LabAccent =
+  | "violet" | "amber" | "blue"
+  | "indigo" | "green" | "rose" | "teal";
 export type ProjectStatus = "in-motion" | "blocked" | "dormant";
 export type IdeaStage = "Spark" | "Brewing" | "Exploring" | "Testing" | "Ready";
 export type Theme = "bold" | "mono" | "slate";
@@ -132,6 +136,48 @@ export interface SearchDecision {
   used: string;
 }
 
+/* ---------------- Research Lab ----------------
+   A quiet research department working on the founder's behalf. */
+export interface LabAgent {
+  initials: string;
+  name: string;
+  accent: LabAccent;
+  status: "field" | "reporting" | "idle";
+  assignment: string;
+  finding: string;
+  last: string;
+}
+
+export interface LabExperiment {
+  name: string;
+  accent: LabAccent;
+  state: "active" | "paused" | "done";
+  q: string;
+  note: string;
+}
+
+export interface LabShelf {
+  name: string;
+  accent: LabAccent;
+  count: number;
+  sample: string;
+}
+
+export interface LabReport {
+  t: string;
+  kind: string;
+  when: string;
+  fresh: boolean;
+  d: string;
+}
+
+export interface Lab {
+  agents: LabAgent[];
+  experiments: LabExperiment[];
+  shelves: LabShelf[];
+  reports: LabReport[];
+}
+
 export interface COSData {
   user: { name: string; initials: string; greetingName: string };
   today: Today;
@@ -142,6 +188,7 @@ export interface COSData {
   searchPeople: SearchPerson[];
   searchKnowledge: SearchKnowledge[];
   searchDecisions: SearchDecision[];
+  lab: Lab;
 }
 
 /** A document opened in the DocViewer drawer. */

@@ -49,6 +49,7 @@ export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setT
         <button className={"nav-i" + (route === "today" ? " on" : "")} onClick={() => onNav("today")} title="Today"><Icon.calendar /> <span className="nav-lbl">Today</span></button>
         <button className={"nav-i" + (route === "projects" || route === "project" ? " on" : "")} onClick={() => onNav("projects")} title="Projects"><Icon.projects /> <span className="nav-lbl">Projects</span> <span className="ct">{D.projects.length}</span></button>
         <button className={"nav-i" + (route === "ideas" ? " on" : "")} onClick={() => onNav("ideas")} title="Ideas"><Icon.ideas /> <span className="nav-lbl">Ideas</span> <span className="ct">{D.ideas.length}</span></button>
+        <button className={"nav-i" + (route === "lab" ? " on" : "")} onClick={() => onNav("lab")} title="Lab"><Icon.lab /> <span className="nav-lbl">Lab</span> <span className="ct">{D.lab.agents.length}</span></button>
         <button className={"nav-i" + (route === "search" ? " on" : "")} onClick={() => onNav("search")} title="Memory"><Icon.memory /> <span className="nav-lbl">Memory</span></button>
       </nav>
 

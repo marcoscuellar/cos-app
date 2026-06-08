@@ -8,6 +8,7 @@ import { ProjectsScreen } from "./screens/Projects";
 import { ProjectScreen } from "./screens/ProjectDetail";
 import { IdeasScreen } from "./screens/Ideas";
 import { IdeaDetail } from "./screens/IdeaDetail";
+import { LabScreen } from "./screens/Lab";
 import { SearchScreen } from "./screens/Search";
 import { Reentry } from "./overlays/Reentry";
 import { BrainstormPanel } from "./overlays/Brainstorm";
@@ -15,7 +16,7 @@ import { AskCOSPanel } from "./overlays/AskCOS";
 import { DocViewer } from "./overlays/DocViewer";
 import { loadState, saveState } from "./storage";
 
-type Route = "home" | "today" | "projects" | "project" | "ideas" | "idea" | "search";
+type Route = "home" | "today" | "projects" | "project" | "ideas" | "idea" | "lab" | "search";
 
 // Single-user personal app — no authentication. The identity shown in the
 // sidebar is static; change it here if you want a different name/email.
@@ -116,6 +117,7 @@ export default function App() {
         )}
         {route === "ideas" && <IdeasScreen onIdea={goIdea} />}
         {route === "idea" && idea && <IdeaDetail idea={idea} onProject={goProject} onBack={() => goNav("ideas")} />}
+        {route === "lab" && <LabScreen />}
         {route === "search" && <SearchScreen onProject={goProject} initialQuery={searchSeed} />}
       </main>
       {reentry && <Reentry project={reentry} onClose={() => setReentry(null)} onResume={resumeFromReentry} />}
