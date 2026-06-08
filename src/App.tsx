@@ -14,6 +14,7 @@ import { AdminUsers } from "./screens/AdminUsers";
 import { InviteAccept } from "./screens/InviteAccept";
 import { Reentry } from "./overlays/Reentry";
 import { BrainstormPanel } from "./overlays/Brainstorm";
+import { AskCOSPanel } from "./overlays/AskCOS";
 import { DocViewer } from "./overlays/DocViewer";
 import { loadState, saveState } from "./storage";
 import { whoami, logout } from "./auth";
@@ -41,6 +42,7 @@ const [user, setUser] = useState<User | null>({
   const [reentry, setReentry] = useState<Project | null>(null);
   const [ideaId, setIdeaId] = useState<string | null>(null);
   const [brainstorm, setBrainstorm] = useState<Project | null>(null);
+  const [askProject, setAskProject] = useState<Project | null>(null);
   const [doc, setDoc] = useState<{ d: DocRef; accent: Accent } | null>(null);
   const [searchSeed, setSearchSeed] = useState("");
   const [loaded, setLoaded] = useState(false);
@@ -184,7 +186,7 @@ const [user, setUser] = useState<User | null>({
         {route === "today" && <TodayScreen onProject={goProject} />}
         {route === "projects" && <ProjectsScreen onProject={onProjectClick} onContinue={onContinue} />}
         {route === "project" && project && (
-          <ProjectScreen project={project} onContinue={onContinue} onBrainstorm={() => setBrainstorm(project)} onOpenDoc={(d, accent) => setDoc({ d, accent })} />
+          <ProjectScreen project={project} onContinue={onContinue} onBrainstorm={() => setBrainstorm(project)} onAsk={() => setAskProject(project)} onOpenDoc={(d, accent) => setDoc({ d, accent })} />
         )}
         {route === "ideas" && <IdeasScreen onIdea={goIdea} />}
         {route === "idea" && idea && <IdeaDetail idea={idea} onProject={goProject} onBack={() => goNav("ideas")} />}
@@ -192,6 +194,7 @@ const [user, setUser] = useState<User | null>({
       </main>
       {reentry && <Reentry project={reentry} onClose={() => setReentry(null)} onResume={resumeFromReentry} />}
       {brainstorm && <BrainstormPanel project={brainstorm} onClose={() => setBrainstorm(null)} />}
+      {askProject && <AskCOSPanel project={askProject} onClose={() => setAskProject(null)} />}
       {doc && <DocViewer doc={doc.d} accent={doc.accent} onClose={() => setDoc(null)} />}
     </div>
   );

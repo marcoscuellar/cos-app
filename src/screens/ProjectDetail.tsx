@@ -7,12 +7,13 @@ interface ProjectScreenProps {
   project: Project;
   onContinue: (id: string, fromInside?: boolean) => void;
   onBrainstorm: () => void;
+  onAsk: () => void;
   onOpenDoc: (doc: DocRef, accent: Accent) => void;
 }
 
 type Tab = "context" | "overview" | "research" | "ideas";
 
-export function ProjectScreen({ project, onContinue, onBrainstorm, onOpenDoc }: ProjectScreenProps) {
+export function ProjectScreen({ project, onContinue, onBrainstorm, onAsk, onOpenDoc }: ProjectScreenProps) {
   const p = project;
   const tabs: [Tab, string, number | null][] = [
     ["context", "Current Context", null],
@@ -37,9 +38,14 @@ export function ProjectScreen({ project, onContinue, onBrainstorm, onOpenDoc }: 
             <Eyebrow accent={p.accent}>{p.name}</Eyebrow>
             <h1 className="disp" style={{ margin: "16px 0 10px", fontSize: "clamp(38px,5vw,60px)", color: "var(--ac)" }}>{p.name}</h1>
             <p style={{ fontSize: 17, color: "var(--ink-3)", maxWidth: "46ch", lineHeight: 1.45 }}>{p.why}</p>
-            <button className="btn btn-accent" style={{ marginTop: 18 }} onClick={onBrainstorm}>
-              <Icon.spark style={{ width: 15, height: 15 }} /> Brainstorm with COS
-            </button>
+            <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
+              <button className="btn btn-solid" onClick={onAsk}>
+                <Icon.spark style={{ width: 15, height: 15 }} /> Ask COS
+              </button>
+              <button className="btn btn-accent" onClick={onBrainstorm}>
+                <Icon.spark style={{ width: 15, height: 15 }} /> Brainstorm with COS
+              </button>
+            </div>
           </div>
           <Status status={p.status} />
         </div>

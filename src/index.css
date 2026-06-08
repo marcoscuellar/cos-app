@@ -260,6 +260,20 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
   color:#fff;background:var(--ink);border-radius:11px;padding:11px 17px;transition:transform .12s}
 .bs-cta:hover{transform:translateY(-1px)}.bs-cta svg{width:15px;height:15px;stroke:#fff}
 
+/* Ask COS panel — empty state, re-ask, and the (subtle) context affordance */
+.ask-empty{text-align:center;padding:18px 8px 6px;display:flex;flex-direction:column;align-items:center;gap:9px}
+.ask-empty-mark{width:42px;height:42px;border-radius:13px;background:var(--ac-bg,var(--paper-3));color:var(--ac,var(--ink-3));
+  display:grid;place-items:center}
+.ask-empty-mark svg{stroke:var(--ac,var(--ink-3))}
+.ask-empty-title{font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.02em;color:var(--ink)}
+.ask-empty-sub{font-size:13px;color:var(--ink-4);line-height:1.5;max-width:34ch}
+.ask-empty-sub strong{color:var(--ink-2);font-weight:600}
+.ask-again{align-self:flex-start;font-size:12.5px;font-weight:600;color:var(--ac,var(--ink-3));padding:2px 0;margin-top:-3px}
+.ask-again:hover{text-decoration:underline}
+.ask-context-note{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-4);font-weight:500;
+  padding:0 4px 9px;letter-spacing:.01em}
+.ask-context-dot{width:5px;height:5px;border-radius:50%;background:var(--ac,var(--a-mint))}
+
 /* resume rows under Current Focus + doc viewer */
 .resume-row{display:flex;align-items:center;gap:13px;padding:12px 10px;margin:0 -10px;border-radius:10px;width:calc(100% + 20px);
   text-align:left;transition:background .12s;cursor:pointer;border-bottom:1px solid var(--line-2)}
