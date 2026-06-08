@@ -22,37 +22,19 @@ npm run preview    # preview the production build
 
 ## Backend (Vercel) — KV storage + server-side AI
 
-All secrets stay **server-side**. The client bundle never sees an API key — it
-only calls two serverless functions under [`api/`](./api):
+This is a **single-user personal app** — there is no authentication. The app
+loads straight to the dashboard. All secrets stay **server-side**; the client
+bundle never sees an API key — it only calls the serverless functions under
+[`api/`](./api):
 
-- **`api/state.ts`** — persists UI position (auth, route, selected project,
-  theme, sidebar state) in **Vercel KV** via its REST API (native `fetch`, no
-  SDK dependency), keyed by an opaque per-browser id. Reads `KV_REST_API_URL` /
+- **`api/state.ts`** — persists UI position (route, selected project, theme,
+  sidebar state) in **Vercel KV** via its REST API (native `fetch`, no SDK
+  dependency), keyed by an opaque per-browser id. Reads `KV_REST_API_URL` /
   `KV_REST_API_TOKEN` from the environment.
-### User management
-
-Real users live in **Vercel KV** as `users:{email}` (`name`, `email`, bcrypt
-`password`, `role`, `createdAt`, `active`, `lastLogin`). Auth is enforced
-server-side; the client only holds a signed session token.
-
-- **`api/login.ts`** — looks up the KV user record and verifies the bcrypt
-  password, issues an HMAC-signed session token (`AUTH_SECRET`), and stamps
-  `lastLogin`. The admin (`APP_ADMIN_EMAIL`) is bootstrapped on first login from
-  `APP_ADMIN_PASSWORD`. Also keeps the **48h test account** (`test@costhread.app`).
-- **`api/auth.ts`** — whoami: verifies the token and returns the current user +
-  admin flag (used to gate the admin UI and re-validate sessions on load).
-- **`api/users.ts`** — admin-only: list users, invite (24h link), activate /
-  deactivate. Admin is determined by `APP_ADMIN_EMAIL`.
-- **`api/invite.ts`** — validates an invite token and creates the account
-  (bcrypt-hashed password); invites expire 24h after creation.
-- Admin UI at **`/admin/users`**; invite acceptance at **`/invite?token=…`**
-  (both SPA routes, served via the `vercel.json` rewrite).
-
-> **Setup:** add `APP_ADMIN_EMAIL`, `APP_ADMIN_PASSWORD`, and `AUTH_SECRET` to
-> the Vercel project env, then sign in once as the admin to seed the account.
-- **`api/brainstorm.ts`** — powers the Brainstorm panel by calling Claude
-  (`claude-opus-4-8`) through the official `@anthropic-ai/sdk`, using
-  `ANTHROPIC_API_KEY`. The key is read from `process.env` on the server only.
+- **`api/brainstorm.ts`** and **`api/ask.ts`** — power the Brainstorm panel and
+  Ask COS by calling Claude (`claude-opus-4-8`) through the official
+  `@anthropic-ai/sdk`, using `ANTHROPIC_API_KEY`. The key is read from
+  `process.env` on the server only.
 
 The frontend talks to these via `src/storage.ts` (state) and a `fetch` in
 `src/overlays/Brainstorm.tsx` (AI). Both degrade gracefully: if the API is
@@ -65,7 +47,7 @@ These are configured on the Vercel project and consumed only by `api/`:
 
 | Variable | Used by | Purpose |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | `api/brainstorm.ts` | Authenticates the Claude call |
+| `ANTHROPIC_API_KEY` | `api/brainstorm.ts`, `api/ask.ts` | Authenticates the Claude call |
 | `KV_REST_API_URL` | `api/state.ts` | Vercel KV REST endpoint |
 | `KV_REST_API_TOKEN` | `api/state.ts` | Vercel KV REST token |
 
@@ -86,13 +68,15 @@ See [`.env.example`](./.env.example) for the full list.
 api/
   state.ts             Serverless: persist UI state in Vercel KV
   brainstorm.ts        Serverless: Claude-powered Brainstorm (server-side key)
+  ask.ts               Serverless: Ask COS context engine (server-side key)
+lib/server/ai/         Context engine: context renderer, action registry, provider adapter
 src/
   index.css            Design system — the :root token block is the source of truth
   types.ts             Entity types (Project, Idea, Today, …)
   data.ts              Typed sample data (replaces window.COS_DATA)
   storage.ts           Client → /api/state, with localStorage fallback
-  App.tsx              Root: auth gate, string router, theme + persistence
-  Login.tsx            The calm threshold
+  askContext.ts        buildWorkspaceContext() — the client-side context packager
+  App.tsx              Root: string router, theme + persistence (no auth)
   components/
     Icon.tsx           Inline SVG icon set
     Sidebar.tsx        Collapsible nav (Now / Today / Projects / Ideas / Memory)

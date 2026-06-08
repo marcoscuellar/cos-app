@@ -14,8 +14,6 @@ interface SidebarProps {
   onAsk: () => void;
   userName: string;
   userEmail: string;
-  isAdmin: boolean;
-  onSignOut: () => void;
 }
 
 // Turn an email into a display name: "marcos.cuellar@cos.app" → "Marcos Cuellar".
@@ -29,7 +27,7 @@ function displayName(email: string): string {
   return name || "You";
 }
 
-export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setTheme, collapsed, onToggle, userName, userEmail, isAdmin, onSignOut }: SidebarProps) {
+export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setTheme, collapsed, onToggle, userName, userEmail }: SidebarProps) {
   const D = COS_DATA;
   const name = userName.trim() || displayName(userEmail);
   const initial = (name[0] || "?").toUpperCase();
@@ -67,11 +65,6 @@ export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setT
       </div>
 
       <div className="sb-foot">
-        {isAdmin && (
-          <a className="sb-admin" href="/admin/users" title="User management">
-            <Icon.projects /> <span className="nav-lbl">Admin · Users</span>
-          </a>
-        )}
         <div className="theme-tog">
           <button className={theme === "bold" ? "on" : ""} onClick={() => setTheme("bold")}>Bold</button>
           <button className={theme === "mono" ? "on" : ""} onClick={() => setTheme("mono")}>Mono</button>
@@ -80,7 +73,6 @@ export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setT
         <div className="sb-user" title={userEmail}>
           <div className="av">{initial}</div>
           <div className="nm">{name}<span>{userEmail}</span></div>
-          <button className="sb-signout" onClick={onSignOut} title="Sign out"><Icon.arrow /></button>
         </div>
       </div>
     </aside>

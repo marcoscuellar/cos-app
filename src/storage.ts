@@ -1,12 +1,10 @@
 import type { Theme } from "./types";
 
 export interface PersistedState {
-  authed?: boolean;
   route?: string;
   projectId?: string | null;
   theme?: Theme;
   collapsed?: boolean;
-  email?: string;
 }
 
 const CLIENT_ID_KEY = "cos-client-id";
