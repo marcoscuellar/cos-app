@@ -70,7 +70,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     res.setHeader("Allow", "GET, PUT");
     return res.status(405).json({ error: "Method not allowed" });
-  } catch {
+  } catch (error) {
+    console.error("api/state KV failure", error);
     return res.status(502).json({ error: "Storage is unavailable right now." });
   }
 }
