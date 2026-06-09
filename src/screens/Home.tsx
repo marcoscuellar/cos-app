@@ -56,7 +56,6 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
 
         {/* DOORWAY — architectural briefing: CEO quote · motto · enter */}
         <h1 className="arch-hero">{greeting}.</h1>
-        <p className="arch-sub">Five rooms. One is still warm — step back in, or look around the floor first.</p>
 
         <button className={"doorway ac-" + door.accent} onClick={enterFoyer}>
           <div className="dw-body">
