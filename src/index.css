@@ -44,6 +44,7 @@
   --brand:'DM Sans',-apple-system,system-ui,sans-serif;
   --ui:'Inter',-apple-system,system-ui,sans-serif;
   --serif:'Newsreader',Georgia,serif;
+  --mono:'DM Mono','SFMono-Regular',ui-monospace,Menlo,monospace;
 
   --radius:18px;
   --radius-sm:12px;
@@ -596,20 +597,65 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
   border-radius:20px;padding:3px 10px}
 .rolepill.admin{color:var(--a-violet);background:var(--a-violet-bg)}
 
-/* ---------- Home doorway (the foyer briefing) ---------- */
-.doorway{margin:16px 0 42px}
-.dw-quote{font-family:var(--serif);font-style:italic;font-weight:400;
-  font-size:clamp(30px,5vw,56px);line-height:1.1;letter-spacing:-.01em;
-  color:var(--ink);max-width:18ch;margin:16px 0 12px}
-.dw-attr{font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--ink-4)}
-.dw-row{display:flex;gap:16px;margin-top:30px;flex-wrap:wrap}
-.dw-cur{flex:1;min-width:260px;border-top:2px solid var(--ac,var(--line-3));padding-top:14px}
-.dw-lbl{display:inline-flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.13em;
-  text-transform:uppercase;font-weight:700;color:var(--ink-4)}
-.dw-lbl .d{width:6px;height:6px;border-radius:50%;background:var(--ac,var(--ink-4))}
-.dw-cur-t{display:block;font-size:15px;line-height:1.5;color:var(--ink-2);margin-top:10px;max-width:44ch}
-.dw-cur-s{display:block;font-size:11.5px;font-weight:600;color:var(--ink-4);margin-top:9px}
-@media(max-width:720px){.dw-row{flex-direction:column;gap:18px}}
+/* ============================================================
+   ARCHITECTURAL HOME — chip signage · blueprint metadata · doorway
+   the COS chip logo becomes the source of the visual language
+   ============================================================ */
+
+/* blueprint markings — DM Mono, like labels on a floor plan */
+.mono-meta{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-4);line-height:1.4}
+.mono-meta.q{color:var(--ink-5)}
+.mono-meta b{color:var(--ink-2);font-weight:500}
+
+/* the chip — a physical marker within the building (the COS logo, productized) */
+.chip{display:inline-flex;align-items:center;gap:7px;background:#0a0a0a;color:#fff;
+  font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  padding:7px 11px 6px;border-radius:6px;line-height:1;white-space:nowrap}
+.chip .cd{width:6px;height:6px;border-radius:1.5px;background:var(--ac,#fff)}
+[data-theme="slate"] .chip{background:#f4f3f0;color:#191926}
+[data-theme="mono"] .chip{background:var(--ink)}
+
+/* ---- foyer header ---- */
+.home-arch .foyer{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding-bottom:20px;margin-bottom:34px;border-bottom:1px solid var(--line)}
+.home-arch .foyer-mark{display:flex;align-items:center;gap:13px}
+.home-arch .foyer-mark .cos-logo{font-size:15px;padding:8px 11px}
+.home-arch .arch-hero{font-family:var(--display);font-weight:800;letter-spacing:-.04em;line-height:.92;
+  font-size:clamp(54px,7.4vw,92px);color:var(--ink);margin:0 0 16px}
+.home-arch .arch-sub{font-size:17px;color:var(--ink-3);font-weight:500;max-width:46ch;
+  line-height:1.5;margin:0 0 32px}
+
+/* ============================================================
+   HOME BRIEFING — the architectural doorway: CEO quote · motto
+   ============================================================ */
+.doorway{position:relative;overflow:hidden;display:flex;flex-direction:column;width:100%;text-align:left;cursor:pointer;
+  background:#0a0a0a;color:#fff;padding:32px 36px 26px;
+  box-shadow:0 34px 80px -34px rgba(0,0,0,.6);transition:transform .16s, box-shadow .16s}
+.doorway:hover{transform:translateY(-2px);box-shadow:0 46px 96px -36px rgba(0,0,0,.66)}
+.doorway .dw-body{display:grid;grid-template-columns:1.45fr 1fr;gap:40px;align-items:start}
+@media(max-width:780px){.doorway .dw-body{grid-template-columns:1fr;gap:24px;align-items:start}}
+.doorway .dw-left{display:flex;flex-direction:column;align-items:flex-start}
+.doorway .dw-rule{height:3px;width:54px;background:#fff;opacity:.95;margin-bottom:20px}
+.doorway .chip{background:#fff;color:#0a0a0a}
+.doorway .dw-name{font-family:var(--display);font-weight:800;letter-spacing:-.05em;line-height:.82;
+  font-size:clamp(76px,11.5vw,156px);color:#fff;margin:16px 0 0}
+.doorway .dw-quotewrap{text-align:right}
+.doorway .dw-quote{font-family:var(--display);font-weight:500;font-size:20px;letter-spacing:-.012em;line-height:1.4;
+  color:#e8e8ec;max-width:32ch;margin-left:auto}
+.doorway .dw-cite{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;
+  color:#8c8c95;margin-top:13px}
+.doorway .dw-foot{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.14);
+  display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+.doorway .dw-mono{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#9a9aa2}
+.doorway .dw-closer{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em;
+  line-height:1;color:#fff;display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
+.doorway .dw-closer svg{width:18px;height:18px;stroke:#fff;transition:transform .16s}
+.doorway:hover .dw-closer svg{transform:translateX(4px)}
+[data-theme="slate"] .doorway,[data-theme="mono"] .doorway{background:#0a0a0a;color:#fff}
+
+/* square corners on the architectural foyer + doorway */
+.home-arch .foyer-mark .cos-logo,.doorway,.chip,.chip .cd{border-radius:0}
 
 /* ---------- Research Lab ---------- */
 .lab-agent{display:flex;flex-direction:column}

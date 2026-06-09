@@ -178,12 +178,16 @@ export interface Lab {
   reports: LabReport[];
 }
 
-/* The doorway briefing — the quiet "foyer" you walk into on Home:
-   a founder quote, a current from the Lab, and the standing motto. */
+/* The architectural doorway on Home: a date-seeded CEO/founder quote
+   and the standing motto. The room name is the COS project itself. */
+export interface CeoQuote {
+  t: string;
+  who: string;
+  role: string;
+}
 export interface Doorway {
-  quote: { t: string; who: string };
-  mottoLead: string;
-  mottoEmph: string;
+  quotes: CeoQuote[];
+  motto: string;
 }
 
 export interface COSData {

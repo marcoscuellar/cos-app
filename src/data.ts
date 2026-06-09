@@ -5,12 +5,20 @@ import type { COSData } from "./types";
 
 export const COS_DATA: COSData = {
   user: { name: "Founder", initials: "F", greetingName: "" },
-  // The doorway briefing shown in Home's foyer. The Lab news is pulled live
-  // from the Market Scout agent (see `lab.agents`); only the quote + motto live here.
+  // The architectural doorway. A date-seeded quote rotates daily (see brief.ts);
+  // the motto is the standing line. Both are easy to edit.
   doorway: {
-    quote: { t: "The best way to predict the future is to invent it.", who: "Alan Kay" },
-    mottoLead: "You're allowed to rest —",
-    mottoEmph: "you're not allowed to quit.",
+    motto: "Be a badass. But never a dick. Work hard, be kind.",
+    quotes: [
+      { t: "The best way to predict the future is to invent it.", who: "Alan Kay", role: "Computer scientist" },
+      { t: "Make something people want.", who: "Paul Graham", role: "Y Combinator" },
+      { t: "If you are not embarrassed by the first version of your product, you've launched too late.", who: "Reid Hoffman", role: "LinkedIn" },
+      { t: "Ideas are easy. Execution is everything.", who: "John Doerr", role: "Kleiner Perkins" },
+      { t: "Your margin is my opportunity.", who: "Jeff Bezos", role: "Amazon" },
+      { t: "Done is better than perfect.", who: "Sheryl Sandberg", role: "Operator" },
+      { t: "Real artists ship.", who: "Steve Jobs", role: "Apple" },
+      { t: "Move with urgency and focus.", who: "Brian Chesky", role: "Airbnb" },
+    ],
   },
   // today's plan — calendar blocks tied to projects (the "Day" layer over "Now")
   today: {

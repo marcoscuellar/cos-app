@@ -1,6 +1,7 @@
 import { COS_DATA } from "../data";
 import { ChatBar } from "../components/shared";
 import { Icon } from "../components/Icon";
+import { greeting as getGreeting, foyerStamp, pickQuote } from "../brief";
 
 interface HomeProps {
   onProject: (id: string) => void;
@@ -11,20 +12,13 @@ interface HomeProps {
 export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
   const D = COS_DATA;
   const T = D.today;
-  // Greeting + date follow the user's home timezone (Chicago / Central Time),
-  // so they're correct no matter what device or timezone the app is opened from.
-  const TZ = "America/Chicago";
-  const now = new Date();
-  const hour = Number(
-    new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(now),
-  );
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const today = new Intl.DateTimeFormat(undefined, {
-    timeZone: TZ,
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  }).format(now);
+  // Greeting, datestamp + quote follow the user's home timezone (Central) and a
+  // daily seed, so the doorway is correct from any device and rotates day to day.
+  const greeting = getGreeting();
+  const stamp = foyerStamp();
+  const DW = D.doorway;
+  const quote = pickQuote(DW.quotes);
+  const door = D.projects.find((p) => p.id === "cos") || D.projects[0]; // the warm room
   const recent = [D.projects[1], D.projects[4]]; // COS, Personal Brand — two most recently touched
   const inMotion = D.projects.filter((p) => p.status !== "dormant");
   const dormant = D.projects.filter((p) => p.status === "dormant");
@@ -33,33 +27,49 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
     { t: "GLVE is blocked", d: "Waiting on pricing input from finance.", proj: "glve", accent: "violet" },
     { t: "Ōllin has gone quiet", d: "Untouched for 3 weeks — pick up or let rest.", proj: "ollin", accent: "amber" },
   ];
-  // The foyer briefing: founder quote (data) + a live current from the Lab's
-  // Market Scout agent + the standing motto. One face, one system.
-  const DW = D.doorway;
-  const news = D.lab.agents.find((a) => a.initials === "MS") || D.lab.agents[0];
+  // The doorway is a brand + motivation moment that drops you into the day — it
+  // doesn't navigate; it smooth-scrolls down to reveal the rest of the floor.
+  const enterFoyer = () => {
+    const m = document.querySelector(".main");
+    if (m) m.scrollBy({ top: Math.round((window.innerHeight || 700) * 0.9), behavior: "smooth" });
+  };
 
   return (
     <div className="wrap">
       <div className="stagger">
-        <div className="kicker">{greeting}. It's {today}.</div>
-
-        {/* THE DOORWAY — a quiet briefing you walk into, not a billboard. */}
-        <div className="doorway">
-          <span className="eyebrow bare"><span className="d" />The doorway · today's briefing</span>
-          <p className="dw-quote">{DW.quote.t}</p>
-          <div className="dw-attr">{DW.quote.who}</div>
-          <div className="dw-row">
-            <div className="dw-cur ac-indigo">
-              <span className="dw-lbl"><span className="d" />From the Lab</span>
-              <span className="dw-cur-t">{news.finding}</span>
-              <span className="dw-cur-s">{news.name} · reported {news.last}</span>
+        {/* FOYER + DOORWAY — the architectural entrance to Home */}
+        <div className="home-arch">
+          <div className="foyer">
+            <div className="foyer-mark">
+              <span className="cos-logo">COS</span>
+              <span className="mono-meta">FOYER</span>
             </div>
-            <div className="dw-cur ac-coral">
-              <span className="dw-lbl"><span className="d" />Motto</span>
-              <span className="dw-cur-t">{DW.mottoLead} <span className="em ac-coral">{DW.mottoEmph}</span></span>
-            </div>
+            <span className="mono-meta q">{stamp}</span>
           </div>
+
+          <h1 className="arch-hero">{greeting}.</h1>
+          <p className="arch-sub">Five rooms. One is still warm — step back in, or look around the floor first.</p>
+
+          <button className={"doorway ac-" + door.accent} onClick={enterFoyer}>
+            <div className="dw-body">
+              <div className="dw-left">
+                <div className="dw-rule" />
+                <span className="chip">Let's keep going</span>
+                <div className="dw-name">{door.name}</div>
+              </div>
+              <div className="dw-quotewrap">
+                <div className="dw-quote">“{quote.t}”</div>
+                <div className="dw-cite">— {quote.who} · {quote.role}</div>
+              </div>
+            </div>
+            <div className="dw-foot">
+              <span className="dw-mono">{DW.motto}</span>
+              <span className="dw-closer">Enter the foyer <Icon.arrow style={{ transform: "rotate(90deg)" }} /></span>
+            </div>
+          </button>
         </div>
+
+        <div className="spacer-m" />
 
         <ChatBar big placeholder="Ask COS, or capture a thought…" onFocusNav={() => onNav("search")} />
 
