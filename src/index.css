@@ -654,8 +654,45 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .doorway:hover .dw-closer svg{transform:translateX(4px)}
 [data-theme="slate"] .doorway,[data-theme="mono"] .doorway{background:#0a0a0a;color:#fff}
 
-/* square corners on the architectural foyer + doorway */
-.home-arch .foyer-mark .cos-logo,.doorway,.chip,.chip .cd{border-radius:0}
+/* ---- section headers as wayfinding ---- */
+.home-arch .arch-sec{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}
+.home-arch .arch-sec .more{font-family:var(--display);font-size:12.5px;color:var(--ink-3);font-weight:600;
+  display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.home-arch .arch-sec .more:hover{color:var(--ink)}
+.home-arch .arch-sec .more svg{stroke:currentColor}
+.home-arch .arch-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+
+/* ---- architectural overrides: titles go grounded/black, meta goes mono ---- */
+.home-arch .card-title{color:var(--ink)}
+.home-arch .card-eyebrow{font-family:var(--mono);font-weight:500;font-size:10.5px;letter-spacing:.07em;color:var(--ink-4)}
+.home-arch .pr-name,.home-arch .pr-name.dim{color:var(--ink)}
+.home-arch .pr-name.dim{color:var(--ink-4)}
+.home-arch .pr-pct{font-family:var(--mono);font-weight:500}
+.home-arch .prow .ptitle{color:var(--ink)}
+.home-arch .prow .pright,.home-arch .act .aw{font-family:var(--mono);font-weight:500;letter-spacing:.04em;
+  text-transform:uppercase;font-size:10px;color:var(--ink-4)}
+.home-arch .hc-time{font-family:var(--mono);font-weight:500;letter-spacing:.02em;color:var(--ink-3)}
+.home-arch .hc-now{font-family:var(--mono);font-weight:500;font-size:9px;letter-spacing:.08em;
+  background:#0a0a0a;color:#fff;border-radius:4px;padding:3px 6px 2px;margin-left:9px}
+[data-theme="slate"] .home-arch .hc-now{background:#f4f3f0;color:#191926}
+[data-theme="mono"] .home-arch .hc-now{background:var(--ink)}
+.home-arch .act .ap{color:var(--ink);font-weight:700}
+
+/* ---- square corners — architectural / signage edges on the home ---- */
+.home-arch .card,
+.home-arch .chatbar,
+.home-arch .home-cal-card,
+.doorway,
+.chip,
+.chip .cd,
+.home-arch .hc-now,
+.home-arch .pbar,
+.home-arch .pbar i,
+.home-arch .pr-dot,
+.home-arch .prow .pdot,
+.home-arch .act .ad,
+.home-arch .foyer-mark .cos-logo,
+.home-arch .recent-dot{border-radius:0}
 
 /* ---------- Research Lab ---------- */
 .lab-agent{display:flex;flex-direction:column}
