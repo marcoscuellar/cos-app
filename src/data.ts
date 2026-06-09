@@ -5,6 +5,13 @@ import type { COSData } from "./types";
 
 export const COS_DATA: COSData = {
   user: { name: "Founder", initials: "F", greetingName: "" },
+  // The doorway briefing shown in Home's foyer. The Lab news is pulled live
+  // from the Market Scout agent (see `lab.agents`); only the quote + motto live here.
+  doorway: {
+    quote: { t: "The best way to predict the future is to invent it.", who: "Alan Kay" },
+    mottoLead: "You're allowed to rest —",
+    mottoEmph: "you're not allowed to quit.",
+  },
   // today's plan — calendar blocks tied to projects (the "Day" layer over "Now")
   today: {
     date: "Saturday, June 7",

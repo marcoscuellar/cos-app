@@ -178,6 +178,14 @@ export interface Lab {
   reports: LabReport[];
 }
 
+/* The doorway briefing — the quiet "foyer" you walk into on Home:
+   a founder quote, a current from the Lab, and the standing motto. */
+export interface Doorway {
+  quote: { t: string; who: string };
+  mottoLead: string;
+  mottoEmph: string;
+}
+
 export interface COSData {
   user: { name: string; initials: string; greetingName: string };
   today: Today;
@@ -189,6 +197,7 @@ export interface COSData {
   searchKnowledge: SearchKnowledge[];
   searchDecisions: SearchDecision[];
   lab: Lab;
+  doorway: Doorway;
 }
 
 /** A document opened in the DocViewer drawer. */

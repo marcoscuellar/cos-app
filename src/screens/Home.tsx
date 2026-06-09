@@ -33,14 +33,33 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
     { t: "GLVE is blocked", d: "Waiting on pricing input from finance.", proj: "glve", accent: "violet" },
     { t: "Ōllin has gone quiet", d: "Untouched for 3 weeks — pick up or let rest.", proj: "ollin", accent: "amber" },
   ];
+  // The foyer briefing: founder quote (data) + a live current from the Lab's
+  // Market Scout agent + the standing motto. One face, one system.
+  const DW = D.doorway;
+  const news = D.lab.agents.find((a) => a.initials === "MS") || D.lab.agents[0];
 
   return (
     <div className="wrap">
       <div className="stagger">
         <div className="kicker">{greeting}. It's {today}.</div>
-        <h1 className="disp" style={{ fontSize: "clamp(50px,8vw,98px)", lineHeight: 0.96, margin: "18px 0 44px", maxWidth: "15ch" }}>
-          You're allowed to rest — <span className="em ac-coral">you're not allowed to quit.</span>
-        </h1>
+
+        {/* THE DOORWAY — a quiet briefing you walk into, not a billboard. */}
+        <div className="doorway">
+          <span className="eyebrow bare"><span className="d" />The doorway · today's briefing</span>
+          <p className="dw-quote">{DW.quote.t}</p>
+          <div className="dw-attr">{DW.quote.who}</div>
+          <div className="dw-row">
+            <div className="dw-cur ac-indigo">
+              <span className="dw-lbl"><span className="d" />From the Lab</span>
+              <span className="dw-cur-t">{news.finding}</span>
+              <span className="dw-cur-s">{news.name} · reported {news.last}</span>
+            </div>
+            <div className="dw-cur ac-coral">
+              <span className="dw-lbl"><span className="d" />Motto</span>
+              <span className="dw-cur-t">{DW.mottoLead} <span className="em ac-coral">{DW.mottoEmph}</span></span>
+            </div>
+          </div>
+        </div>
 
         <ChatBar big placeholder="Ask COS, or capture a thought…" onFocusNav={() => onNav("search")} />
 
