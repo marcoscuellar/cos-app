@@ -800,6 +800,26 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
   .cal-hero .ch-right{gap:28px}
   .cal-hero .ch-num{font-size:38px}
 }
+.cal-hero .ch-dump{font-family:var(--display);font-weight:700;font-size:13px;background:#fff;color:#0a0a0a;
+  padding:10px 15px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;transition:background .12s}
+.cal-hero .ch-dump:hover{background:#ececed}
+.cal-hero .ch-dump svg{width:15px;height:15px;stroke:#0a0a0a}
+
+/* brain-dump composer */
+.dump-composer{margin-bottom:26px}
+.dump-input{min-height:128px}
+.dump-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+.dump-hint{font-size:12px;color:var(--ink-4);margin-top:10px;line-height:1.5}
+.plan-note{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:600;font-size:15px;
+  letter-spacing:-.01em;color:var(--ink-2);background:var(--paper-2);border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:13px 16px;margin-bottom:22px;line-height:1.4}
+.plan-note svg{stroke:var(--a-blue);flex-shrink:0}
+
+/* deferred — intentionally left for another day */
+.deferred-card{margin-top:18px}
+.deferred-list{display:flex;flex-direction:column;gap:9px;margin-top:4px}
+.deferred-row{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--ink-3);line-height:1.45}
+.deferred-row .dd{width:6px;height:6px;border-radius:50%;background:var(--ink-4);flex-shrink:0;margin-top:7px}
 
 .notes-tools{display:flex;justify-content:flex-end;margin-top:12px}
 .notes-tidy-btn{display:inline-flex;align-items:center;gap:7px;font-family:var(--display);font-weight:600;

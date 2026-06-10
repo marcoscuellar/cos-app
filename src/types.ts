@@ -14,6 +14,25 @@ export interface Note {
   createdAt: number;
 }
 
+/** A single scheduled block produced by the brain-dump day planner. */
+export interface PlannedBlock {
+  start: string;
+  end: string;
+  title: string;
+  kind: string;
+  proj: string | null;
+  walkIn?: string;
+}
+
+/** Today's AI-built plan, persisted per day. */
+export interface DayPlan {
+  dump: string;
+  blocks: PlannedBlock[];
+  deferred: string[];
+  note?: string;
+  createdAt: number;
+}
+
 export interface ResumeItem {
   kind: string;
   t: string;
