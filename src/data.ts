@@ -8,7 +8,7 @@ export const COS_DATA: COSData = {
   // The architectural doorway. A date-seeded quote rotates daily (see brief.ts);
   // the motto is the standing line. Both are easy to edit.
   doorway: {
-    motto: "Be a badass. But never a dick. Work hard, be kind.",
+    motto: "If it don't make you smile, laugh, money, or excited — don't chase it.",
     quotes: [
       { t: "The best way to predict the future is to invent it.", who: "Alan Kay", role: "Computer scientist" },
       { t: "Make something people want.", who: "Paul Graham", role: "Y Combinator" },
