@@ -206,7 +206,9 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
           {plan && (
             <div className="ch-intent">
               <div className="ci-lbl">Today's intention</div>
-              {editingIntent ? (
+              {allDone ? (
+                <div className="ci-quote ci-done">Touch grass. 🌱</div>
+              ) : editingIntent ? (
                 <input
                   className="ci-input"
                   value={intentDraft}
