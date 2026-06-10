@@ -189,10 +189,7 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
                   <div className="cl-title">{live.next.title}</div>
                 </>
               ) : (
-                <>
-                  <div className="cl-lbl">Done</div>
-                  <div className="cl-title">That's the day. Rest up. 🌙</div>
-                </>
+                <></>
               )}
             </div>
           </div>
