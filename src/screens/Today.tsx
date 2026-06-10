@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { COS_DATA } from "../data";
 import { Icon } from "../components/Icon";
 import type { DayPlan } from "../types";
-import { loadPlan, buildPlan, clearPlan } from "../dayPlanApi";
+import { loadPlan, buildPlan } from "../dayPlanApi";
 
 type AnyBlock = { start: string; end: string; title: string; kind: string; proj: string | null; walkIn?: string; who?: string };
 
@@ -25,7 +25,6 @@ function toMinutes(t: string): number | null {
 interface LiveState {
   current: AnyBlock | null;
   next: AnyBlock | null;
-  done: boolean;
 }
 
 // Where are you in the day right now? Drives the black box's live readout.
@@ -39,18 +38,16 @@ function computeLive(blocks: AnyBlock[], nowMin: number): LiveState {
     if (!current && s <= nowMin && (e === null || nowMin < e)) current = b;
     if (!next && s > nowMin) next = b;
   }
-  const done = blocks.length > 0 && !current && !next;
-  return { current, next, done };
+  return { current, next };
 }
 
-/* TODAY — the calendar / day layer, with black-box branding + brain-dump planner. */
+/* TODAY — black-box branding + a Home-style brain-dump bar right underneath. */
 export function TodayScreen({ onProject }: { onProject: (id: string) => void }) {
   const D = COS_DATA;
   const T = D.today;
   const projOf = (id: string) => D.projects.find((p) => p.id === id);
 
   const [plan, setPlan] = useState<DayPlan | null>(null);
-  const [composeOpen, setComposeOpen] = useState(false);
   const [dump, setDump] = useState("");
   const [building, setBuilding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +55,10 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
 
   useEffect(() => {
     loadPlan().then((p) => {
-      if (p) setPlan(p);
+      if (p) {
+        setPlan(p);
+        setDump(p.dump);
+      }
     });
   }, []);
   useEffect(() => {
@@ -86,20 +86,8 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
     const rooms = D.projects.map((p) => ({ id: p.id, name: p.name }));
     const { plan: next, error: err } = await buildPlan({ dump: text, rooms, hours: DEFAULT_HOURS, pacing: DEFAULT_PACING });
     setBuilding(false);
-    if (next) {
-      setPlan(next);
-      setComposeOpen(false);
-      setDump("");
-    } else {
-      setError(err || "Couldn't build your day — try again.");
-    }
-  };
-
-  const startOver = async () => {
-    setPlan(null);
-    setDump(plan?.dump ?? "");
-    setComposeOpen(true);
-    await clearPlan();
+    if (next) setPlan(next);
+    else setError(err || "Couldn't build your day — try again.");
   };
 
   return (
@@ -114,7 +102,7 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
           <span className="mono-meta q">{monthDay}</span>
         </div>
 
-        {/* THE BLACK BOX — the branded calendar hero */}
+        {/* THE BLACK BOX — branded calendar hero with live wayfinding */}
         <div className="cal-hero">
           <div className="ch-body">
             <div className="ch-left">
@@ -127,7 +115,7 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
               {!plan ? (
                 <>
                   <div className="cl-lbl">Open</div>
-                  <div className="cl-title">Brain-dump your day to fill it in.</div>
+                  <div className="cl-title">Dump your day below to fill it in.</div>
                 </>
               ) : live?.current ? (
                 <>
@@ -155,43 +143,31 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
               <span className="cdot" />
               {plan ? "Built by COS from your brain-dump" : `Synced with ${T.calendar} · COS attaches context`}
             </span>
-            {plan ? (
-              <button className="ch-dump" onClick={startOver}>
-                <Icon.spark /> Re-dump my day
-              </button>
-            ) : (
-              <button className="ch-dump" onClick={() => setComposeOpen((v) => !v)}>
-                <Icon.spark /> Brain-dump my day
-              </button>
-            )}
           </div>
         </div>
 
-        {/* BRAIN-DUMP COMPOSER */}
-        {composeOpen && !plan && (
-          <div className="card dump-composer">
-            <div className="card-eyebrow">Brain-dump your day — messy is the point</div>
-            <textarea
-              className="notes-input dump-input"
-              value={dump}
-              onChange={(e) => setDump(e.target.value)}
-              onKeyDown={(e) => {
-                if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit();
-              }}
-              placeholder={"Everything in your head — order doesn't matter:\ngym, deep work on GLVE, call finance before noon, lunch w/ Sam, errands, prep for Monday…"}
-              rows={5}
-              autoFocus
-            />
-            {error && <div className="notes-failed">{error}</div>}
-            <div className="dump-actions">
-              <button className="btn btn-ghost" onClick={() => setComposeOpen(false)} disabled={building}>Cancel</button>
-              <button className="btn btn-solid" onClick={submit} disabled={!dump.trim() || building}>
-                {building ? "Building your day…" : "Build my day"} <Icon.spark style={{ width: 15, height: 15 }} />
-              </button>
-            </div>
-            <div className="dump-hint">COS plans gently — focused sprints, real breaks, and it defers overflow instead of cramming. ⌘↵ to build.</div>
-          </div>
-        )}
+        {/* BRAIN-DUMP BAR — same structure as Home: the bar right under the box */}
+        <div className="chatbar dump-bar" style={{ padding: "18px 20px" }}>
+          <input
+            value={dump}
+            onChange={(e) => setDump(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                submit();
+              }
+            }}
+            placeholder={plan ? "Re-dump or adjust your day…" : "Brain-dump your day — gym, deep work on GLVE, call finance, lunch…"}
+            disabled={building}
+          />
+          <button className="mic" title="Voice (or use your keyboard mic)"><Icon.mic /></button>
+          <button className="send" title={building ? "Building…" : "Build my day"} onClick={submit} disabled={!dump.trim() || building}>
+            <Icon.send />
+          </button>
+        </div>
+        {building && <div className="dump-status"><span className="spin" />Building your day — focused sprints, real breaks, overflow deferred…</div>}
+        {error && <div className="notes-failed" style={{ marginBottom: 18 }}>{error}</div>}
+        {!building && !error && <div className="dump-status muted">Messy is fine. COS plans gently and never crams. ↵ to build.</div>}
 
         {/* WARM NOTE from COS about the plan */}
         {plan?.note && <div className="plan-note"><Icon.spark style={{ width: 15, height: 15 }} />{plan.note}</div>}
