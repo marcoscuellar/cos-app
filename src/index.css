@@ -624,10 +624,8 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
   padding-bottom:20px;margin-bottom:34px;border-bottom:1px solid var(--line)}
 .home-arch .foyer-mark{display:flex;align-items:center;gap:13px}
 .home-arch .foyer-mark .cos-logo{font-size:15px;padding:8px 11px}
-.home-arch .arch-hero{font-family:var(--display);font-weight:800;letter-spacing:-.03em;line-height:1;
-  font-size:clamp(30px,3.8vw,46px);color:var(--ink);margin:0 0 18px}
-.home-arch .arch-hero::before{content:"";display:block;width:40px;height:4px;background:var(--gold);border-radius:2px;margin-bottom:16px}
-.home-arch .foyer-mark .mono-meta{color:var(--gold)}
+.home-arch .arch-hero{font-family:var(--display);font-weight:900;letter-spacing:-.04em;line-height:.92;
+  font-size:clamp(52px,7vw,92px);color:var(--ink);margin:0 0 18px}
 .home-arch .arch-sub{font-size:17px;color:var(--ink-3);font-weight:500;max-width:46ch;
   line-height:1.5;margin:0 0 32px}
 
@@ -642,7 +640,7 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 @media(max-width:780px){.doorway .dw-body{grid-template-columns:1fr;gap:24px;align-items:start}}
 .doorway .dw-left{display:flex;flex-direction:column;align-items:flex-start}
 .doorway .dw-rule{height:3px;width:54px;background:var(--gold);opacity:1;margin-bottom:20px}
-.doorway .chip{background:var(--gold);color:#0a0a0a}
+.doorway .chip{background:#fff;color:#0a0a0a}
 .doorway .dw-name{font-family:var(--display);font-weight:800;letter-spacing:-.05em;line-height:.82;
   font-size:clamp(76px,11.5vw,156px);color:#fff;margin:16px 0 0}
 .doorway .dw-quotewrap{text-align:right}
