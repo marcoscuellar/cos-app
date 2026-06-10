@@ -178,11 +178,6 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
                   <div className="cl-lbl">Open</div>
                   <div className="cl-title">Dump your day below to fill it in.</div>
                 </>
-              ) : allDone ? (
-                <>
-                  <div className="cl-lbl">Done</div>
-                  <div className="cl-title">That's everything. Go rest. 🌙</div>
-                </>
               ) : live?.current ? (
                 <>
                   <div className="cl-lbl"><span className="live-dot" />Right now</div>
