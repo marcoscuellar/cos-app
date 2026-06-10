@@ -58,8 +58,16 @@ export class AnthropicProvider implements AIProvider {
         .trim();
     } catch (err) {
       if (err instanceof Anthropic.APIError) {
-        throw new ProviderError("AI is unavailable right now.", 502);
+        // Surface the real cause (401 bad key, 403 no access, 400 billing, 429
+        // rate limit, …) in logs and to the caller, instead of a flat 502.
+        console.error("[ai] Anthropic APIError", {
+          status: err.status,
+          type: (err as { type?: string }).type,
+          message: err.message,
+        });
+        throw new ProviderError(err.message || "AI is unavailable right now.", err.status ?? 502);
       }
+      console.error("[ai] Unexpected provider error", err);
       throw new ProviderError("Unexpected error.", 500);
     }
   }
