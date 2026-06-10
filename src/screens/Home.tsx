@@ -91,7 +91,7 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
         </div>
 
         {/* DOORWAY — architectural briefing: CEO quote · motto · enter */}
-        <h1 className="arch-hero">{greeting}.</h1>
+        <h1 className="arch-hero">{greeting}{D.user.greetingName ? `, ${D.user.greetingName}` : ""}.</h1>
 
         <button className={"doorway ac-" + door.accent} onClick={enterFoyer}>
           <div className="dw-body">

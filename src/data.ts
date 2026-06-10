@@ -4,7 +4,7 @@
 import type { COSData } from "./types";
 
 export const COS_DATA: COSData = {
-  user: { name: "Founder", initials: "F", greetingName: "" },
+  user: { name: "Founder", initials: "F", greetingName: "Marcos" },
   // The architectural doorway. A date-seeded quote rotates daily (see brief.ts);
   // the motto is the standing line. Both are easy to edit.
   doorway: {
