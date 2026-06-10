@@ -354,8 +354,8 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .timeline{display:flex;flex-direction:column}
 .tblock{display:grid;grid-template-columns:78px 1fr;gap:18px;position:relative}
 .tblock .ttime{padding-top:20px;text-align:right}
-.tblock .ttime .ts{font-family:var(--display);font-weight:600;font-size:15px;color:var(--ink);letter-spacing:-.01em;display:block}
-.tblock .ttime .te{font-size:11.5px;color:var(--ink-4);font-weight:500;margin-top:1px}
+.tblock .ttime .ts{font-family:var(--display);font-weight:800;font-size:18px;color:var(--ink);letter-spacing:-.01em;display:block}
+.tblock .ttime .te{font-size:13px;color:var(--ink-4);font-weight:600;margin-top:2px}
 .tblock .tspine{position:absolute;left:78px;top:0;bottom:0;width:18px;display:flex;justify-content:center}
 .tblock .tspine::before{content:"";width:1px;background:var(--line);position:absolute;top:0;bottom:0}
 .tblock:first-child .tspine::before{top:24px}
