@@ -18,7 +18,9 @@ export const config = {
 };
 
 export default function middleware(req: Request): Response | undefined {
-  const password = process.env.APP_PASSWORD;
+  // Reuse the password you already configured (APP_ADMIN_PASSWORD). Set a
+  // dedicated APP_PASSWORD to override it without touching the auth system.
+  const password = process.env.APP_PASSWORD || process.env.APP_ADMIN_PASSWORD;
   if (!password) return; // not configured yet → leave the site open
 
   const header = req.headers.get("authorization");
