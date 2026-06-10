@@ -88,6 +88,9 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
     Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(now)) * 60 +
     Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, minute: "2-digit" }).format(now));
   const live = plan ? computeLive(plan.blocks, nowMin) : null;
+  // The "done" celebration fires when you've actually checked everything off —
+  // not just because the clock ran past the last block.
+  const allDone = !!plan && plan.blocks.length > 0 && plan.blocks.every((b) => b.done);
 
   const submit = async () => {
     const text = dump.trim();
@@ -174,6 +177,11 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
                 <>
                   <div className="cl-lbl">Open</div>
                   <div className="cl-title">Dump your day below to fill it in.</div>
+                </>
+              ) : allDone ? (
+                <>
+                  <div className="cl-lbl">Done</div>
+                  <div className="cl-title">That's everything. Go rest. 🌙</div>
                 </>
               ) : live?.current ? (
                 <>
