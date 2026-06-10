@@ -85,7 +85,6 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
         {/* FOYER — the place you enter before a room */}
         <div className="foyer">
           <div className="foyer-mark">
-            <span className="cos-logo">COS</span>
             <span className="mono-meta">FOYER</span>
           </div>
           <span className="mono-meta q">{stamp}</span>
