@@ -1,29 +1,55 @@
 import { COS_DATA } from "../data";
-import { Eyebrow } from "../components/shared";
 import { Icon } from "../components/Icon";
 
-/* TODAY — the calendar / day layer over Now */
+/* TODAY — the calendar / day layer, given the black-box branding treatment. */
 export function TodayScreen({ onProject }: { onProject: (id: string) => void }) {
   const D = COS_DATA;
   const T = D.today;
   const tied = T.blocks.filter((b) => b.proj).length;
   const projOf = (id: string) => D.projects.find((p) => p.id === id);
 
-  return (
-    <div className="wrap">
-      <div className="stagger">
-        <Eyebrow accent="blue">Your day</Eyebrow>
-        <h1 className="disp" style={{ margin: "16px 0 8px", maxWidth: "18ch" }}>
-          Today, tied to <span className="em ac-blue">your work.</span>
-        </h1>
-        <p className="dim" style={{ fontSize: 16, maxWidth: "52ch", marginBottom: 26 }}>
-          {T.date} · {T.blocks.length} blocks, {tied} connected to a project. Each one opens where you left off — you walk in already oriented.
-        </p>
+  // Live date in the user's home timezone, so the black box is always correct.
+  const TZ = "America/Chicago";
+  const now = new Date();
+  const weekday = new Intl.DateTimeFormat(undefined, { timeZone: TZ, weekday: "long" }).format(now);
+  const monthDay = new Intl.DateTimeFormat(undefined, { timeZone: TZ, month: "long", day: "numeric", year: "numeric" }).format(now);
 
-        <div className="cal-banner">
-          <span className="cdot" />
-          <span className="ct-txt">Synced with <b>{T.calendar}</b> · COS reads your blocks and attaches context</span>
-          <button className="ct-link">Manage <Icon.arrow style={{ width: 13, height: 13 }} /></button>
+  return (
+    <div className="wrap today-arch">
+      <div className="stagger">
+        {/* FOYER — same architectural header as Home */}
+        <div className="foyer">
+          <div className="foyer-mark">
+            <span className="cos-logo">COS</span>
+            <span className="mono-meta">CALENDAR</span>
+          </div>
+          <span className="mono-meta q">{monthDay}</span>
+        </div>
+
+        {/* THE BLACK BOX — the branded calendar hero */}
+        <div className="cal-hero">
+          <div className="ch-body">
+            <div className="ch-left">
+              <div className="dw-rule" />
+              <span className="chip">Today</span>
+              <div className="ch-day">{weekday}.</div>
+              <div className="ch-date">{monthDay}</div>
+            </div>
+            <div className="ch-right">
+              <div className="ch-stat">
+                <span className="ch-num">{T.blocks.length}</span>
+                <span className="ch-lbl">Blocks</span>
+              </div>
+              <div className="ch-stat">
+                <span className="ch-num">{tied}</span>
+                <span className="ch-lbl">Tied to a room</span>
+              </div>
+            </div>
+          </div>
+          <div className="ch-foot">
+            <span className="ch-syncline"><span className="cdot" />Synced with {T.calendar} · COS attaches context to every block</span>
+            <button className="ch-manage">Manage <Icon.arrow /></button>
+          </div>
         </div>
 
         <div className="timeline">

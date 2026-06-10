@@ -762,6 +762,45 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .note-row:hover .note-del,.note-del:focus-visible{opacity:1}
 .note-del:hover{background:var(--paper-3);color:var(--a-coral)}
 .note-del svg{width:13px;height:13px;stroke:currentColor}
+/* ---------- Calendar — the black box ---------- */
+.today-arch .foyer{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding-bottom:20px;margin-bottom:28px;border-bottom:1px solid var(--line)}
+.today-arch .foyer-mark{display:flex;align-items:center;gap:13px}
+.today-arch .foyer-mark .cos-logo{font-size:15px;padding:8px 11px;border-radius:0}
+
+.cal-hero{background:#0a0a0a;color:#fff;padding:32px 36px 24px;margin-bottom:30px;
+  box-shadow:0 34px 80px -34px rgba(0,0,0,.6)}
+.cal-hero .ch-body{display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap}
+.cal-hero .ch-left{display:flex;flex-direction:column;align-items:flex-start}
+.cal-hero .dw-rule{height:3px;width:54px;background:#fff;opacity:.95;margin-bottom:20px}
+.cal-hero .chip{background:#fff;color:#0a0a0a;border-radius:0}
+.cal-hero .ch-day{font-family:var(--display);font-weight:800;letter-spacing:-.04em;line-height:.9;
+  font-size:clamp(44px,7vw,82px);color:#fff;margin-top:18px}
+.cal-hero .ch-date{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  color:#9a9aa2;margin-top:13px}
+.cal-hero .ch-right{display:flex;gap:38px}
+.cal-hero .ch-stat{display:flex;flex-direction:column;align-items:flex-start}
+.cal-hero .ch-num{font-family:var(--display);font-weight:800;font-size:48px;letter-spacing:-.03em;line-height:1;color:#fff}
+.cal-hero .ch-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8c8c95;margin-top:9px}
+.cal-hero .ch-foot{margin-top:26px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.cal-hero .ch-syncline{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:#9a9aa2;display:inline-flex;align-items:center;gap:9px}
+.cal-hero .ch-syncline .cdot{width:7px;height:7px;border-radius:50%;background:#2f8a62;box-shadow:0 0 0 4px rgba(47,138,98,.22)}
+.cal-hero .ch-manage{font-family:var(--display);font-weight:700;font-size:13px;color:#fff;
+  display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.cal-hero .ch-manage svg{width:15px;height:15px;stroke:#fff;transition:transform .16s}
+.cal-hero .ch-manage:hover svg{transform:translateX(3px)}
+[data-theme="slate"] .cal-hero,[data-theme="mono"] .cal-hero{background:#0a0a0a;color:#fff}
+/* architectural timeline polish — square edges, mono times */
+.today-arch .tcard{border-radius:0}
+.today-arch .ttime .ts,.today-arch .ttime .te{font-family:var(--mono);letter-spacing:.02em}
+@media(max-width:640px){
+  .cal-hero{padding:26px 22px 22px}
+  .cal-hero .ch-right{gap:28px}
+  .cal-hero .ch-num{font-size:38px}
+}
+
 .notes-tools{display:flex;justify-content:flex-end;margin-top:12px}
 .notes-tidy-btn{display:inline-flex;align-items:center;gap:7px;font-family:var(--display);font-weight:600;
   font-size:12.5px;color:var(--ac);background:var(--ac-bg);border-radius:20px;padding:7px 13px;transition:filter .12s}
