@@ -1,4 +1,4 @@
-import type { DayPlan } from "./types";
+import type { DayPlan, PlannedBlock } from "./types";
 
 // Client for /api/plan-day. The planner returns today's full DayPlan (or null
 // when nothing is planned yet). The brain-dump → schedule call can take several
@@ -45,6 +45,22 @@ export async function updateIntention(intention: string): Promise<DayPlan | null
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ intention }),
+    });
+    if (!r.ok) return null;
+    const { plan } = (await r.json()) as { plan?: DayPlan | null };
+    return plan ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Save an edited blocks array (reschedule / rename / check off / add / delete). */
+export async function saveBlocks(blocks: PlannedBlock[]): Promise<DayPlan | null> {
+  try {
+    const r = await fetch("/api/plan-day", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ blocks }),
     });
     if (!r.ok) return null;
     const { plan } = (await r.json()) as { plan?: DayPlan | null };

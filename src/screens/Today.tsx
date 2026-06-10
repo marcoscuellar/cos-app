@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
 import { COS_DATA } from "../data";
 import { Icon } from "../components/Icon";
-import type { DayPlan } from "../types";
-import { loadPlan, buildPlan, updateIntention } from "../dayPlanApi";
+import type { DayPlan, PlannedBlock } from "../types";
+import { loadPlan, buildPlan, updateIntention, saveBlocks } from "../dayPlanApi";
 
-type AnyBlock = { start: string; end: string; title: string; kind: string; proj: string | null; walkIn?: string; who?: string };
+// Make sure every block has a stable id (older saved plans predate ids).
+const ensureIds = (p: DayPlan): DayPlan => ({
+  ...p,
+  blocks: p.blocks.map((b, i) => (b.id ? b : { ...b, id: `b${i}_${Math.random().toString(36).slice(2, 6)}` })),
+});
+
+type AnyBlock = { id?: string; start: string; end: string; title: string; kind: string; proj: string | null; walkIn?: string; who?: string; done?: boolean };
 
 // Default day shape — a long, gentle day with breathing room (severe-ADHD friendly).
 const DEFAULT_HOURS = "7:00 AM – 10:00 PM";
@@ -53,13 +59,16 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
   const [error, setError] = useState<string | null>(null);
   const [editingIntent, setEditingIntent] = useState(false);
   const [intentDraft, setIntentDraft] = useState("");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<PlannedBlock | null>(null);
   const [, setTick] = useState(0); // re-render every minute so "now/next" stays live
 
   useEffect(() => {
     loadPlan().then((p) => {
       if (p) {
-        setPlan(p);
-        setDump(p.dump);
+        const q = ensureIds(p);
+        setPlan(q);
+        setDump(q.dump);
       }
     });
   }, []);
@@ -88,8 +97,42 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
     const rooms = D.projects.map((p) => ({ id: p.id, name: p.name }));
     const { plan: next, error: err } = await buildPlan({ dump: text, rooms, hours: DEFAULT_HOURS, pacing: DEFAULT_PACING });
     setBuilding(false);
-    if (next) setPlan(next);
+    if (next) setPlan(ensureIds(next));
     else setError(err || "Couldn't build your day — try again.");
+  };
+
+  // ── Block editing — the day has to flex (2pm meeting pushed to 5pm, etc.) ──
+  const persist = (blocks: PlannedBlock[]) => {
+    if (!plan) return;
+    setPlan({ ...plan, blocks }); // optimistic — feels instant
+    saveBlocks(blocks); // then durably save (cross-device)
+  };
+  const toggleDone = (b: PlannedBlock) =>
+    persist((plan?.blocks ?? []).map((x) => (x.id === b.id ? { ...x, done: !x.done } : x)));
+  const startEdit = (b: PlannedBlock) => {
+    setEditId(b.id ?? null);
+    setDraft({ ...b });
+  };
+  const saveEdit = () => {
+    if (!draft || !plan) return;
+    persist(plan.blocks.map((x) => (x.id === editId ? draft : x)));
+    setEditId(null);
+    setDraft(null);
+  };
+  const deleteBlock = (id?: string) => {
+    if (!plan) return;
+    persist(plan.blocks.filter((x) => x.id !== id));
+    setEditId(null);
+    setDraft(null);
+  };
+  const addBlock = () => {
+    if (!plan) return;
+    const nb: PlannedBlock = {
+      id: `b_${Date.now().toString(36)}`,
+      start: "12:00 PM", end: "1:00 PM", title: "New block", kind: "focus", proj: null, done: false,
+    };
+    persist([...plan.blocks, nb]);
+    startEdit(nb);
   };
 
   const startEditIntent = () => {
@@ -219,34 +262,70 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
             const p = b.proj ? projOf(b.proj) : null;
             const accent = p ? p.accent : "blue";
             const linked = !!p;
+            const editable = !!plan;
+            const editing = editable && b.id != null && b.id === editId;
             return (
-              <div key={idx} className={"tblock ac-" + accent}>
+              <div key={b.id ?? idx} className={"tblock ac-" + accent + (b.done ? " done" : "")}>
                 <div className="ttime">
                   <span className="ts">{b.start}</span>
                   <span className="te">{b.end}</span>
                 </div>
                 <div className="tspine"><span className="tnode" /></div>
-                <div className={"tcard" + (linked ? "" : " nolink")}
-                  onClick={() => linked && p && onProject(p.id)}>
-                  <div className="tc-top">
-                    <span className={"kind " + (b.kind === "meeting" ? "meeting" : b.kind === "focus" ? "focus" : "")}>{b.kind}</span>
-                    {b.who && <span style={{ fontSize: 12.5, color: "var(--ink-4)", fontWeight: 500 }}>with {b.who}</span>}
-                    {p && <span className="tproj"><span className="pd" />{p.name}</span>}
-                  </div>
-                  <div className="ttitle">{b.title}</div>
-                  {b.walkIn && (
-                    <div className="twalk">
-                      <span className="wlabel">{linked ? "Walk in with" : "COS"}</span>
-                      {b.walkIn}
+
+                {editing && draft ? (
+                  <div className="tcard tedit">
+                    <div className="te-times">
+                      <input className="te-time" value={draft.start} placeholder="9:00 AM"
+                        onChange={(e) => setDraft({ ...draft, start: e.target.value })} />
+                      <span className="te-dash">–</span>
+                      <input className="te-time" value={draft.end} placeholder="10:00 AM"
+                        onChange={(e) => setDraft({ ...draft, end: e.target.value })} />
                     </div>
-                  )}
-                  {linked && p && (
-                    <div className="tenter">Enter {p.name} <Icon.arrow /></div>
-                  )}
-                </div>
+                    <input className="te-title" value={draft.title} placeholder="What is it?"
+                      onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
+                    <select className="te-room" value={draft.proj ?? ""}
+                      onChange={(e) => setDraft({ ...draft, proj: e.target.value || null })}>
+                      <option value="">No room</option>
+                      {D.projects.map((pr) => <option key={pr.id} value={pr.id}>{pr.name}</option>)}
+                    </select>
+                    <div className="te-actions">
+                      <button className="btn btn-solid" onClick={saveEdit}>Save</button>
+                      <button className="btn btn-ghost" onClick={() => { setEditId(null); setDraft(null); }}>Cancel</button>
+                      <button className="te-del" onClick={() => deleteBlock(b.id)}>Delete</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={"tcard" + (linked ? "" : " nolink")}>
+                    {editable && (
+                      <button className={"tcheck" + (b.done ? " on" : "")} onClick={() => toggleDone(b)}
+                        title={b.done ? "Done — tap to undo" : "Mark done"}>{b.done ? "✓" : ""}</button>
+                    )}
+                    <div className="tc-top">
+                      <span className={"kind " + (b.kind === "meeting" ? "meeting" : b.kind === "focus" ? "focus" : "")}>{b.kind}</span>
+                      {b.who && <span style={{ fontSize: 12.5, color: "var(--ink-4)", fontWeight: 500 }}>with {b.who}</span>}
+                      {p && <span className="tproj"><span className="pd" />{p.name}</span>}
+                    </div>
+                    <div className="ttitle">{b.title}</div>
+                    {b.walkIn && (
+                      <div className="twalk">
+                        <span className="wlabel">{linked ? "Walk in with" : "COS"}</span>
+                        {b.walkIn}
+                      </div>
+                    )}
+                    <div className="tc-foot">
+                      {linked && p && <button className="tenter" onClick={() => onProject(p.id)}>Enter {p.name} <Icon.arrow /></button>}
+                      {editable && <button className="tedit-btn" onClick={() => startEdit(b)}>Edit · reschedule</button>}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
+          {plan && (
+            <button className="add-block" onClick={addBlock}>
+              <Icon.spark style={{ width: 14, height: 14 }} /> Add a block
+            </button>
+          )}
         </div>
 
         {/* DEFERRED — what COS intentionally left off today */}

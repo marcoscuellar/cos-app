@@ -17,12 +17,37 @@ const OWNER = "me";
 const PACING = new Set(["breathing-room", "tight", "deep-work"]);
 
 interface PlannedBlock {
+  id?: string;
   start: string;
   end: string;
   title: string;
   kind: string;
   proj: string | null;
   walkIn?: string;
+  done?: boolean;
+}
+
+const blockId = () => `b_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+
+// Accept a client-edited blocks array (reschedule, rename, check off, add, delete).
+function sanitizeBlocks(raw: unknown): PlannedBlock[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .slice(0, 60)
+    .map((b): PlannedBlock => {
+      const o = (b ?? {}) as Record<string, unknown>;
+      return {
+        id: typeof o.id === "string" && o.id ? o.id.slice(0, 40) : blockId(),
+        start: String(o.start ?? "").slice(0, 12),
+        end: String(o.end ?? "").slice(0, 12),
+        title: String(o.title ?? "").slice(0, 140),
+        kind: String(o.kind ?? "focus").toLowerCase().slice(0, 16),
+        proj: typeof o.proj === "string" && o.proj ? o.proj.slice(0, 40) : null,
+        walkIn: typeof o.walkIn === "string" && o.walkIn.trim() ? o.walkIn.trim().slice(0, 140) : undefined,
+        done: o.done === true,
+      };
+    })
+    .filter((b) => b.title && b.start);
 }
 interface DayPlan {
   dump: string;
@@ -107,6 +132,7 @@ function normalize(
       const proj = typeof o.proj === "string" && roomIds.has(o.proj) ? o.proj : null;
       const walkIn = typeof o.walkIn === "string" && o.walkIn.trim() ? o.walkIn.trim().slice(0, 140) : undefined;
       return {
+        id: blockId(),
         start: String(o.start ?? "").slice(0, 12),
         end: String(o.end ?? "").slice(0, 12),
         title: String(o.title ?? "").slice(0, 140),
@@ -146,6 +172,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         hours?: string;
         pacing?: string;
         intention?: string;
+        blocks?: unknown;
       };
 
       // Edit just the intention on the existing plan — no AI needed.
@@ -153,6 +180,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const existing = await kvGet<DayPlan>(planKey());
         if (!existing) return res.status(404).json({ error: "No plan to update." });
         const updated: DayPlan = { ...existing, intention: body.intention.trim().slice(0, 200) || undefined };
+        await kvSet(planKey(), updated);
+        return res.status(200).json({ plan: updated });
+      }
+
+      // Save an edited blocks array (reschedule / rename / check off / add / delete) — no AI.
+      if (Array.isArray(body.blocks) && !body.dump) {
+        const existing = await kvGet<DayPlan>(planKey());
+        if (!existing) return res.status(404).json({ error: "No plan to update." });
+        const updated: DayPlan = { ...existing, blocks: sanitizeBlocks(body.blocks) };
         await kvSet(planKey(), updated);
         return res.status(200).json({ plan: updated });
       }

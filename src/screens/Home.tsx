@@ -1,7 +1,36 @@
+import { useEffect, useState } from "react";
 import { COS_DATA } from "../data";
 import { ChatBar } from "../components/shared";
 import { Icon } from "../components/Icon";
 import { greeting as getGreeting, foyerStamp, pickQuote } from "../brief";
+import type { DayPlan } from "../types";
+import { loadPlan } from "../dayPlanApi";
+
+type GlanceBlock = { start: string; end: string; title: string; kind: string; proj: string | null; id?: string; done?: boolean };
+
+// Which block is happening right now (Chicago time)? Mirrors the Calendar screen.
+function currentIndex(blocks: GlanceBlock[]): number {
+  const TZ = "America/Chicago";
+  const now = new Date();
+  const nm =
+    Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(now)) * 60 +
+    Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, minute: "2-digit" }).format(now));
+  const toMin = (t: string) => {
+    const m = t.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
+    if (!m) return null;
+    let h = +m[1];
+    const mn = m[2] ? +m[2] : 0;
+    const ap = m[3]?.toLowerCase();
+    if (ap === "pm" && h < 12) h += 12;
+    if (ap === "am" && h === 12) h = 0;
+    return h * 60 + mn;
+  };
+  return blocks.findIndex((b) => {
+    const s = toMin(b.start);
+    const e = toMin(b.end);
+    return s !== null && s <= nm && (e === null || nm < e);
+  });
+}
 
 interface HomeProps {
   onProject: (id: string) => void;
@@ -19,6 +48,14 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
   const D = COS_DATA;
   const T = D.today;
   const projOf = (id: string) => D.projects.find((x) => x.id === id);
+  // The foyer's "Today" card shows the SAME real plan as the Calendar screen
+  // (falling back to the sample day until one is built), so they never disagree.
+  const [plan, setPlan] = useState<DayPlan | null>(null);
+  useEffect(() => {
+    loadPlan().then((p) => p && setPlan(p));
+  }, []);
+  const todayBlocks: GlanceBlock[] = plan ? plan.blocks : (T.blocks as GlanceBlock[]);
+  const nowIdx = plan ? currentIndex(todayBlocks) : 1;
   // Greeting, datestamp + quote follow the user's home timezone (Central) and a
   // daily seed, so the doorway is correct from any device and rotates day to day.
   const greeting = getGreeting();
@@ -91,14 +128,14 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
             </div>
             <div className="card ac-blue home-cal-card">
               <div className="home-cal-list">
-                {T.blocks.map((b, idx) => {
+                {todayBlocks.map((b, idx) => {
                   const p = b.proj ? projOf(b.proj) : null;
                   const accent = p ? p.accent : "blue";
                   return (
-                    <button key={idx} className={"home-cal-row ac-" + accent}
+                    <button key={b.id ?? idx} className={"home-cal-row ac-" + accent} style={b.done ? { opacity: 0.5 } : undefined}
                       onClick={() => (p ? onProject(p.id) : onNav("today"))}>
                       <span className="hc-time">{b.start}</span>
-                      <span className="hc-title">{b.title}{idx === 1 && <span className="hc-now">NOW</span>}</span>
+                      <span className="hc-title" style={b.done ? { textDecoration: "line-through" } : undefined}>{b.title}{idx === nowIdx && <span className="hc-now">NOW</span>}</span>
                       {p ? <span className="hc-proj"><span className="pd" />{p.name}</span>
                          : <span className="hc-proj" style={{ color: "var(--ink-4)" }}>{b.kind}</span>}
                     </button>

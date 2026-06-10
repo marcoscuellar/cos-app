@@ -16,12 +16,14 @@ export interface Note {
 
 /** A single scheduled block produced by the brain-dump day planner. */
 export interface PlannedBlock {
+  id?: string;
   start: string;
   end: string;
   title: string;
   kind: string;
   proj: string | null;
   walkIn?: string;
+  done?: boolean;
 }
 
 /** Today's AI-built plan, persisted per day. */
