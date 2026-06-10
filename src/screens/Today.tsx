@@ -231,7 +231,7 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
           <div className="ch-foot">
             <span className="ch-syncline">
               <span className="cdot" />
-              {plan ? "Be A BadAss, Work Hard, Just Dont be a Dick" : `Synced with ${T.calendar} · COS attaches context`}
+              {plan ? "If it doesn't make you laugh, smile, profit, or finish — Let it go!" : `Synced with ${T.calendar} · COS attaches context`}
             </span>
           </div>
         </div>
