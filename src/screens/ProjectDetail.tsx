@@ -133,7 +133,7 @@ function CurrentContext({ p, due, setDue, onContinue, onOpenDoc }: CurrentContex
         )}
       </div>
 
-      <NotesPanel projectId={p.id} />
+      <NotesPanel projectId={p.id} projectName={p.name} />
 
       {p.resume && p.resume.length > 0 && (
         <div className="card" style={{ marginTop: 16 }}>

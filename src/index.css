@@ -762,6 +762,17 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .note-row:hover .note-del,.note-del:focus-visible{opacity:1}
 .note-del:hover{background:var(--paper-3);color:var(--a-coral)}
 .note-del svg{width:13px;height:13px;stroke:currentColor}
+.notes-tools{display:flex;justify-content:flex-end;margin-top:12px}
+.notes-tidy-btn{display:inline-flex;align-items:center;gap:7px;font-family:var(--display);font-weight:600;
+  font-size:12.5px;color:var(--ac);background:var(--ac-bg);border-radius:20px;padding:7px 13px;transition:filter .12s}
+.notes-tidy-btn:hover{filter:brightness(.96)}
+.notes-tidy-btn:disabled{opacity:.6;cursor:default}
+.notes-tidy-btn svg{width:14px;height:14px;stroke:currentColor}
+.notes-tidied{margin-top:14px;border:1px solid var(--ac);border-radius:var(--radius-sm);background:var(--ac-bg);padding:14px 16px}
+.tidied-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.tidied-head .card-eyebrow{color:var(--ac)}
+.tidied-body{font-size:14px;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+
 @media (max-width:640px){
   .notes-compose{flex-direction:column}
   .notes-save{align-self:stretch;justify-content:center}

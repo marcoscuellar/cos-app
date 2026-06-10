@@ -30,6 +30,23 @@ export async function addNote(project: string, text: string): Promise<Note[] | n
   }
 }
 
+/** Ask COS to organize a room's raw notes into a clean brief. Raw notes are
+ *  never modified — this returns plain text to display alongside them. */
+export async function tidyNotes(room: string, notes: string[]): Promise<string | null> {
+  try {
+    const r = await fetch("/api/tidy", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ room, notes }),
+    });
+    if (!r.ok) return null;
+    const { tidied } = (await r.json()) as { tidied?: string };
+    return typeof tidied === "string" && tidied.trim() ? tidied.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function deleteNote(project: string, id: string): Promise<Note[] | null> {
   try {
     const r = await fetch("/api/notes", {
