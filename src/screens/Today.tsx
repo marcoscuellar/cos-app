@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { COS_DATA } from "../data";
 import { Icon } from "../components/Icon";
 import type { DayPlan } from "../types";
-import { loadPlan, buildPlan } from "../dayPlanApi";
+import { loadPlan, buildPlan, updateIntention } from "../dayPlanApi";
 
 type AnyBlock = { start: string; end: string; title: string; kind: string; proj: string | null; walkIn?: string; who?: string };
 
@@ -51,6 +51,8 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
   const [dump, setDump] = useState("");
   const [building, setBuilding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingIntent, setEditingIntent] = useState(false);
+  const [intentDraft, setIntentDraft] = useState("");
   const [, setTick] = useState(0); // re-render every minute so "now/next" stays live
 
   useEffect(() => {
@@ -88,6 +90,19 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
     setBuilding(false);
     if (next) setPlan(next);
     else setError(err || "Couldn't build your day — try again.");
+  };
+
+  const startEditIntent = () => {
+    setIntentDraft(plan?.intention ?? "");
+    setEditingIntent(true);
+  };
+  const saveIntent = async () => {
+    setEditingIntent(false);
+    const t = intentDraft.trim();
+    if (!plan || t === (plan.intention ?? "")) return;
+    setPlan({ ...plan, intention: t || undefined }); // optimistic
+    const updated = await updateIntention(t);
+    if (updated) setPlan(updated);
   };
 
   return (
@@ -138,6 +153,33 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
               )}
             </div>
           </div>
+
+          {/* TODAY'S INTENTION — the soul of the day, COS-proposed and editable */}
+          {plan && (
+            <div className="ch-intent">
+              <div className="ci-lbl">Today's intention</div>
+              {editingIntent ? (
+                <input
+                  className="ci-input"
+                  value={intentDraft}
+                  onChange={(e) => setIntentDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveIntent();
+                    if (e.key === "Escape") setEditingIntent(false);
+                  }}
+                  onBlur={saveIntent}
+                  placeholder="What matters most today?"
+                  autoFocus
+                />
+              ) : (
+                <button className={"ci-quote" + (plan.intention ? "" : " empty")} onClick={startEditIntent} title="Tap to edit">
+                  {plan.intention ? `“${plan.intention}”` : "Set today's intention…"}
+                  <span className="ci-edit">edit</span>
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="ch-foot">
             <span className="ch-syncline">
               <span className="cdot" />

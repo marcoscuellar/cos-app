@@ -38,6 +38,22 @@ export async function buildPlan(req: PlanRequest): Promise<{ plan?: DayPlan; err
   }
 }
 
+/** Edit just today's intention on the saved plan (no AI). Returns the updated plan. */
+export async function updateIntention(intention: string): Promise<DayPlan | null> {
+  try {
+    const r = await fetch("/api/plan-day", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ intention }),
+    });
+    if (!r.ok) return null;
+    const { plan } = (await r.json()) as { plan?: DayPlan | null };
+    return plan ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function clearPlan(): Promise<void> {
   try {
     await fetch("/api/plan-day", { method: "DELETE" });

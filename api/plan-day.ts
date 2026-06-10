@@ -28,6 +28,7 @@ interface DayPlan {
   dump: string;
   blocks: PlannedBlock[];
   deferred: string[];
+  intention?: string;
   note?: string;
   createdAt: number;
 }
@@ -70,33 +71,34 @@ function buildPrompt(
     "- Tie a block to a room id ONLY when it clearly relates; otherwise proj = null.",
     "- Titles short and concrete. `walkIn` is an optional ≤8-word gentle cue to start the block.",
     "- `kind` is one of: ritual, focus, meeting, break, admin, errand, meal.",
+    "- `intention` is the ONE directive line for the day, in the user's own voice — short, punchy, specific to their dump (≤14 words). Example: \"Protect the GLVE morning. Everything else can wait.\" Name what matters most; make it motivating, not generic.",
     "- `note` is ONE warm, encouraging sentence about the day (no lists).",
     "",
     "Rooms you may tie blocks to (use the id):",
     roomList,
     "",
     "Respond with ONLY valid JSON, no prose, no code fences, in exactly this shape:",
-    '{"blocks":[{"start":"7:00 AM","end":"7:45 AM","title":"...","kind":"focus","proj":"glve","walkIn":"..."}],"deferred":["..."],"note":"..."}',
+    '{"intention":"...","blocks":[{"start":"7:00 AM","end":"7:45 AM","title":"...","kind":"focus","proj":"glve","walkIn":"..."}],"deferred":["..."],"note":"..."}',
   ].join("\n");
 
   const user = `Here is my brain-dump for today:\n\n${dump}`;
   return { system, user };
 }
 
-function parsePlanJSON(text: string): { blocks?: unknown; deferred?: unknown; note?: unknown } {
+function parsePlanJSON(text: string): { blocks?: unknown; deferred?: unknown; intention?: unknown; note?: unknown } {
   let t = text.trim();
   const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fence) t = fence[1].trim();
   const start = t.indexOf("{");
   const end = t.lastIndexOf("}");
   if (start >= 0 && end > start) t = t.slice(start, end + 1);
-  return JSON.parse(t) as { blocks?: unknown; deferred?: unknown; note?: unknown };
+  return JSON.parse(t) as { blocks?: unknown; deferred?: unknown; intention?: unknown; note?: unknown };
 }
 
 function normalize(
-  parsed: { blocks?: unknown; deferred?: unknown; note?: unknown },
+  parsed: { blocks?: unknown; deferred?: unknown; intention?: unknown; note?: unknown },
   roomIds: Set<string>,
-): { blocks: PlannedBlock[]; deferred: string[]; note?: string } {
+): { blocks: PlannedBlock[]; deferred: string[]; intention?: string; note?: string } {
   const rawBlocks = Array.isArray(parsed.blocks) ? parsed.blocks : [];
   const blocks: PlannedBlock[] = rawBlocks
     .slice(0, 40)
@@ -118,7 +120,9 @@ function normalize(
     ? parsed.deferred.slice(0, 25).map((d) => String(d).slice(0, 160)).filter(Boolean)
     : [];
   const note = typeof parsed.note === "string" && parsed.note.trim() ? parsed.note.trim().slice(0, 300) : undefined;
-  return { blocks, deferred, note };
+  const intention =
+    typeof parsed.intention === "string" && parsed.intention.trim() ? parsed.intention.trim().slice(0, 200) : undefined;
+  return { blocks, deferred, intention, note };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -136,14 +140,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "POST") {
-      if (!providerConfigured()) return res.status(503).json({ error: "AI is not configured." });
-
       const body = (req.body ?? {}) as {
         dump?: string;
         rooms?: { id?: unknown; name?: unknown }[];
         hours?: string;
         pacing?: string;
+        intention?: string;
       };
+
+      // Edit just the intention on the existing plan — no AI needed.
+      if (typeof body.intention === "string" && !body.dump) {
+        const existing = await kvGet<DayPlan>(planKey());
+        if (!existing) return res.status(404).json({ error: "No plan to update." });
+        const updated: DayPlan = { ...existing, intention: body.intention.trim().slice(0, 200) || undefined };
+        await kvSet(planKey(), updated);
+        return res.status(200).json({ plan: updated });
+      }
+
+      if (!providerConfigured()) return res.status(503).json({ error: "AI is not configured." });
+
       const dump = typeof body.dump === "string" ? body.dump.trim() : "";
       if (!dump) return res.status(400).json({ error: "Empty brain-dump." });
       if (dump.length > 6000) return res.status(413).json({ error: "Brain-dump too long." });
@@ -161,9 +176,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       let plan: DayPlan;
       try {
-        const { blocks, deferred, note } = normalize(parsePlanJSON(answer), roomIds);
+        const { blocks, deferred, intention, note } = normalize(parsePlanJSON(answer), roomIds);
         if (!blocks.length) throw new Error("no blocks");
-        plan = { dump, blocks, deferred, note, createdAt: Date.now() };
+        plan = { dump, blocks, deferred, intention, note, createdAt: Date.now() };
       } catch {
         return res.status(502).json({ error: "Couldn't build a clean schedule from that — try again." });
       }

@@ -29,6 +29,8 @@ export interface DayPlan {
   dump: string;
   blocks: PlannedBlock[];
   deferred: string[];
+  /** The one directive line for the day — shown in the black box, editable. */
+  intention?: string;
   note?: string;
   createdAt: number;
 }

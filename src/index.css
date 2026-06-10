@@ -813,6 +813,22 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
   margin-top:16px;padding-top:13px;border-top:1px solid rgba(255,255,255,.14);max-width:26ch;line-height:1.5}
 @media(max-width:640px){.cal-hero .ch-live{text-align:left;align-items:flex-start;margin-left:0}}
 
+/* today's intention — the soul of the day, with a divider line */
+.cal-hero .ch-intent{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.14)}
+.cal-hero .ci-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8c8c95;margin-bottom:12px}
+.cal-hero .ci-quote{display:inline-flex;align-items:baseline;gap:12px;text-align:left;background:none;cursor:pointer;
+  font-family:var(--display);font-weight:500;font-size:clamp(20px,2.7vw,28px);letter-spacing:-.015em;line-height:1.32;
+  color:#f0f0f2;max-width:42ch}
+.cal-hero .ci-quote:hover{color:#fff}
+.cal-hero .ci-quote.empty{color:#6a6a72;font-style:italic}
+.cal-hero .ci-edit{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  color:#6a6a72;flex-shrink:0;opacity:0;transition:opacity .12s}
+.cal-hero .ci-quote:hover .ci-edit{opacity:1}
+.cal-hero .ci-input{width:100%;max-width:46ch;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.32);
+  color:#fff;font-family:var(--display);font-weight:500;font-size:clamp(20px,2.7vw,28px);letter-spacing:-.015em;
+  padding:2px 0 9px;outline:none}
+.cal-hero .ci-input::placeholder{color:#5a5a62}
+
 /* brain-dump bar — sits right under the black box, Home-style */
 .today-arch .cal-hero{margin-bottom:16px}
 .dump-bar{margin-bottom:8px}
