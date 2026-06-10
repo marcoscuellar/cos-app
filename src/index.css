@@ -371,7 +371,7 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .tcard .kind.meeting{color:var(--a-blue);border-color:transparent;background:var(--a-blue-bg)}
 .tcard .tproj{margin-left:auto;font-family:var(--display);font-weight:600;font-size:12.5px;color:var(--ac);display:inline-flex;align-items:center;gap:6px}
 .tcard .tproj .pd{width:7px;height:7px;border-radius:50%;background:var(--ac)}
-.tcard .ttitle{font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.015em;color:var(--ink);margin-top:11px}
+.tcard .ttitle{font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:-.02em;color:var(--ink);margin-top:11px}
 .tcard .twalk{display:flex;gap:9px;margin-top:9px;font-size:13.5px;color:var(--ink-3);line-height:1.5;max-width:54ch}
 .tcard .twalk .wlabel{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ac);flex-shrink:0;padding-top:3px}
 .tcard .tenter{margin-top:14px;display:inline-flex;align-items:center;gap:7px;font-family:var(--display);font-weight:600;font-size:13px;color:var(--ac)}
@@ -774,8 +774,8 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .cal-hero .ch-left{display:flex;flex-direction:column;align-items:flex-start}
 .cal-hero .dw-rule{height:3px;width:54px;background:#fff;opacity:.95;margin-bottom:20px}
 .cal-hero .chip{background:#fff;color:#0a0a0a;border-radius:0}
-.cal-hero .ch-day{font-family:var(--display);font-weight:800;letter-spacing:-.04em;line-height:.9;
-  font-size:clamp(44px,7vw,82px);color:#fff;margin-top:18px}
+.cal-hero .ch-day{font-family:var(--display);font-weight:900;letter-spacing:-.045em;line-height:.88;
+  font-size:clamp(56px,9.5vw,118px);color:#fff;margin-top:18px}
 .cal-hero .ch-date{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
   color:#9a9aa2;margin-top:13px}
 .cal-hero .ch-right{display:flex;gap:38px}
