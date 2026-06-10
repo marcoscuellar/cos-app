@@ -191,6 +191,8 @@ RULES: Use real current-date awareness. Prioritize mid-market + vertical strengt
   },
 };
 
+export const ENGINE_IDS = Object.keys(ENGINES);
+
 export function getEngine(id: string): ServerEngine | null {
   return ENGINES[id] ?? null;
 }

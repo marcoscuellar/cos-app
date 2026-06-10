@@ -902,6 +902,23 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .eng-draft{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-3);cursor:pointer;user-select:none}
 .eng-draft input{width:15px;height:15px;accent-color:var(--ac);cursor:pointer}
 .run-draft{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);border:1px solid var(--line-3);border-radius:100px;padding:2px 7px}
+
+/* saved runs toolbar */
+.runs-toolbar{display:flex;gap:12px;align-items:center;margin:18px 0 6px;flex-wrap:wrap}
+.runs-filter{appearance:none;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink);
+  font-size:13.5px;font-weight:600;padding:10px 32px 10px 13px;cursor:pointer;outline:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--ink-4) 50%),linear-gradient(135deg,var(--ink-4) 50%,transparent 50%);
+  background-position:right 14px center,right 9px center;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.runs-search{display:flex;align-items:center;gap:9px;flex:1;min-width:200px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 13px;background:var(--paper)}
+.runs-search svg{stroke:var(--ink-4);flex-shrink:0}
+.runs-search input{flex:1;border:none;outline:none;background:none;font-size:14px;color:var(--ink)}
+
+.run-engine{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);font-weight:700;margin-right:4px}
+.run-vmeta{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--ink-4);padding-top:14px}
+.run-export{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.run-export button{font-family:var(--display);font-weight:600;font-size:12px;color:var(--ink-2);
+  border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 12px;background:var(--paper);transition:all .12s}
+.run-export button:hover{border-color:var(--ac);color:var(--ac)}
 .eng-working{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:13.5px;color:var(--ink-3);
   background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px 15px}
 .eng-working .spin{width:15px;height:15px;border:2px solid var(--line-3);border-top-color:var(--ac);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}

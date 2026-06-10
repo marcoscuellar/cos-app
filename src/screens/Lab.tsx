@@ -3,13 +3,15 @@ import { Eyebrow } from "../components/shared";
 import { Icon } from "../components/Icon";
 import type { EngineDef, EngineRun } from "../types";
 import { ENGINES, getEngineDef, assemblePrompt } from "../engines";
-import { loadRuns, runEngine, patchRun } from "../enginesApi";
+import { loadRuns, loadAllRuns, runEngine, patchRun } from "../enginesApi";
 import { renderMarkdown } from "../lib/markdown";
+import { runToMarkdown, runFilename, copyText, downloadFile } from "../lib/exportRun";
 
-/* THE ENGINE ROOM — your sales-intelligence pipeline. Each engine is a
-   repeatable workflow: pick it, give it inputs, it researches live and returns
-   a structured report. Every run is saved. */
+/* THE ENGINE ROOM — your sales-intelligence pipeline. Pick an engine, give it
+   inputs, it researches live and returns a structured report. Every run is
+   saved to Redis; the Saved Runs tab is the cross-engine library + export. */
 export function LabScreen() {
+  const [tab, setTab] = useState<"engines" | "saved">("engines");
   const [activeId, setActiveId] = useState<string | null>(null);
   const def = activeId ? getEngineDef(activeId) : null;
 
@@ -22,27 +24,103 @@ export function LabScreen() {
         <h1 className="disp" style={{ margin: "16px 0 8px" }}>
           Your <span className="em ac-indigo">engines.</span>
         </h1>
-        <p className="dim" style={{ fontSize: 16, maxWidth: "58ch", marginBottom: 36 }}>
+        <p className="dim" style={{ fontSize: 16, maxWidth: "58ch", marginBottom: 22 }}>
           Repeatable operating systems that turn a messy input into useful work. Pick an engine, give it
           what it needs, and it researches live and reports back. Every run is saved.
         </p>
 
-        <div className="grid-3">
-          {ENGINES.map((e) => (
-            <button key={e.id} className={"card engine-card ac-" + e.accent} onClick={() => setActiveId(e.id)}>
-              <div className="eng-num">{String(e.num).padStart(2, "0")}</div>
-              <div className="eng-name">{e.name}</div>
-              <div className="eng-tag">{e.tagline}</div>
-              <div className="eng-stages">
-                {e.stages.map((s, i) => (
-                  <span key={s} className="eng-stage">{s}{i < e.stages.length - 1 && <i className="eng-arrow">→</i>}</span>
-                ))}
-              </div>
-              <div className="eng-open">Open engine <Icon.arrow style={{ width: 13, height: 13 }} /></div>
-            </button>
-          ))}
+        <div className="tabs">
+          <button className={"tab" + (tab === "engines" ? " on" : "")} onClick={() => setTab("engines")}>Engines</button>
+          <button className={"tab" + (tab === "saved" ? " on" : "")} onClick={() => setTab("saved")}>Saved runs</button>
+        </div>
+
+        {tab === "engines" ? (
+          <div className="grid-3">
+            {ENGINES.map((e) => (
+              <button key={e.id} className={"card engine-card ac-" + e.accent} onClick={() => setActiveId(e.id)}>
+                <div className="eng-num">{String(e.num).padStart(2, "0")}</div>
+                <div className="eng-name">{e.name}</div>
+                <div className="eng-tag">{e.tagline}</div>
+                <div className="eng-stages">
+                  {e.stages.map((s, i) => (
+                    <span key={s} className="eng-stage">{s}{i < e.stages.length - 1 && <i className="eng-arrow">→</i>}</span>
+                  ))}
+                </div>
+                <div className="eng-open">Open engine <Icon.arrow style={{ width: 13, height: 13 }} /></div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <SavedRunsView />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Saved Runs — every run across all engines, filterable + searchable ──
+function SavedRunsView() {
+  const [runs, setRuns] = useState<EngineRun[] | null>(null);
+  const [filter, setFilter] = useState<string>("all");
+  const [q, setQ] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadAllRuns().then(setRuns);
+  }, []);
+
+  // Optimistic local update after a notes/star edit (runs span many engines).
+  const apply = (id: string, patch: Partial<EngineRun>) =>
+    setRuns((rs) => (rs ?? []).map((r) => (r.id === id ? { ...r, ...patch } : r)));
+
+  const onStar = async (r: EngineRun) => {
+    apply(r.id, { starred: !r.starred });
+    await patchRun(r.engineId, r.id, { starred: !r.starred });
+  };
+  const onNotes = async (r: EngineRun, notes: string) => {
+    if (notes === (r.notes ?? "")) return;
+    apply(r.id, { notes });
+    await patchRun(r.engineId, r.id, { notes });
+  };
+
+  if (runs === null) return <div className="eng-empty">Loading your runs…</div>;
+
+  const needle = q.trim().toLowerCase();
+  const filtered = runs.filter((r) => {
+    if (filter !== "all" && r.engineId !== filter) return false;
+    if (!needle) return true;
+    return (
+      Object.values(r.inputs).join(" ").toLowerCase().includes(needle) ||
+      (r.output || "").toLowerCase().includes(needle) ||
+      (r.notes || "").toLowerCase().includes(needle)
+    );
+  });
+
+  return (
+    <div className="fade-in">
+      <div className="runs-toolbar">
+        <select className="runs-filter" value={filter} onChange={(e) => setFilter(e.target.value)}>
+          <option value="all">All engines ({runs.length})</option>
+          {ENGINES.map((e) => {
+            const n = runs.filter((r) => r.engineId === e.id).length;
+            return <option key={e.id} value={e.id} disabled={n === 0}>{String(e.num).padStart(2, "0")} · {e.name} ({n})</option>;
+          })}
+        </select>
+        <div className="runs-search">
+          <Icon.search style={{ width: 15, height: 15 }} />
+          <input placeholder="Search inputs, output, notes…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
       </div>
+
+      {filtered.length === 0 ? (
+        <div className="eng-empty">{runs.length === 0 ? "No runs yet — run an engine and it'll show up here." : "No runs match."}</div>
+      ) : (
+        filtered.map((r) => (
+          <RunCard key={r.id} run={r} def={getEngineDef(r.engineId)} showEngine open={openId === r.id}
+            onToggle={() => setOpenId(openId === r.id ? null : r.id)}
+            onStar={() => onStar(r)} onNotes={(n) => onNotes(r, n)} />
+        ))
+      )}
     </div>
   );
 }
@@ -86,13 +164,13 @@ function EngineRunner({ def, onBack }: { def: EngineDef; onBack: () => void }) {
   };
 
   const toggleStar = async (r: EngineRun) => {
-    const next = await patchRun(def.id, r.id, { starred: !r.starred });
-    if (next.length) setRuns(next);
+    setRuns((rs) => rs.map((x) => (x.id === r.id ? { ...x, starred: !x.starred } : x)));
+    await patchRun(def.id, r.id, { starred: !r.starred });
   };
   const saveNotes = async (r: EngineRun, notes: string) => {
     if (notes === (r.notes ?? "")) return;
-    const next = await patchRun(def.id, r.id, { notes });
-    if (next.length) setRuns(next);
+    setRuns((rs) => rs.map((x) => (x.id === r.id ? { ...x, notes } : x)));
+    await patchRun(def.id, r.id, { notes });
   };
 
   return (
@@ -113,7 +191,6 @@ function EngineRunner({ def, onBack }: { def: EngineDef; onBack: () => void }) {
           </div>
         </div>
 
-        {/* INTAKE */}
         <div className="card eng-intake">
           <div className="card-eyebrow">Run the engine</div>
           {def.inputs.map((f) => (
@@ -153,7 +230,6 @@ function EngineRunner({ def, onBack }: { def: EngineDef; onBack: () => void }) {
           )}
         </div>
 
-        {/* RUNS */}
         {loaded && runs.length === 0 && !running && (
           <div className="eng-empty">No runs yet. Give the engine an input above and run it.</div>
         )}
@@ -167,15 +243,24 @@ function EngineRunner({ def, onBack }: { def: EngineDef; onBack: () => void }) {
   );
 }
 
-function RunCard({ run, def, open, onToggle, onStar, onNotes }: {
-  run: EngineRun; def: EngineDef; open: boolean;
+function RunCard({ run, def, open, showEngine, onToggle, onStar, onNotes }: {
+  run: EngineRun; def?: EngineDef; open: boolean; showEngine?: boolean;
   onToggle: () => void; onStar: () => void; onNotes: (n: string) => void;
 }) {
   const [notes, setNotes] = useState(run.notes ?? "");
+  const [copied, setCopied] = useState(false);
   const when = new Date(run.createdAt).toLocaleString(undefined, {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
   });
   const summary = Object.values(run.inputs).join(" · ").slice(0, 90) || "—";
+  const engineLabel = def ? `${String(def.num).padStart(2, "0")} · ${def.name}` : run.engineId;
+
+  const copy = async () => {
+    if (await copyText(runToMarkdown(run, def))) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    }
+  };
 
   return (
     <div className={"card run-card" + (run.starred ? " starred" : "")}>
@@ -185,7 +270,12 @@ function RunCard({ run, def, open, onToggle, onStar, onNotes }: {
           {run.starred ? "★" : "☆"}
         </button>
         <div className="run-meta">
-          <div className="run-when">{when}{run.starred && <span className="run-best">Best</span>}{run.draft && <span className="run-draft">Draft</span>}</div>
+          <div className="run-when">
+            {showEngine && <span className="run-engine">{engineLabel}</span>}
+            {when}
+            {run.starred && <span className="run-best">Best</span>}
+            {run.draft && <span className="run-draft">Draft</span>}
+          </div>
           <div className="run-sum">{summary}</div>
         </div>
         <div className="run-model">{run.model.replace("claude-", "")}</div>
@@ -194,6 +284,16 @@ function RunCard({ run, def, open, onToggle, onStar, onNotes }: {
 
       {open && (
         <div className="run-body">
+          <div className="run-vmeta">
+            Engine v{run.version} · {run.model.replace("claude-", "")}{run.draft ? " · draft (no web search)" : ""}
+          </div>
+
+          <div className="run-export">
+            <button onClick={copy}>{copied ? "Copied ✓" : "Copy Markdown"}</button>
+            <button onClick={() => downloadFile(runFilename(run, def, "md"), runToMarkdown(run, def), "text/markdown")}>Download .md</button>
+            <button onClick={() => downloadFile(runFilename(run, def, "json"), JSON.stringify(run, null, 2), "application/json")}>Download .json</button>
+          </div>
+
           <div className="run-report" dangerouslySetInnerHTML={{ __html: renderMarkdown(run.output) }} />
 
           {run.sources.length > 0 && (
@@ -214,9 +314,13 @@ function RunCard({ run, def, open, onToggle, onStar, onNotes }: {
 
           <details className="run-inputs">
             <summary>Inputs used</summary>
-            {def.inputs.map((f) => run.inputs[f.key] && (
-              <div key={f.key} className="run-input-row"><b>{f.label.replace(/\s*\(optional\)/i, "")}:</b> {run.inputs[f.key]}</div>
-            ))}
+            {def
+              ? def.inputs.map((f) => run.inputs[f.key] && (
+                  <div key={f.key} className="run-input-row"><b>{f.label.replace(/\s*\(optional\)/i, "")}:</b> {run.inputs[f.key]}</div>
+                ))
+              : Object.entries(run.inputs).map(([k, v]) => (
+                  <div key={k} className="run-input-row"><b>{k}:</b> {v}</div>
+                ))}
           </details>
         </div>
       )}

@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Anthropic from "@anthropic-ai/sdk";
 import { kvConfigured, kvGet, kvSet } from "../lib/server/kv.js";
-import { getEngine, todayLabel } from "../lib/server/engines.js";
+import { getEngine, todayLabel, ENGINE_IDS } from "../lib/server/engines.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Engine runner. Each engine is a director system prompt run with LIVE web
@@ -100,9 +100,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method === "GET") {
       const engineId = String(req.query.engine ?? "");
-      if (!engineId) return res.status(400).json({ error: "Missing engine." });
-      const runs = (await kvGet<EngineRun[]>(runsKey(engineId))) ?? [];
-      return res.status(200).json({ runs });
+      // Single engine, unless ?all=1 (or no engine) → aggregate every engine's runs.
+      if (engineId && req.query.all !== "1") {
+        const runs = (await kvGet<EngineRun[]>(runsKey(engineId))) ?? [];
+        return res.status(200).json({ runs });
+      }
+      const lists = await Promise.all(ENGINE_IDS.map((id) => kvGet<EngineRun[]>(runsKey(id))));
+      const all = lists
+        .flatMap((l) => l ?? [])
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, 300);
+      return res.status(200).json({ runs: all });
     }
 
     if (req.method === "PATCH") {

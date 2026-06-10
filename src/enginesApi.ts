@@ -14,6 +14,18 @@ export async function loadRuns(engineId: string): Promise<EngineRun[]> {
   }
 }
 
+/** Every run across all engines, newest first — for the Saved Runs view. */
+export async function loadAllRuns(): Promise<EngineRun[]> {
+  try {
+    const r = await fetch("/api/engine-run?all=1");
+    if (!r.ok) return [];
+    const { runs } = (await r.json()) as { runs?: EngineRun[] };
+    return runs ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export async function runEngine(
   engineId: string,
   inputs: Record<string, string>,
