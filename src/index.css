@@ -740,3 +740,30 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
   background:var(--a-coral-bg);border-radius:20px;padding:2px 7px}
 .report-d{font-size:13px;color:var(--ink-3);line-height:1.5;max-width:62ch}
 .report-when{font-size:11.5px;color:var(--ink-4);font-weight:600;white-space:nowrap;flex-shrink:0;padding-top:3px}
+
+/* ---------- Room notes (persisted to KV) ---------- */
+.notes-card{margin-top:16px}
+.notes-compose{display:flex;gap:10px;align-items:stretch;margin-top:4px}
+.notes-input{flex:1;resize:vertical;min-height:50px;font-family:var(--ui);font-size:14.5px;line-height:1.5;
+  color:var(--ink);background:var(--paper-2);border:1px solid var(--line-3);border-radius:var(--radius-sm);
+  padding:11px 13px;transition:border-color .15s}
+.notes-input:focus{outline:none;border-color:var(--ac)}
+.notes-input::placeholder{color:var(--ink-4)}
+.notes-save{flex-shrink:0;white-space:nowrap;align-self:flex-end}
+.notes-empty{margin-top:14px;font-size:13.5px;color:var(--ink-4)}
+.notes-failed{margin-top:10px;font-size:12.5px;color:var(--a-coral);font-weight:500}
+.notes-list{display:flex;flex-direction:column;margin-top:8px}
+.note-row{display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-top:1px solid var(--line-2)}
+.note-text{flex:1;font-size:14.5px;line-height:1.5;color:var(--ink-2);white-space:pre-wrap;word-break:break-word}
+.note-meta{flex-shrink:0;font-family:var(--mono,ui-monospace,monospace);font-size:11px;color:var(--ink-4);
+  padding-top:2px;white-space:nowrap}
+.note-del{flex-shrink:0;width:24px;height:24px;display:grid;place-items:center;border-radius:6px;
+  color:var(--ink-4);opacity:0;transition:opacity .12s,background .12s,color .12s}
+.note-row:hover .note-del,.note-del:focus-visible{opacity:1}
+.note-del:hover{background:var(--paper-3);color:var(--a-coral)}
+.note-del svg{width:13px;height:13px;stroke:currentColor}
+@media (max-width:640px){
+  .notes-compose{flex-direction:column}
+  .notes-save{align-self:stretch;justify-content:center}
+  .note-del{opacity:1}
+}

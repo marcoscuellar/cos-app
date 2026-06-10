@@ -7,6 +7,13 @@ export type ProjectStatus = "in-motion" | "blocked" | "dormant";
 export type IdeaStage = "Spark" | "Brewing" | "Exploring" | "Testing" | "Ready";
 export type Theme = "bold" | "mono" | "slate";
 
+/** A note the user writes inside a room — persisted to KV, newest first. */
+export interface Note {
+  id: string;
+  text: string;
+  createdAt: number;
+}
+
 export interface ResumeItem {
   kind: string;
   t: string;

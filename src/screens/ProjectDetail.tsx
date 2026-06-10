@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Project, DocRef, Accent } from "../types";
 import { Eyebrow, Status } from "../components/shared";
 import { Icon } from "../components/Icon";
+import { NotesPanel } from "../components/Notes";
 
 interface ProjectScreenProps {
   project: Project;
@@ -131,6 +132,8 @@ function CurrentContext({ p, due, setDue, onContinue, onOpenDoc }: CurrentContex
           </div>
         )}
       </div>
+
+      <NotesPanel projectId={p.id} />
 
       {p.resume && p.resume.length > 0 && (
         <div className="card" style={{ marginTop: 16 }}>
