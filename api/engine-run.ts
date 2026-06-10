@@ -15,7 +15,9 @@ import { getEngine, todayLabel } from "../lib/server/engines.js";
 export const config = { maxDuration: 300 };
 
 const OWNER = "me";
-const MODEL = process.env.AI_MODEL || "claude-opus-4-8";
+// Engines default to Sonnet 4.6 — strong at research + synthesis, ~40% cheaper
+// and faster than Opus (which also dodges function timeouts). Override with ENGINE_MODEL.
+const MODEL = process.env.ENGINE_MODEL || "claude-sonnet-4-6";
 const runsKey = (engineId: string) => `engine:runs:${OWNER}:${engineId}`;
 
 interface EngineRun {
@@ -29,6 +31,7 @@ interface EngineRun {
   createdAt: number;
   notes?: string;
   starred?: boolean;
+  draft?: boolean;
 }
 
 // Pull every cited/searched URL we can find out of a finished message.
@@ -41,13 +44,24 @@ function collectSources(content: unknown[], into: Set<string>) {
   }
 }
 
-async function runEngine(systemPrompt: string, userPrompt: string): Promise<{ output: string; sources: string[] }> {
+async function runEngine(
+  systemPrompt: string,
+  userPrompt: string,
+  draft: boolean,
+): Promise<{ output: string; sources: string[] }> {
   const client = new Anthropic();
   // Cast: server-tool versions + adaptive thinking may outpace the installed SDK's types.
-  const tools = [
-    { type: "web_search_20260209", name: "web_search" },
-    { type: "web_fetch_20260209", name: "web_fetch" },
-  ];
+  // Draft mode skips web tools entirely — fast + cheap, for tuning the engine.
+  const tools = draft
+    ? []
+    : [
+        { type: "web_search_20260209", name: "web_search" },
+        { type: "web_fetch_20260209", name: "web_fetch" },
+      ];
+  const system = draft
+    ? systemPrompt +
+      "\n\nFAST DRAFT MODE: You have NO web access on this run. Produce a best-effort structured draft from your existing knowledge, clearly flag anything you would normally verify live, and mark assumptions. Do not invent specific facts, dates, or source URLs, and omit the Sources section."
+    : systemPrompt;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const messages: any[] = [{ role: "user", content: userPrompt }];
   const sources = new Set<string>();
@@ -59,7 +73,7 @@ async function runEngine(systemPrompt: string, userPrompt: string): Promise<{ ou
       model: MODEL,
       max_tokens: 20000,
       thinking: { type: "adaptive" },
-      system: systemPrompt,
+      system,
       messages,
       tools,
     } as any);
@@ -113,7 +127,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === "POST") {
       if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: "AI is not configured." });
 
-      const body = (req.body ?? {}) as { engineId?: string; inputs?: Record<string, string>; prompt?: string };
+      const body = (req.body ?? {}) as { engineId?: string; inputs?: Record<string, string>; prompt?: string; draft?: boolean };
+      const draft = body.draft === true;
       const engine = getEngine(String(body.engineId ?? ""));
       if (!engine) return res.status(400).json({ error: "Unknown engine." });
       const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
@@ -126,7 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const system = engine.system.replace(/\{\{DATE\}\}/g, todayLabel());
-      const { output, sources } = await runEngine(system, prompt);
+      const { output, sources } = await runEngine(system, prompt, draft);
       if (!output) return res.status(502).json({ error: "The engine came back empty — try running it again." });
 
       const run: EngineRun = {
@@ -138,6 +153,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         output,
         sources,
         createdAt: Date.now(),
+        draft,
       };
       const runs = (await kvGet<EngineRun[]>(runsKey(engine.id))) ?? [];
       const next = [run, ...runs].slice(0, 50);

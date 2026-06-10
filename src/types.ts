@@ -277,4 +277,6 @@ export interface EngineRun {
   createdAt: number;
   notes?: string;
   starred?: boolean;
+  /** True when run as a fast draft (no web search). */
+  draft?: boolean;
 }

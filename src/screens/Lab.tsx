@@ -50,6 +50,7 @@ export function LabScreen() {
 function EngineRunner({ def, onBack }: { def: EngineDef; onBack: () => void }) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [running, setRunning] = useState(false);
+  const [draft, setDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [runs, setRuns] = useState<EngineRun[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -74,7 +75,7 @@ function EngineRunner({ def, onBack }: { def: EngineDef; onBack: () => void }) {
     const prompt = assemblePrompt(def, values);
     setRunning(true);
     setError(null);
-    const { run: newRun, runs: nextRuns, error: err } = await runEngine(def.id, values, prompt);
+    const { run: newRun, runs: nextRuns, error: err } = await runEngine(def.id, values, prompt, draft);
     setRunning(false);
     if (newRun) {
       setRuns(nextRuns ?? [newRun, ...runs]);
@@ -130,14 +131,24 @@ function EngineRunner({ def, onBack }: { def: EngineDef; onBack: () => void }) {
           {error && <div className="notes-failed" style={{ marginTop: 4 }}>{error}</div>}
           <div className="eng-run-row">
             <button className="btn btn-solid" onClick={run} disabled={running}>
-              {running ? "Running…" : "Run engine"} <Icon.spark style={{ width: 15, height: 15 }} />
+              {running ? "Running…" : draft ? "Run draft" : "Run engine"} <Icon.spark style={{ width: 15, height: 15 }} />
             </button>
-            {!running && <span className="eng-run-note">Researches live on the web — a run can take a minute.</span>}
+            <label className="eng-draft">
+              <input type="checkbox" checked={draft} onChange={(e) => setDraft(e.target.checked)} disabled={running} />
+              Fast draft — skip web search
+            </label>
           </div>
+          {!running && (
+            <div className="eng-run-note">
+              {draft
+                ? "Draft mode: no web search — fast & cheap, from the model's own knowledge. Good for tuning the engine."
+                : "Researches live on the web and cites sources — a run can take a minute."}
+            </div>
+          )}
           {running && (
             <div className="eng-working">
               <span className="spin" />
-              Searching the web, verifying sources, writing the report… hang tight.
+              {draft ? "Drafting from the model's knowledge…" : "Searching the web, verifying sources, writing the report… hang tight."}
             </div>
           )}
         </div>
@@ -174,7 +185,7 @@ function RunCard({ run, def, open, onToggle, onStar, onNotes }: {
           {run.starred ? "★" : "☆"}
         </button>
         <div className="run-meta">
-          <div className="run-when">{when}{run.starred && <span className="run-best">Best</span>}</div>
+          <div className="run-when">{when}{run.starred && <span className="run-best">Best</span>}{run.draft && <span className="run-draft">Draft</span>}</div>
           <div className="run-sum">{summary}</div>
         </div>
         <div className="run-model">{run.model.replace("claude-", "")}</div>

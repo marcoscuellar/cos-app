@@ -18,12 +18,13 @@ export async function runEngine(
   engineId: string,
   inputs: Record<string, string>,
   prompt: string,
+  draft = false,
 ): Promise<{ run?: EngineRun; runs?: EngineRun[]; error?: string }> {
   try {
     const r = await fetch("/api/engine-run", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ engineId, inputs, prompt }),
+      body: JSON.stringify({ engineId, inputs, prompt, draft }),
     });
     const data = (await r.json().catch(() => ({}))) as { run?: EngineRun; runs?: EngineRun[]; error?: string };
     if (!r.ok) return { error: data.error || "The engine hit a snag — try again." };
