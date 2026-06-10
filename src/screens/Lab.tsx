@@ -1,97 +1,214 @@
-import { COS_DATA } from "../data";
+import { useEffect, useState } from "react";
 import { Eyebrow } from "../components/shared";
+import { Icon } from "../components/Icon";
+import type { EngineDef, EngineRun } from "../types";
+import { ENGINES, getEngineDef, assemblePrompt } from "../engines";
+import { loadRuns, runEngine, patchRun } from "../enginesApi";
+import { renderMarkdown } from "../lib/markdown";
 
-const STATUS_LABEL: Record<string, string> = {
-  field: "In the field",
-  reporting: "Reporting back",
-  idle: "Resting",
-};
-const STATE_LABEL: Record<string, string> = {
-  active: "Active",
-  paused: "Paused",
-  done: "Done",
-};
-
+/* THE ENGINE ROOM — your sales-intelligence pipeline. Each engine is a
+   repeatable workflow: pick it, give it inputs, it researches live and returns
+   a structured report. Every run is saved. */
 export function LabScreen() {
-  const { lab } = COS_DATA;
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const def = activeId ? getEngineDef(activeId) : null;
+
+  if (def) return <EngineRunner def={def} onBack={() => setActiveId(null)} />;
+
   return (
     <div className="wrap">
       <div className="stagger">
-        <Eyebrow accent="indigo">Research department</Eyebrow>
+        <Eyebrow accent="indigo">Engine room</Eyebrow>
         <h1 className="disp" style={{ margin: "16px 0 8px" }}>
-          The <span className="em ac-indigo">Lab.</span>
+          Your <span className="em ac-indigo">engines.</span>
         </h1>
-        <p className="dim" style={{ fontSize: 16, maxWidth: "54ch", marginBottom: 40 }}>
-          A quiet research department working on your behalf. Agents watch the field, experiments
-          test the product, and findings land here like mail on a desk.
+        <p className="dim" style={{ fontSize: 16, maxWidth: "58ch", marginBottom: 36 }}>
+          Repeatable operating systems that turn a messy input into useful work. Pick an engine, give it
+          what it needs, and it researches live and reports back. Every run is saved.
         </p>
 
-        {/* AGENTS */}
-        <div className="section-head"><span className="lbl">Agents · running against your context</span></div>
-        <div className="grid-3" style={{ marginBottom: 56 }}>
-          {lab.agents.map((a) => (
-            <div key={a.initials} className={"card lab-agent ac-" + a.accent}>
-              <div className="ag-head">
-                <div className="ag-av">{a.initials}</div>
-                <div>
-                  <div className="ag-name">{a.name}</div>
-                  <span className={"ag-status " + a.status}><span className="d" />{STATUS_LABEL[a.status]}</span>
-                </div>
+        <div className="grid-3">
+          {ENGINES.map((e) => (
+            <button key={e.id} className={"card engine-card ac-" + e.accent} onClick={() => setActiveId(e.id)}>
+              <div className="eng-num">{String(e.num).padStart(2, "0")}</div>
+              <div className="eng-name">{e.name}</div>
+              <div className="eng-tag">{e.tagline}</div>
+              <div className="eng-stages">
+                {e.stages.map((s, i) => (
+                  <span key={s} className="eng-stage">{s}{i < e.stages.length - 1 && <i className="eng-arrow">→</i>}</span>
+                ))}
               </div>
-              <div className="ag-assign">{a.assignment}</div>
-              <div className="ag-finding">
-                <span className="fl">Latest finding</span>
-                {a.finding}
-              </div>
-              <div className="ag-last">Reported {a.last}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* EXPERIMENTS */}
-        <div className="section-head"><span className="lbl">Experiments · things you're testing</span></div>
-        <div className="grid-3" style={{ marginBottom: 56 }}>
-          {lab.experiments.map((e) => (
-            <div key={e.name} className={"card exp-card ac-" + e.accent}>
-              <span className="exp-state">{STATE_LABEL[e.state]}</span>
-              <div className="exp-q">{e.q}</div>
-              <div className="card-eyebrow" style={{ margin: "0 0 6px" }}>{e.name}</div>
-              <div className="exp-note">{e.note}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* KNOWLEDGE BASE */}
-        <div className="section-head"><span className="lbl">Knowledge base · a library, not a database</span></div>
-        <div className="card" style={{ padding: "8px 24px", marginBottom: 56 }}>
-          {lab.shelves.map((s) => (
-            <div key={s.name} className={"shelf-row ac-" + s.accent}>
-              <span className="shelf-spine" />
-              <span className="shelf-name">{s.name}</span>
-              <span className="shelf-sample">{s.sample}</span>
-              <span className="shelf-count">{s.count}<span>notes</span></span>
-            </div>
-          ))}
-        </div>
-
-        {/* REPORTS */}
-        <div className="section-head"><span className="lbl">Reports · generated automatically</span></div>
-        <div className="card" style={{ padding: "8px 24px" }}>
-          {lab.reports.map((r) => (
-            <div key={r.t} className="report-row">
-              <div className="report-main">
-                <div className="report-kind">{r.kind}</div>
-                <div className="report-title">
-                  {r.t}
-                  {r.fresh && <span className="report-new">New</span>}
-                </div>
-                <div className="report-d">{r.d}</div>
-              </div>
-              <div className="report-when">{r.when}</div>
-            </div>
+              <div className="eng-open">Open engine <Icon.arrow style={{ width: 13, height: 13 }} /></div>
+            </button>
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+function EngineRunner({ def, onBack }: { def: EngineDef; onBack: () => void }) {
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [runs, setRuns] = useState<EngineRun[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    loadRuns(def.id).then((rs) => {
+      setRuns(rs);
+      if (rs[0]) setOpenId(rs[0].id);
+      setLoaded(true);
+    });
+  }, [def.id]);
+
+  const set = (k: string, v: string) => setValues((p) => ({ ...p, [k]: v }));
+
+  const run = async () => {
+    const missing = def.inputs.find((f) => f.required && !(values[f.key] ?? "").trim());
+    if (missing) {
+      setError(`${missing.label.replace(/\s*\(optional\)/i, "")} is required.`);
+      return;
+    }
+    const prompt = assemblePrompt(def, values);
+    setRunning(true);
+    setError(null);
+    const { run: newRun, runs: nextRuns, error: err } = await runEngine(def.id, values, prompt);
+    setRunning(false);
+    if (newRun) {
+      setRuns(nextRuns ?? [newRun, ...runs]);
+      setOpenId(newRun.id);
+    } else {
+      setError(err || "The engine hit a snag — try again.");
+    }
+  };
+
+  const toggleStar = async (r: EngineRun) => {
+    const next = await patchRun(def.id, r.id, { starred: !r.starred });
+    if (next.length) setRuns(next);
+  };
+  const saveNotes = async (r: EngineRun, notes: string) => {
+    if (notes === (r.notes ?? "")) return;
+    const next = await patchRun(def.id, r.id, { notes });
+    if (next.length) setRuns(next);
+  };
+
+  return (
+    <div className={"wrap ac-" + def.accent}>
+      <div className="fade-in">
+        <button className="eng-back" onClick={onBack}>
+          <Icon.arrow style={{ transform: "rotate(180deg)", width: 14, height: 14 }} /> All engines
+        </button>
+
+        <div className="eng-head">
+          <span className="eng-head-num">ENGINE {String(def.num).padStart(2, "0")}</span>
+          <h1 className="disp" style={{ margin: "8px 0 8px", color: "var(--ac)" }}>{def.name}</h1>
+          <p className="dim" style={{ fontSize: 16, maxWidth: "52ch" }}>{def.tagline}</p>
+          <div className="eng-stages on-head">
+            {def.stages.map((s, i) => (
+              <span key={s} className="eng-stage">{s}{i < def.stages.length - 1 && <i className="eng-arrow">→</i>}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* INTAKE */}
+        <div className="card eng-intake">
+          <div className="card-eyebrow">Run the engine</div>
+          {def.inputs.map((f) => (
+            <div key={f.key} className="eng-field">
+              <label>{f.label}</label>
+              {f.type === "textarea" ? (
+                <textarea className="notes-input" rows={3} value={values[f.key] ?? ""}
+                  placeholder={f.placeholder} onChange={(e) => set(f.key, e.target.value)} disabled={running} />
+              ) : (
+                <input className="eng-input" value={values[f.key] ?? ""} placeholder={f.placeholder}
+                  onChange={(e) => set(f.key, e.target.value)} disabled={running} />
+              )}
+            </div>
+          ))}
+          {error && <div className="notes-failed" style={{ marginTop: 4 }}>{error}</div>}
+          <div className="eng-run-row">
+            <button className="btn btn-solid" onClick={run} disabled={running}>
+              {running ? "Running…" : "Run engine"} <Icon.spark style={{ width: 15, height: 15 }} />
+            </button>
+            {!running && <span className="eng-run-note">Researches live on the web — a run can take a minute.</span>}
+          </div>
+          {running && (
+            <div className="eng-working">
+              <span className="spin" />
+              Searching the web, verifying sources, writing the report… hang tight.
+            </div>
+          )}
+        </div>
+
+        {/* RUNS */}
+        {loaded && runs.length === 0 && !running && (
+          <div className="eng-empty">No runs yet. Give the engine an input above and run it.</div>
+        )}
+        {runs.map((r) => (
+          <RunCard key={r.id} run={r} def={def} open={openId === r.id}
+            onToggle={() => setOpenId(openId === r.id ? null : r.id)}
+            onStar={() => toggleStar(r)} onNotes={(n) => saveNotes(r, n)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RunCard({ run, def, open, onToggle, onStar, onNotes }: {
+  run: EngineRun; def: EngineDef; open: boolean;
+  onToggle: () => void; onStar: () => void; onNotes: (n: string) => void;
+}) {
+  const [notes, setNotes] = useState(run.notes ?? "");
+  const when = new Date(run.createdAt).toLocaleString(undefined, {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+  });
+  const summary = Object.values(run.inputs).join(" · ").slice(0, 90) || "—";
+
+  return (
+    <div className={"card run-card" + (run.starred ? " starred" : "")}>
+      <div className="run-top" onClick={onToggle}>
+        <button className={"run-star" + (run.starred ? " on" : "")}
+          onClick={(e) => { e.stopPropagation(); onStar(); }} title={run.starred ? "Best result" : "Mark best"}>
+          {run.starred ? "★" : "☆"}
+        </button>
+        <div className="run-meta">
+          <div className="run-when">{when}{run.starred && <span className="run-best">Best</span>}</div>
+          <div className="run-sum">{summary}</div>
+        </div>
+        <div className="run-model">{run.model.replace("claude-", "")}</div>
+        <Icon.chevron className="run-chev" style={{ transform: open ? "rotate(180deg)" : "none" }} />
+      </div>
+
+      {open && (
+        <div className="run-body">
+          <div className="run-report" dangerouslySetInnerHTML={{ __html: renderMarkdown(run.output) }} />
+
+          {run.sources.length > 0 && (
+            <div className="run-sources">
+              <div className="card-eyebrow" style={{ margin: "0 0 8px" }}>Sources · {run.sources.length}</div>
+              {run.sources.map((s, i) => (
+                <a key={i} href={s} target="_blank" rel="noopener noreferrer" className="run-source">{s}</a>
+              ))}
+            </div>
+          )}
+
+          <div className="run-notes">
+            <label>Your notes after this run</label>
+            <textarea className="notes-input" rows={2} value={notes}
+              placeholder="What worked, what to change next time…"
+              onChange={(e) => setNotes(e.target.value)} onBlur={() => onNotes(notes)} />
+          </div>
+
+          <details className="run-inputs">
+            <summary>Inputs used</summary>
+            {def.inputs.map((f) => run.inputs[f.key] && (
+              <div key={f.key} className="run-input-row"><b>{f.label.replace(/\s*\(optional\)/i, "")}:</b> {run.inputs[f.key]}</div>
+            ))}
+          </details>
+        </div>
+      )}
     </div>
   );
 }

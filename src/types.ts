@@ -240,3 +240,41 @@ export interface DocRef {
   source?: string;
   summary: string;
 }
+
+// ── Engines — repeatable AI pipelines that turn messy input into real work ──
+
+/** One input an engine asks for before it runs. */
+export interface EngineField {
+  key: string;
+  label: string;
+  type: "text" | "textarea";
+  required?: boolean;
+  placeholder?: string;
+}
+
+/** Client-facing engine definition (drives the picker + the intake form). */
+export interface EngineDef {
+  id: string;
+  num: number;
+  name: string;
+  tagline: string;
+  accent: LabAccent;
+  inputs: EngineField[];
+  stages: string[];
+}
+
+/** A single saved run — the durable record of inputs, what ran, and the output. */
+export interface EngineRun {
+  id: string;
+  engineId: string;
+  inputs: Record<string, string>;
+  model: string;
+  version: number;
+  /** The engine's report, as markdown (tables, pillars, etc.). */
+  output: string;
+  /** Source URLs the engine cited via live web search. */
+  sources: string[];
+  createdAt: number;
+  notes?: string;
+  starred?: boolean;
+}
