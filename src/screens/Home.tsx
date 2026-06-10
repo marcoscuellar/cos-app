@@ -69,8 +69,7 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
               <div className="dw-cite">— {quote.who} · {quote.role}</div>
             </div>
           </div>
-          <div className="dw-foot">
-            <span className="dw-mono">{DW.motto}</span>
+          <div className="dw-foot" style={{ justifyContent: "flex-end" }}>
             <span className="dw-closer">Enter the foyer <Icon.arrow style={{ transform: "rotate(90deg)" }} /></span>
           </div>
         </button>
