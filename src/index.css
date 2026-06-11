@@ -831,16 +831,21 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
   box-shadow:0 34px 80px -34px rgba(0,0,0,.6)}
 .cal-hero .ch-body{display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap}
 .cal-hero .ch-left{display:flex;flex-direction:column;align-items:flex-start}
-.cal-hero .dw-rule{height:3px;width:54px;background:#fff;opacity:.95;margin-bottom:20px}
+.cal-hero .dw-rule{height:4px;width:54px;background:var(--gold);opacity:1;margin-bottom:20px;border-radius:2px}
 .cal-hero .chip{background:#fff;color:#0a0a0a;border-radius:0}
 .cal-hero .ch-day{font-family:var(--display);font-weight:900;letter-spacing:-.045em;line-height:.88;
   font-size:clamp(56px,9.5vw,118px);color:#fff;margin-top:18px}
 .cal-hero .ch-date{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
   color:#9a9aa2;margin-top:13px}
-.cal-hero .ch-right{display:flex;gap:38px}
-.cal-hero .ch-stat{display:flex;flex-direction:column;align-items:flex-start}
-.cal-hero .ch-num{font-family:var(--display);font-weight:800;font-size:48px;letter-spacing:-.03em;line-height:1;color:#fff}
-.cal-hero .ch-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8c8c95;margin-top:9px}
+/* BRAND MARK — bold + gold COS lockup on the right of the black banner */
+.cal-hero .ch-brand{display:flex;flex-direction:column;align-items:flex-end;text-align:right;padding-top:2px}
+.cal-hero .cb-ey{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8c8c95}
+.cal-hero .cb-mark{font-family:var(--display);font-weight:900;font-size:clamp(48px,6vw,74px);letter-spacing:-.05em;
+  line-height:.86;color:#fff;margin-top:12px}
+.cal-hero .cb-mark .cb-dot{color:var(--gold)}
+.cal-hero .cb-rule{width:46px;height:4px;background:var(--gold);border-radius:2px;margin:18px 0 14px}
+.cal-hero .cb-note{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:-.01em;line-height:1.32;color:#c9c9d0}
+@media(max-width:780px){.cal-hero .ch-brand{align-items:flex-start;text-align:left}}
 .cal-hero .ch-foot{margin-top:26px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14);
   display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .cal-hero .ch-syncline{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
