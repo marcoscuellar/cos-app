@@ -1,5 +1,6 @@
 import { COS_DATA } from "../data";
 import { Status } from "../components/shared";
+import { Icon } from "../components/Icon";
 import { foyerStamp } from "../brief";
 
 interface ProjectsProps {
@@ -34,23 +35,28 @@ export function ProjectsScreen({ onProject, onContinue }: ProjectsProps) {
             <span className="dw-mono">Five rooms. One focus at a time.</span>
           </div>
         </div>
+        {/* project cards — same engine-card language as the Lab: mono eyebrow,
+            marker-highlight title, an "Open →" affordance at the foot */}
         <div className="grid-2">
-          {D.projects.map((p) => (
-            <div key={p.id} className={"card click ac-" + p.accent}
+          {D.projects.map((p, i) => (
+            <div key={p.id} className={"card project-card ac-" + p.accent}
               onClick={() => (p.status === "dormant" ? onContinue(p.id) : onProject(p.id))}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-                <div className="card-eyebrow" style={{ margin: 0 }}>{p.counts.timeline} updates · {p.lastActivity}</div>
+              <div className="pc-top">
+                <span className="pc-num">{String(i + 1).padStart(2, "0")} · {p.counts.timeline} updates · {p.lastActivity}</span>
                 <Status status={p.status} />
               </div>
-              <div className="card-title">{p.name}</div>
-              <div className="card-body" style={{ maxWidth: "40ch" }}>{p.why}</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 11, marginTop: 18 }}>
+              <div className="pc-name"><span>{p.name}</span></div>
+              <div className="pc-why">{p.why}</div>
+              <div className="pc-prog">
                 <span className="pbar"><i style={{ width: (p.pct || 0) + "%", background: p.status === "dormant" ? "var(--ink-4)" : "var(--ac)" }} /></span>
-                <span style={{ fontFamily: "var(--display)", fontWeight: 600, fontSize: 13, color: "var(--ink-3)", flexShrink: 0 }}>{p.pct || 0}%</span>
+                <span className="pc-pct">{p.pct || 0}%</span>
               </div>
-              <div style={{ borderTop: "1px solid var(--line-2)", marginTop: 16, paddingTop: 14, display: "flex", alignItems: "center", gap: 9 }}>
-                <span style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--ink-4)", fontWeight: 700 }}>Focus</span>
-                <span style={{ fontSize: 13, color: "var(--ink-2)" }}>{p.focus}</span>
+              <div className="pc-focus">
+                <span className="pc-focus-label">Focus</span>
+                <span className="pc-focus-val">{p.focus}</span>
+              </div>
+              <div className="pc-open">
+                {p.status === "dormant" ? "Re-enter project" : "Open project"} <Icon.arrow style={{ width: 13, height: 13 }} />
               </div>
             </div>
           ))}
