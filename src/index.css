@@ -335,6 +335,21 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 @media(max-width:920px){.home-split{grid-template-columns:1fr}}
 .home-col{display:flex;flex-direction:column;gap:12px}
 
+/* foyer right column: WHAT'S NEXT — the next block on the day, gold-spined */
+.upnext{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
+  border:1px solid var(--line);border-left:4px solid var(--ac,var(--gold));background:var(--paper);
+  padding:14px 16px;transition:border-color .14s,transform .14s,box-shadow .14s}
+.upnext:hover{transform:translateY(-1px);border-color:var(--ac,var(--gold));box-shadow:0 10px 26px -16px rgba(0,0,0,.4)}
+.upnext .un-time{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--ac,var(--ink-3));flex-shrink:0}
+.upnext .un-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.upnext .un-title{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upnext .un-proj{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-3)}
+.upnext .un-proj .pd{width:7px;height:7px;border-radius:50%;background:var(--ac,var(--ink-4));flex-shrink:0}
+.upnext .un-arrow{width:16px;height:16px;stroke:var(--ink-4);flex-shrink:0;transition:transform .16s,stroke .16s}
+.upnext:hover .un-arrow{stroke:var(--ac,var(--gold));transform:translateX(3px)}
+.home-launch-head{margin-top:6px}
+
 /* foyer right column: launchpad (social tabs, ≤2/3) over Recent */
 .home-right .home-launch{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:66%;overflow:auto}
 .home-launch-tile{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:var(--paper);

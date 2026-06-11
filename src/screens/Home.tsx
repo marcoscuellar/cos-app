@@ -156,9 +156,30 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
             </div>
           </div>
 
-          {/* RIGHT — launchpad (social tabs) over recently touched rooms */}
+          {/* RIGHT — what's next, then launchpad (social tabs), then recently touched rooms */}
           <div className="home-col home-right">
-            <div className="arch-sec"><span className="chip">Launchpad</span></div>
+            {/* WHAT'S NEXT — the very next block on the day, lifted out so the black banner stays clean */}
+            {(() => {
+              const nb = todayBlocks.find((b, i) => i > nowIdx && !b.done) ?? todayBlocks[nowIdx + 1];
+              if (!nb) return null;
+              const np = nb.proj ? projOf(nb.proj) : null;
+              return (
+                <>
+                  <div className="arch-sec"><span className="chip">What's next</span></div>
+                  <button className={"upnext ac-" + (np ? np.accent : "blue")}
+                    onClick={() => (np ? onProject(np.id) : onNav("today"))}>
+                    <span className="un-time">{nb.start}</span>
+                    <span className="un-main">
+                      <span className="un-title">{nb.title}</span>
+                      <span className="un-proj">{np ? <><span className="pd" />{np.name}</> : nb.kind}</span>
+                    </span>
+                    <Icon.arrow className="un-arrow" />
+                  </button>
+                </>
+              );
+            })()}
+
+            <div className="arch-sec home-launch-head"><span className="chip">Launchpad</span></div>
             <div className="home-launch">
               {LINKS.map((l) => (
                 <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="home-launch-tile">
