@@ -1,5 +1,6 @@
 import { COS_DATA } from "../data";
 import { Status } from "../components/shared";
+import { Icon } from "../components/Icon";
 import { foyerStamp } from "../brief";
 
 interface ProjectsProps {
@@ -41,18 +42,18 @@ export function ProjectsScreen({ onProject, onContinue }: ProjectsProps) {
             <div key={p.id} className={"card project-card ac-" + p.accent}
               onClick={() => (p.status === "dormant" ? onContinue(p.id) : onProject(p.id))}>
               <div className="pc-top">
-                <span className="pc-num">{String(i + 1).padStart(2, "0")} · {p.counts.timeline} updates · {p.lastActivity}</span>
+                <span className="pc-num">{String(i + 1).padStart(2, "0")}</span>
                 <Status status={p.status} />
               </div>
               <div className="pc-name"><span>{p.name}</span></div>
               <div className="pc-why">{p.why}</div>
-              <div className="pc-focus">
-                <span className="pc-focus-label">Objective</span>
-                <span className="pc-focus-val">{p.focus}</span>
+              <div className="eng-stages">
+                {[`${p.pct || 0}% done`, `${p.counts.timeline} updates`, p.lastActivity].map((t, j, arr) => (
+                  <span key={t} className="eng-stage">{t}{j < arr.length - 1 && <i className="eng-arrow">·</i>}</span>
+                ))}
               </div>
-              <div className="pc-prog">
-                <span className="pbar"><i style={{ width: (p.pct || 0) + "%", background: p.status === "dormant" ? "var(--ink-4)" : "var(--ac)" }} /></span>
-                <span className="pc-pct">{p.pct || 0}%</span>
+              <div className="pc-open">
+                {p.status === "dormant" ? "Re-enter project" : "Open project"} <Icon.arrow style={{ width: 13, height: 13 }} />
               </div>
             </div>
           ))}
