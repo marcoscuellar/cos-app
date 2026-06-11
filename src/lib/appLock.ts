@@ -1,10 +1,10 @@
-// Biometric lock for the Lab room — WebAuthn (Touch ID / Face ID / platform passkey).
-// Client-side: registers a platform credential once, then requires a biometric
-// assertion to unlock. The unlock flag lives in sessionStorage, so the Lab
+// Biometric lock for the whole app — WebAuthn (Touch ID / Face ID / platform
+// passkey). Registers a device-bound passkey once, then requires a biometric
+// assertion to enter. The unlock flag lives in sessionStorage, so the app
 // re-locks when the browser session ends.
 
-const CRED_KEY = "cos.lab.cred"; // base64url credential id (persists across sessions)
-const UNLOCK_KEY = "cos.lab.unlocked"; // per-session unlock flag
+const CRED_KEY = "cos.lock.cred"; // base64url credential id (persists across sessions)
+const UNLOCK_KEY = "cos.lock.unlocked"; // per-session unlock flag
 
 function bufToB64url(buf: ArrayBuffer): string {
   const bytes = new Uint8Array(buf);
@@ -54,8 +54,8 @@ export async function register(): Promise<boolean> {
   const cred = (await navigator.credentials.create({
     publicKey: {
       challenge: rand(32),
-      rp: { name: "COS — Lab", id: location.hostname },
-      user: { id: rand(16), name: "lab", displayName: "Lab" },
+      rp: { name: "COS", id: location.hostname },
+      user: { id: rand(16), name: "cos", displayName: "COS" },
       pubKeyCredParams: [
         { type: "public-key", alg: -7 },
         { type: "public-key", alg: -257 },

@@ -672,19 +672,21 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
   background:#0a0a0a;color:#fff;padding:32px 36px 26px;
   box-shadow:0 34px 80px -34px rgba(0,0,0,.6);transition:transform .16s, box-shadow .16s}
 .doorway:hover{transform:translateY(-2px);box-shadow:0 46px 96px -36px rgba(0,0,0,.66)}
-/* Lab biometric lock screen */
-.lab-lock{display:flex;flex-direction:column;align-items:center;text-align:center;
-  padding:64px 28px 72px;max-width:440px;margin:48px auto 0}
-.lab-lock .ll-fp{width:64px;height:64px;display:grid;place-items:center;border-radius:18px;
+/* full-screen biometric lock — the app's front door */
+.app-lock{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:var(--canvas);padding:24px}
+.app-lock-inner{width:min(420px,92%);display:flex;flex-direction:column;align-items:center;text-align:center}
+.app-lock .al-mark{margin-bottom:36px}
+.app-lock .al-mark .cos-logo{font-size:22px;padding:10px 15px}
+.app-lock .al-fp{width:66px;height:66px;display:grid;place-items:center;border-radius:0;
   background:#0a0a0a;color:#fff;margin-bottom:26px}
-.lab-lock .ll-fp svg{width:34px;height:34px;stroke:#fff}
-.lab-lock .ll-title{font-family:var(--display);font-weight:800;font-size:30px;letter-spacing:-.03em;color:var(--ink)}
-.lab-lock .ll-sub{font-size:15px;color:var(--ink-3);margin-top:12px;line-height:1.5;max-width:30ch}
-.lab-lock .ll-btn{margin-top:28px;background:#0a0a0a;color:#fff;border:none;cursor:pointer;
-  font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em;padding:15px 26px;transition:transform .12s,opacity .12s}
-.lab-lock .ll-btn:hover{transform:translateY(-1px)}
-.lab-lock .ll-btn:disabled{opacity:.55;cursor:default;transform:none}
-.lab-lock .ll-err{margin-top:16px;font-size:13px;color:var(--a-coral)}
+.app-lock .al-fp svg{width:36px;height:36px;stroke:#fff}
+.app-lock .al-title{font-family:var(--display);font-weight:900;font-size:38px;letter-spacing:-.04em;color:var(--ink);margin:0}
+.app-lock .al-sub{font-size:15px;color:var(--ink-3);margin-top:12px;line-height:1.5;max-width:32ch}
+.app-lock .al-btn{margin-top:28px;background:#0a0a0a;color:#fff;border:none;cursor:pointer;
+  font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em;padding:15px 28px;transition:transform .12s,opacity .12s}
+.app-lock .al-btn:hover{transform:translateY(-1px)}
+.app-lock .al-btn:disabled{opacity:.55;cursor:default;transform:none}
+.app-lock .al-err{margin-top:16px;font-size:13px;color:var(--a-coral)}
 
 /* room banner — the foyer doorway's twin, but static (not a button) */
 .room-door{cursor:default;margin-bottom:36px}
