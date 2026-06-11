@@ -16,6 +16,18 @@ type AnyBlock = { id?: string; start: string; end: string; title: string; kind: 
 const DEFAULT_HOURS = "7:00 AM – 10:00 PM";
 const DEFAULT_PACING = "breathing-room";
 
+// Quick links to the tools you live in — open in a new tab. icon = lucide line-art slug.
+const LINKS: { label: string; url: string; icon: string }[] = [
+  { label: "LinkedIn", url: "https://www.linkedin.com/feed/", icon: "briefcase" },
+  { label: "Sales Nav", url: "https://www.linkedin.com/sales/home", icon: "target" },
+  { label: "Gmail", url: "https://mail.google.com", icon: "mail" },
+  { label: "Claude", url: "https://claude.ai", icon: "sparkles" },
+  { label: "ChatGPT", url: "https://chatgpt.com", icon: "message-circle" },
+  { label: "Gemini", url: "https://gemini.google.com/app", icon: "gem" },
+  { label: "Grok", url: "https://grok.com", icon: "bot" },
+  { label: "Discord", url: "https://discord.com/app", icon: "messages-square" },
+];
+
 // Parse a display time ("7:00 AM", "1:30 PM") into minutes-since-midnight.
 function toMinutes(t: string): number | null {
   const m = t.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
@@ -257,6 +269,9 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
         {/* WARM NOTE from COS about the plan */}
         {plan?.note && <div className="plan-note"><Icon.spark style={{ width: 15, height: 15 }} />{plan.note}</div>}
 
+        {/* the day + the sticky launchpad rail */}
+        <div className="today-body">
+          <div className="today-main">
         <div className="timeline">
           {blocks.map((b, idx) => {
             const p = b.proj ? projOf(b.proj) : null;
@@ -353,6 +368,22 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
             </div>
           </>
         )}
+          </div>{/* /today-main */}
+
+          <aside className="today-rail">
+            <div className="rail-head"><span className="chip">Launchpad</span></div>
+            <div className="rail-links">
+              {LINKS.map((l) => (
+                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="rail-link">
+                  <img className="ri-ic" src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${l.icon}.svg`} alt=""
+                    loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  <span className="ri-name">{l.label}</span>
+                  <Icon.arrow className="ri-arrow" />
+                </a>
+              ))}
+            </div>
+          </aside>
+        </div>{/* /today-body */}
       </div>
     </div>
   );
