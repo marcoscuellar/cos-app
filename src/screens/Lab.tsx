@@ -25,8 +25,6 @@ export function LabScreen() {
           <div className="foyer-mark"><span className="mono-meta">Let's build shit</span></div>
           <span className="mono-meta q">{foyerStamp()}</span>
         </div>
-        <h1 className="arch-hero">The lab.</h1>
-
         {/* black banner — same shape as the foyer's doorway */}
         <div className="doorway room-door ac-indigo">
           <div className="dw-body">

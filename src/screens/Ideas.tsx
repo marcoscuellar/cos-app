@@ -18,8 +18,6 @@ export function IdeasScreen({ onIdea }: { onIdea: (id: string) => void }) {
           <div className="foyer-mark"><span className="mono-meta">Dream bigger</span></div>
           <span className="mono-meta q">{foyerStamp()}</span>
         </div>
-        <h1 className="arch-hero">Ideas.</h1>
-
         {/* black banner — same shape as the foyer's doorway */}
         <div className="doorway room-door ac-amber">
           <div className="dw-body">
