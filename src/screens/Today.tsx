@@ -28,37 +28,6 @@ const LINKS: { label: string; url: string; icon: string }[] = [
   { label: "Discord", url: "https://discord.com/app", icon: "messages-square" },
 ];
 
-// Parse a display time ("7:00 AM", "1:30 PM") into minutes-since-midnight.
-function toMinutes(t: string): number | null {
-  const m = t.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
-  if (!m) return null;
-  let h = parseInt(m[1], 10);
-  const min = m[2] ? parseInt(m[2], 10) : 0;
-  const ap = m[3]?.toLowerCase();
-  if (ap === "pm" && h < 12) h += 12;
-  if (ap === "am" && h === 12) h = 0;
-  return h * 60 + min;
-}
-
-interface LiveState {
-  current: AnyBlock | null;
-  next: AnyBlock | null;
-}
-
-// Where are you in the day right now? Drives the black box's live readout.
-function computeLive(blocks: AnyBlock[], nowMin: number): LiveState {
-  let current: AnyBlock | null = null;
-  let next: AnyBlock | null = null;
-  for (const b of blocks) {
-    const s = toMinutes(b.start);
-    const e = toMinutes(b.end);
-    if (s === null) continue;
-    if (!current && s <= nowMin && (e === null || nowMin < e)) current = b;
-    if (!next && s > nowMin) next = b;
-  }
-  return { current, next };
-}
-
 /* TODAY — black-box branding + a Home-style brain-dump bar right underneath. */
 export function TodayScreen({ onProject }: { onProject: (id: string) => void }) {
   const D = COS_DATA;
@@ -73,29 +42,20 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
   const [intentDraft, setIntentDraft] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [draft, setDraft] = useState<PlannedBlock | null>(null);
-  const [, setTick] = useState(0); // re-render every minute so "now/next" stays live
 
   useEffect(() => {
     loadPlan().then((p) => {
       if (p) setPlan(ensureIds(p));
     });
   }, []);
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 60000);
-    return () => clearInterval(id);
-  }, []);
 
   const blocks: AnyBlock[] = plan ? plan.blocks : (T.blocks as AnyBlock[]);
 
-  // Live date + clock in the user's home timezone, so the black box is always correct.
+  // Live date in the user's home timezone, so the black box is always correct.
   const TZ = "America/Chicago";
   const now = new Date();
   const weekday = new Intl.DateTimeFormat(undefined, { timeZone: TZ, weekday: "long" }).format(now);
   const monthDay = new Intl.DateTimeFormat(undefined, { timeZone: TZ, month: "long", day: "numeric", year: "numeric" }).format(now);
-  const nowMin =
-    Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(now)) * 60 +
-    Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, minute: "2-digit" }).format(now));
-  const live = plan ? computeLive(plan.blocks, nowMin) : null;
   // The "done" celebration fires when you've actually checked everything off —
   // not just because the clock ran past the last block.
   const allDone = !!plan && plan.blocks.length > 0 && plan.blocks.every((b) => b.done);
@@ -181,29 +141,6 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
               <span className="chip">{plan ? "Planned" : "Today"}</span>
               <div className="ch-day">{weekday}.</div>
               <div className="ch-date">{monthDay}</div>
-            </div>
-            <div className="ch-live">
-              {!plan ? (
-                <>
-                  <div className="cl-lbl">Open</div>
-                  <div className="cl-title">Dump your day below to fill it in.</div>
-                </>
-              ) : live?.current ? (
-                <>
-                  <div className="cl-lbl"><span className="live-dot" />Right now</div>
-                  <div className="cl-time">{live.current.start} – {live.current.end}</div>
-                  <div className="cl-title">{live.current.title}</div>
-                  {live.next && <div className="cl-next">Up next · {live.next.start} · {live.next.title}</div>}
-                </>
-              ) : live?.next ? (
-                <>
-                  <div className="cl-lbl">Up next</div>
-                  <div className="cl-time">{live.next.start}</div>
-                  <div className="cl-title">{live.next.title}</div>
-                </>
-              ) : (
-                <></>
-              )}
             </div>
           </div>
 
