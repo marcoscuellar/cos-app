@@ -26,7 +26,7 @@ export function IdeasScreen({ onIdea }: { onIdea: (id: string) => void }) {
             <div className="dw-left">
               <div className="dw-rule" />
               <span className="chip">Incubation</span>
-              <div className="dw-name">Dream.</div>
+              <div className="dw-name">Ideas.</div>
             </div>
             <div className="dw-quotewrap">
               <div className="dw-quote">“If at first the idea is not absurd, then there is no hope for it.”</div>

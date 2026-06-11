@@ -33,7 +33,7 @@ export function LabScreen() {
             <div className="dw-left">
               <div className="dw-rule" />
               <span className="chip">Engine room</span>
-              <div className="dw-name">Build.</div>
+              <div className="dw-name">Lab.</div>
             </div>
             <div className="dw-quotewrap">
               <div className="dw-quote">“The best way to predict the future is to invent it.”</div>

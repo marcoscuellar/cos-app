@@ -25,7 +25,7 @@ export function ProjectsScreen({ onProject, onContinue }: ProjectsProps) {
             <div className="dw-left">
               <div className="dw-rule" />
               <span className="chip">The work</span>
-              <div className="dw-name">Focus.</div>
+              <div className="dw-name">Projects.</div>
             </div>
             <div className="dw-quotewrap">
               <div className="dw-quote">“The main thing is to keep the main thing the main thing.”</div>
