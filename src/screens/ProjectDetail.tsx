@@ -38,7 +38,7 @@ export function ProjectScreen({ project, onContinue, onBrainstorm, onAsk, onOpen
           <div>
             <span className="gold-rule" />
             <Eyebrow accent={p.accent}>{p.name}</Eyebrow>
-            <h1 className="disp" style={{ margin: "16px 0 10px", fontSize: "clamp(38px,5vw,60px)", color: "var(--ac)" }}>{p.name}</h1>
+            <h1 className="disp hero-mark" style={{ margin: "16px 0 14px", fontSize: "clamp(38px,5vw,60px)", lineHeight: 1.32 }}><span>{p.name}</span></h1>
             <p style={{ fontSize: 17, color: "var(--ink-3)", maxWidth: "46ch", lineHeight: 1.45 }}>{p.why}</p>
             <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
               <button className="btn btn-solid" onClick={onAsk}>
@@ -70,7 +70,7 @@ export function ProjectScreen({ project, onContinue, onBrainstorm, onAsk, onOpen
 }
 
 function StatusBar({ p, due, setDue }: { p: Project; due: string | null; setDue: (d: string) => void }) {
-  const dotColor = p.status === "in-motion" ? "var(--a-mint)" : p.status === "blocked" ? "var(--a-amber)" : "var(--ink-4)";
+  const dotColor = p.status === "in-motion" ? "var(--gold)" : p.status === "blocked" ? "var(--ink-3)" : "var(--ink-4)";
   const statusLabel = p.status === "in-motion" ? "In motion" : p.status === "blocked" ? "Blocked" : "Dormant";
   return (
     <div className="statusbar">
@@ -123,8 +123,8 @@ function CurrentContext({ p, due, setDue, onContinue, onOpenDoc }: CurrentContex
         {(p.blockers.length > 0 || p.openQuestions.length > 0) && (
           <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
             {p.blockers.map((b, i) => (
-              <span key={"b" + i} className="pill" style={{ color: "var(--a-amber)", borderColor: "transparent", background: "var(--a-amber-bg)" }}>
-                <span className="d" style={{ background: "var(--a-amber)" }} />{b}
+              <span key={"b" + i} className="pill" style={{ color: "var(--gold)", borderColor: "transparent", background: "var(--gold-bg)" }}>
+                <span className="d" style={{ background: "var(--gold)" }} />{b}
               </span>
             ))}
             {p.openQuestions.length > 0 && (

@@ -34,7 +34,7 @@ export function IdeaDetail({ idea, onProject, onBack }: IdeaDetailProps) {
           <div>
             <span className="gold-rule" />
             <Eyebrow accent="amber">Idea · {STAGES[stageIdx]}</Eyebrow>
-            <h1 className="disp" style={{ margin: "16px 0 10px", fontSize: "clamp(38px,5vw,60px)", color: "var(--a-amber)" }}>{i.name}</h1>
+            <h1 className="disp hero-mark" style={{ margin: "16px 0 14px", fontSize: "clamp(38px,5vw,60px)", lineHeight: 1.32 }}><span>{i.name}</span></h1>
             <p style={{ fontSize: 17, color: "var(--ink-3)", maxWidth: "46ch", lineHeight: 1.45 }}>{i.why}</p>
           </div>
         </div>
@@ -43,13 +43,13 @@ export function IdeaDetail({ idea, onProject, onBack }: IdeaDetailProps) {
         <div className="statusbar" style={{ marginTop: 24 }}>
           <div className="seg">
             <span className="sl">Stage</span>
-            <span className="sv"><span className="sd" style={{ background: "var(--a-amber)" }} />{STAGES[stageIdx]}</span>
+            <span className="sv"><span className="sd" style={{ background: "var(--gold)" }} />{STAGES[stageIdx]}</span>
           </div>
           <div className="seg">
             <span className="sl">Heat</span>
             {analyzed ? (
               <span className="sv" style={{ gap: 9 }}>{i.heat}
-                <span className="hbars" style={{ display: "flex", gap: 3 }}>{[0, 1, 2, 3].map((b) => <i key={b} style={{ width: 5, height: 13, borderRadius: 2, background: b < heatFill ? "var(--a-amber)" : "var(--line-3)" }} />)}</span>
+                <span className="hbars" style={{ display: "flex", gap: 3 }}>{[0, 1, 2, 3].map((b) => <i key={b} style={{ width: 5, height: 13, borderRadius: 2, background: b < heatFill ? "var(--gold)" : "var(--line-3)" }} />)}</span>
               </span>
             ) : (
               <button className="due-set" onClick={() => setAnalyzed(true)}><Icon.spark style={{ width: 14, height: 14 }} /> Analyze</button>
@@ -81,8 +81,8 @@ export function IdeaDetail({ idea, onProject, onBack }: IdeaDetailProps) {
         </div>
 
         {analyzed && (
-          <div className="card ac-amber" style={{ marginBottom: 16, background: "var(--a-amber-bg)", borderColor: "transparent" }}>
-            <div className="card-eyebrow" style={{ color: "var(--a-amber)" }}>Heat analysis</div>
+          <div className="card ac-amber" style={{ marginBottom: 16, background: "var(--gold-bg)", borderColor: "transparent" }}>
+            <div className="card-eyebrow" style={{ color: "var(--gold)" }}>Heat analysis</div>
             <div style={{ fontFamily: "var(--display)", fontWeight: 600, fontSize: 18, letterSpacing: "-.01em", color: "var(--ink)" }}>{i.heat} — {i.heatNote}</div>
           </div>
         )}
