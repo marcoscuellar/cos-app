@@ -16,16 +16,16 @@ type AnyBlock = { id?: string; start: string; end: string; title: string; kind: 
 const DEFAULT_HOURS = "7:00 AM – 10:00 PM";
 const DEFAULT_PACING = "breathing-room";
 
-// Quick links to the tools you live in — open in a new tab. icon = simpleicons slug.
+// Quick links to the tools you live in — open in a new tab. icon = lucide line-art slug.
 const LINKS: { label: string; url: string; icon: string }[] = [
-  { label: "LinkedIn", url: "https://www.linkedin.com/feed/", icon: "linkedin" },
-  { label: "Sales Nav", url: "https://www.linkedin.com/sales/home", icon: "linkedin" },
-  { label: "Gmail", url: "https://mail.google.com", icon: "gmail" },
-  { label: "Claude", url: "https://claude.ai", icon: "claude" },
-  { label: "ChatGPT", url: "https://chatgpt.com", icon: "openai" },
-  { label: "Gemini", url: "https://gemini.google.com/app", icon: "googlegemini" },
-  { label: "Grok", url: "https://grok.com", icon: "grok" },
-  { label: "Discord", url: "https://discord.com/app", icon: "discord" },
+  { label: "LinkedIn", url: "https://www.linkedin.com/feed/", icon: "briefcase" },
+  { label: "Sales Nav", url: "https://www.linkedin.com/sales/home", icon: "target" },
+  { label: "Gmail", url: "https://mail.google.com", icon: "mail" },
+  { label: "Claude", url: "https://claude.ai", icon: "sparkles" },
+  { label: "ChatGPT", url: "https://chatgpt.com", icon: "message-circle" },
+  { label: "Gemini", url: "https://gemini.google.com/app", icon: "gem" },
+  { label: "Grok", url: "https://grok.com", icon: "bot" },
+  { label: "Discord", url: "https://discord.com/app", icon: "messages-square" },
 ];
 
 // Parse a display time ("7:00 AM", "1:30 PM") into minutes-since-midnight.
@@ -77,11 +77,7 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
 
   useEffect(() => {
     loadPlan().then((p) => {
-      if (p) {
-        const q = ensureIds(p);
-        setPlan(q);
-        setDump(q.dump);
-      }
+      if (p) setPlan(ensureIds(p));
     });
   }, []);
   useEffect(() => {
@@ -112,8 +108,10 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
     const rooms = D.projects.map((p) => ({ id: p.id, name: p.name }));
     const { plan: next, error: err } = await buildPlan({ dump: text, rooms, hours: DEFAULT_HOURS, pacing: DEFAULT_PACING });
     setBuilding(false);
-    if (next) setPlan(ensureIds(next));
-    else setError(err || "Couldn't build your day — try again.");
+    if (next) {
+      setPlan(ensureIds(next));
+      setDump(""); // leave the box clean for the next dump
+    } else setError(err || "Couldn't build your day — try again.");
   };
 
   // ── Block editing — the day has to flex (2pm meeting pushed to 5pm, etc.) ──
@@ -245,10 +243,7 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
           </div>
         </div>
 
-        <div className="today-body">
-          <div className="today-main">
-
-        {/* BRAIN-DUMP BAR — same structure as Home: the bar right under the box */}
+        {/* BRAIN-DUMP BAR — full width under the box */}
         <div className="chatbar dump-bar" style={{ padding: "18px 20px" }}>
           <input
             value={dump}
@@ -274,6 +269,9 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
         {/* WARM NOTE from COS about the plan */}
         {plan?.note && <div className="plan-note"><Icon.spark style={{ width: 15, height: 15 }} />{plan.note}</div>}
 
+        {/* the day + the launchpad rail, aligned */}
+        <div className="today-body">
+          <div className="today-main">
         <div className="timeline">
           {blocks.map((b, idx) => {
             const p = b.proj ? projOf(b.proj) : null;
@@ -377,7 +375,7 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
             <div className="rail-links">
               {LINKS.map((l) => (
                 <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="rail-link">
-                  <img className="ri-ic" src={`https://cdn.simpleicons.org/${l.icon}/0a0a0a`} alt=""
+                  <img className="ri-ic" src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${l.icon}.svg`} alt=""
                     loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                   <span className="ri-name">{l.label}</span>
                   <Icon.arrow className="ri-arrow" />
