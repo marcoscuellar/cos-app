@@ -68,13 +68,16 @@ export function SearchScreen({ onProject, initialQuery }: SearchProps) {
           <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.2-3.2" /></svg>
           <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="my GLVE stuff, a person, a decision…" />
         </div>
+        {/* everything below the search bar appears only once you start typing */}
+        {ql && (
+          <>
         <div className="axes">
           {axisOptions.map(([k, l]) => (
             <button key={k} className={"axis" + (axis === k ? " on" : "")} onClick={() => setAxis(k)}>{l}</button>
           ))}
         </div>
 
-        {ql && <div style={{ fontSize: 12.5, color: "var(--ink-4)", marginTop: 18 }}>{total} result{total !== 1 ? "s" : ""}</div>}
+        <div style={{ fontSize: 12.5, color: "var(--ink-4)", marginTop: 18 }}>{total} result{total !== 1 ? "s" : ""}</div>
 
         {show("projects") && projHits.length > 0 && (
           <div className="res-group">
@@ -144,22 +147,12 @@ export function SearchScreen({ onProject, initialQuery }: SearchProps) {
           </div>
         )}
 
-        {ql && total === 0 && (
+        {total === 0 && (
           <div className="card" style={{ marginTop: 26, textAlign: "center", padding: "40px 20px", color: "var(--ink-4)" }}>
             Nothing matches "{q}" yet. Try a project name, a person, or a decision.
           </div>
         )}
-
-        {!ql && (
-          <div style={{ marginTop: 30 }}>
-            <div className="rgl" style={{ fontSize: 11, letterSpacing: ".13em", textTransform: "uppercase", color: "var(--ink-4)", fontWeight: 700, marginBottom: 12 }}>You usually look by</div>
-            <div className="grid-3">
-              {([["By meaning", "“my GLVE stuff”"], ["By time", "“what did I do last week?”"], ["By person", "“what’s up with this client?”"]] as [string, string][]).map(([t, d]) => (
-                <div key={t} className="card"><div style={{ fontFamily: "var(--display)", fontWeight: 600, fontSize: 17, letterSpacing: "-.01em" }}>{t}</div>
-                  <div style={{ fontSize: 13, color: "var(--ink-4)", marginTop: 6, fontFamily: "var(--serif)", fontStyle: "italic" }}>{d}</div></div>
-              ))}
-            </div>
-          </div>
+          </>
         )}
       </div>
     </div>
