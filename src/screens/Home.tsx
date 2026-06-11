@@ -44,6 +44,18 @@ const STATUS_LABEL: Record<string, string> = {
   dormant: "Dormant",
 };
 
+// Quick links to the tools you live in — open in a new tab. icon = lucide line-art slug.
+const LINKS: { label: string; url: string; icon: string }[] = [
+  { label: "LinkedIn", url: "https://www.linkedin.com/feed/", icon: "briefcase" },
+  { label: "Sales Nav", url: "https://www.linkedin.com/sales/home", icon: "target" },
+  { label: "Gmail", url: "https://mail.google.com", icon: "mail" },
+  { label: "Claude", url: "https://claude.ai", icon: "sparkles" },
+  { label: "ChatGPT", url: "https://chatgpt.com", icon: "message-circle" },
+  { label: "Gemini", url: "https://gemini.google.com/app", icon: "gem" },
+  { label: "Grok", url: "https://grok.com", icon: "bot" },
+  { label: "Discord", url: "https://discord.com/app", icon: "messages-square" },
+];
+
 export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
   const D = COS_DATA;
   const T = D.today;
@@ -144,11 +156,20 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
             </div>
           </div>
 
-          {/* RIGHT — recently touched rooms */}
-          <div className="home-col">
-            <div className="arch-sec">
-              <span className="chip">Recent</span>
+          {/* RIGHT — launchpad (social tabs) over recently touched rooms */}
+          <div className="home-col home-right">
+            <div className="arch-sec"><span className="chip">Launchpad</span></div>
+            <div className="home-launch">
+              {LINKS.map((l) => (
+                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="home-launch-tile">
+                  <img className="hl-ic" src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${l.icon}.svg`} alt=""
+                    loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  <span className="hl-name">{l.label}</span>
+                </a>
+              ))}
             </div>
+
+            <div className="arch-sec home-recent-head"><span className="chip">Recent</span></div>
             {recent.map((p) => (
               <div key={p.id} className={"card click ac-" + p.accent} style={{ padding: "18px 20px" }} onClick={() => onContinue(p.id)}>
                 <div className="arch-card-head" style={{ marginBottom: 12 }}>

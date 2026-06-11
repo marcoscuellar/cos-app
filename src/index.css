@@ -332,6 +332,16 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .home-split{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:stretch}
 @media(max-width:920px){.home-split{grid-template-columns:1fr}}
 .home-col{display:flex;flex-direction:column;gap:12px}
+
+/* foyer right column: launchpad (social tabs, ≤2/3) over Recent */
+.home-right .home-launch{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:66%;overflow:auto}
+.home-launch-tile{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:var(--paper);
+  padding:11px 12px;transition:border-color .14s,transform .14s}
+.home-launch-tile:hover{border-color:var(--gold);transform:translateY(-1px)}
+.home-launch-tile .hl-ic{width:16px;height:16px;flex-shrink:0;opacity:.85}
+.home-launch-tile .hl-name{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:-.01em;
+  color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.home-right .home-recent-head{margin-top:18px}
 .home-cal-card{flex:1;display:flex;flex-direction:column}
 .home-cal-card .home-cal-list{flex:1;justify-content:space-between}
 .home-cal-list{display:flex;flex-direction:column;margin-top:4px}
