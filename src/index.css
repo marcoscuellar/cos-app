@@ -743,10 +743,14 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 [data-theme="mono"] .home-arch .hc-now{background:var(--ink)}
 .home-arch .act .ap{color:var(--ink);font-weight:700}
 
-/* ---- square corners — architectural / signage edges on the home ---- */
+/* ---- square corners — architectural / signage edges on the home + the main rooms ---- */
 .home-arch .card,
 .home-arch .chatbar,
 .home-arch .home-cal-card,
+.room-arch .card,
+.room-arch .pbar,
+.room-arch .pbar i,
+.room-arch .pr-dot,
 .doorway,
 .chip,
 .chip .cd,
