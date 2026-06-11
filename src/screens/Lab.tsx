@@ -53,7 +53,7 @@ export function LabScreen() {
             {ENGINES.map((e) => (
               <button key={e.id} className={"card engine-card ac-" + e.accent} onClick={() => setActiveId(e.id)}>
                 <div className="eng-num">{String(e.num).padStart(2, "0")}</div>
-                <div className="eng-name">{e.name}</div>
+                <div className="eng-name"><span>{e.name}</span></div>
                 <div className="eng-tag">{e.tagline}</div>
                 <div className="eng-stages">
                   {e.stages.map((s, i) => (
