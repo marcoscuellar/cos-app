@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { COS_DATA } from "../data";
-import { Eyebrow } from "../components/shared";
+import { foyerStamp } from "../brief";
 import { Icon } from "../components/Icon";
 
 const STAGES = ["Spark", "Brewing", "Exploring", "Testing", "Ready"];
@@ -11,11 +11,14 @@ export function IdeasScreen({ onIdea }: { onIdea: (id: string) => void }) {
   const [analyzed, setAnalyzed] = useState<Record<string, boolean>>({});
 
   return (
-    <div className="wrap">
+    <div className="wrap room-arch">
       <div className="stagger">
-        <span className="gold-rule" />
-        <Eyebrow accent="amber">Incubation</Eyebrow>
-        <h1 className="disp" style={{ margin: "16px 0 8px" }}>Ideas <span className="em ac-amber">brewing.</span></h1>
+        {/* same calm header as the foyer — a motivational tag + the live stamp */}
+        <div className="foyer">
+          <div className="foyer-mark"><span className="mono-meta">Dream bigger</span></div>
+          <span className="mono-meta q">{foyerStamp()}</span>
+        </div>
+        <h1 className="arch-hero">Ideas.</h1>
         <p className="dim" style={{ fontSize: 16, maxWidth: "50ch", marginBottom: 34 }}>
           Three ideas get your real attention at a time. Everything else waits as a spark. Focus is the point.
         </p>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Eyebrow } from "../components/shared";
+import { foyerStamp } from "../brief";
 import { Icon } from "../components/Icon";
 import type { EngineDef, EngineRun } from "../types";
 import { ENGINES, getEngineDef, assemblePrompt } from "../engines";
@@ -18,13 +18,14 @@ export function LabScreen() {
   if (def) return <EngineRunner def={def} onBack={() => setActiveId(null)} />;
 
   return (
-    <div className="wrap">
+    <div className="wrap room-arch">
       <div className="stagger">
-        <span className="gold-rule" />
-        <Eyebrow accent="indigo">Engine room</Eyebrow>
-        <h1 className="disp" style={{ margin: "16px 0 8px" }}>
-          Your <span className="em ac-indigo">engines.</span>
-        </h1>
+        {/* same calm header as the foyer — a motivational tag + the live stamp */}
+        <div className="foyer">
+          <div className="foyer-mark"><span className="mono-meta">Let's build shit</span></div>
+          <span className="mono-meta q">{foyerStamp()}</span>
+        </div>
+        <h1 className="arch-hero">The lab.</h1>
         <p className="dim" style={{ fontSize: 16, maxWidth: "58ch", marginBottom: 22 }}>
           Repeatable operating systems that turn a messy input into useful work. Pick an engine, give it
           what it needs, and it researches live and reports back. Every run is saved.

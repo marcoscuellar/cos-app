@@ -1,5 +1,6 @@
 import { COS_DATA } from "../data";
-import { Eyebrow, Status } from "../components/shared";
+import { Status } from "../components/shared";
+import { foyerStamp } from "../brief";
 
 interface ProjectsProps {
   onProject: (id: string) => void;
@@ -9,11 +10,14 @@ interface ProjectsProps {
 export function ProjectsScreen({ onProject, onContinue }: ProjectsProps) {
   const D = COS_DATA;
   return (
-    <div className="wrap">
+    <div className="wrap room-arch">
       <div className="stagger">
-        <span className="gold-rule" />
-        <Eyebrow accent="violet">The work</Eyebrow>
-        <h1 className="disp" style={{ margin: "16px 0 8px" }}>Projects</h1>
+        {/* same calm header as the foyer — a motivational tag + the live stamp */}
+        <div className="foyer">
+          <div className="foyer-mark"><span className="mono-meta">Stay focused</span></div>
+          <span className="mono-meta q">{foyerStamp()}</span>
+        </div>
+        <h1 className="arch-hero">Projects.</h1>
         <p className="dim" style={{ fontSize: 16, maxWidth: "48ch", marginBottom: 36 }}>
           Five context containers. Everything related to each lives inside it — open one to land on where you left off.
         </p>
