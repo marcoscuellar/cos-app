@@ -121,16 +121,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 ::-webkit-scrollbar-thumb{background:#e2e2e5;border-radius:10px;border:3px solid #fff}
 ::-webkit-scrollbar-thumb:hover{background:#d2d2d6}
 
-/* accent helpers */
-.ac-violet{--ac:var(--a-violet);--ac-bg:var(--a-violet-bg)}
-.ac-mint{--ac:var(--a-mint);--ac-bg:var(--a-mint-bg)}
-.ac-coral{--ac:var(--a-coral);--ac-bg:var(--a-coral-bg)}
-.ac-amber{--ac:var(--a-amber);--ac-bg:var(--a-amber-bg)}
-.ac-blue{--ac:var(--a-blue);--ac-bg:var(--a-blue-bg)}
-.ac-indigo{--ac:var(--a-indigo);--ac-bg:var(--a-indigo-bg)}
-.ac-green{--ac:var(--a-green);--ac-bg:var(--a-green-bg)}
-.ac-rose{--ac:var(--a-rose);--ac-bg:var(--a-rose-bg)}
-.ac-teal{--ac:var(--a-teal);--ac-bg:var(--a-teal-bg)}
+/* accent helpers — gold is the only accent. Every accent class resolves to
+   gold so no room can leak a violet/indigo/coral tint. */
+.ac-violet,.ac-mint,.ac-coral,.ac-amber,.ac-blue,.ac-indigo,.ac-green,.ac-rose,.ac-teal{
+  --ac:var(--gold);--ac-bg:var(--gold-bg)}
 
 /* ---------- shell ---------- */
 .app{display:flex;height:100vh;overflow:hidden}
