@@ -414,13 +414,15 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .pill .d{width:6px;height:6px;border-radius:50%;background:var(--ac,var(--ink-4))}
 .pill.solid{background:var(--ac-bg);border-color:transparent;color:var(--ac)}
 
-.status{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;border-radius:30px;padding:5px 11px;white-space:nowrap}
-.status .d{width:6px;height:6px;border-radius:50%}
-.status.in-motion{background:var(--a-mint-bg);color:var(--a-mint)} .status.in-motion .d{background:var(--a-mint)}
-.status.blocked{background:var(--a-amber-bg);color:var(--a-amber)} .status.blocked .d{background:var(--a-amber)}
-.status.dormant{background:var(--paper-3);color:var(--ink-4)} .status.dormant .d{background:var(--ink-4)}
-[data-theme="mono"] .status{background:var(--paper-3);color:var(--ink-3)}
-[data-theme="mono"] .status .d{background:var(--ink-3)}
+/* status — a bare mono label + dot, in the gold/ink editorial register
+   (no pastel pills). Gold dot = live, hollow ring = blocked, faint = dormant. */
+.status{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;
+  font-weight:600;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;color:var(--ink-3);background:none;padding:0}
+.status .d{width:6px;height:6px;border-radius:50%;box-sizing:border-box}
+.status.in-motion{color:var(--ink)} .status.in-motion .d{background:var(--gold)}
+.status.blocked{color:var(--ink-3)} .status.blocked .d{background:none;border:1.5px solid var(--ink-3)}
+.status.dormant{color:var(--ink-4)} .status.dormant .d{background:var(--ink-5)}
+[data-theme="mono"] .status.in-motion .d{background:var(--ink)}
 
 .btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--display);font-weight:600;font-size:13.5px;
   letter-spacing:-.005em;border-radius:11px;padding:11px 16px;transition:transform .12s,background .14s,border-color .14s;white-space:nowrap}
