@@ -670,6 +670,15 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 /* thread the gold signature through every section label so the bold language runs the whole page */
 .home-arch .chip::before{content:"";width:9px;height:3px;border-radius:1px;background:var(--gold);flex-shrink:0}
 
+/* sidebar weather chip — above the nav */
+.sb-weather{display:flex;align-items:center;gap:9px;padding:9px 12px;margin:14px 0 4px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--paper-2)}
+.sb-weather .wx-emoji{font-size:15px;flex-shrink:0;line-height:1}
+.sb-weather .wx-temp{font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.02em;color:var(--ink)}
+.sb-weather .wx-cond{font-size:11px;color:var(--ink-4);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb.collapsed .sb-weather{justify-content:center;padding:9px 0}
+.sb.collapsed .sb-weather .wx-temp,.sb.collapsed .sb-weather .wx-cond{display:none}
+
 /* calendar layout — main column + sticky launchpad rail */
 .today-body{display:grid;grid-template-columns:1fr 248px;gap:26px;align-items:start}
 @media(max-width:920px){.today-body{grid-template-columns:1fr}}

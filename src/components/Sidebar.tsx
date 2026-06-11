@@ -1,6 +1,7 @@
 import { COS_DATA } from "../data";
 import type { Theme } from "../types";
 import { Icon } from "./Icon";
+import { Weather } from "./Weather";
 
 interface SidebarProps {
   route: string;
@@ -43,6 +44,8 @@ export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setT
         <span className="txt">Ask or capture…</span>
         <kbd>⌘K</kbd>
       </button>
+
+      <Weather />
 
       <nav className="sb-nav">
         <button className={"nav-i" + (route === "home" ? " on" : "")} onClick={() => onNav("home")} title="Now"><Icon.home /> <span className="nav-lbl">Now</span></button>
