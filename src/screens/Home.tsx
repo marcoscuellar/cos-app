@@ -44,6 +44,18 @@ const STATUS_LABEL: Record<string, string> = {
   dormant: "Dormant",
 };
 
+// Quick links to the tools you live in — open in a new tab. Easy to edit/reorder.
+const LINKS: { label: string; url: string }[] = [
+  { label: "LinkedIn", url: "https://www.linkedin.com/feed/" },
+  { label: "Sales Nav", url: "https://www.linkedin.com/sales/home" },
+  { label: "Gmail", url: "https://mail.google.com" },
+  { label: "Claude", url: "https://claude.ai" },
+  { label: "ChatGPT", url: "https://chatgpt.com" },
+  { label: "Gemini", url: "https://gemini.google.com/app" },
+  { label: "Grok", url: "https://grok.com" },
+  { label: "Discord", url: "https://discord.com/app" },
+];
+
 export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
   const D = COS_DATA;
   const T = D.today;
@@ -114,6 +126,19 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
         <div className="spacer-m" />
 
         <ChatBar big placeholder="Ask COS, or capture a thought…" onFocusNav={() => onNav("search")} />
+
+        <div className="spacer-l" />
+
+        {/* LAUNCHPAD — quick links to the tools you live in */}
+        <div className="arch-sec"><span className="chip">Launchpad</span></div>
+        <div className="launchpad">
+          {LINKS.map((l) => (
+            <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="launch-tile">
+              <span className="lt-name">{l.label}</span>
+              <Icon.arrow className="lt-arrow" />
+            </a>
+          ))}
+        </div>
 
         <div className="spacer-l" />
 

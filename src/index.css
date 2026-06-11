@@ -667,6 +667,18 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .home-arch .arch-sec .more:hover{color:var(--ink)}
 .home-arch .arch-sec .more svg{stroke:currentColor}
 .home-arch .arch-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+/* thread the gold signature through every section label so the bold language runs the whole page */
+.home-arch .chip::before{content:"";width:9px;height:3px;border-radius:1px;background:var(--gold);flex-shrink:0}
+
+/* launchpad — quick links to external tools */
+.launchpad{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:780px){.launchpad{grid-template-columns:repeat(2,1fr)}}
+.launch-tile{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  border:1px solid var(--line);background:var(--paper);padding:15px 17px;transition:border-color .14s,transform .14s}
+.launch-tile:hover{border-color:var(--gold);transform:translateY(-2px)}
+.launch-tile .lt-name{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
+.launch-tile .lt-arrow{width:15px;height:15px;stroke:var(--ink-4);transform:rotate(-45deg);transition:stroke .14s,transform .14s;flex-shrink:0}
+.launch-tile:hover .lt-arrow{stroke:var(--gold);transform:rotate(-45deg) translate(2px,-2px)}
 
 /* ---- architectural overrides: titles go grounded/black, meta goes mono ---- */
 .home-arch .card-title{color:var(--ink)}
