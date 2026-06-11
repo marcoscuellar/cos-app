@@ -13,6 +13,7 @@ export function IdeasScreen({ onIdea }: { onIdea: (id: string) => void }) {
   return (
     <div className="wrap">
       <div className="stagger">
+        <span className="gold-rule" />
         <Eyebrow accent="amber">Incubation</Eyebrow>
         <h1 className="disp" style={{ margin: "16px 0 8px" }}>Ideas <span className="em ac-amber">brewing.</span></h1>
         <p className="dim" style={{ fontSize: 16, maxWidth: "50ch", marginBottom: 34 }}>

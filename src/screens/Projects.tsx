@@ -11,6 +11,7 @@ export function ProjectsScreen({ onProject, onContinue }: ProjectsProps) {
   return (
     <div className="wrap">
       <div className="stagger">
+        <span className="gold-rule" />
         <Eyebrow accent="violet">The work</Eyebrow>
         <h1 className="disp" style={{ margin: "16px 0 8px" }}>Projects</h1>
         <p className="dim" style={{ fontSize: 16, maxWidth: "48ch", marginBottom: 36 }}>

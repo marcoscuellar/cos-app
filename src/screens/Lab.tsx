@@ -20,6 +20,7 @@ export function LabScreen() {
   return (
     <div className="wrap">
       <div className="stagger">
+        <span className="gold-rule" />
         <Eyebrow accent="indigo">Engine room</Eyebrow>
         <h1 className="disp" style={{ margin: "16px 0 8px" }}>
           Your <span className="em ac-indigo">engines.</span>
@@ -181,6 +182,7 @@ function EngineRunner({ def, onBack }: { def: EngineDef; onBack: () => void }) {
         </button>
 
         <div className="eng-head">
+          <span className="gold-rule" />
           <span className="eng-head-num">ENGINE {String(def.num).padStart(2, "0")}</span>
           <h1 className="disp" style={{ margin: "8px 0 8px", color: "var(--ac)" }}>{def.name}</h1>
           <p className="dim" style={{ fontSize: 16, maxWidth: "52ch" }}>{def.tagline}</p>

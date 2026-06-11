@@ -32,6 +32,7 @@ export function IdeaDetail({ idea, onProject, onBack }: IdeaDetailProps) {
         <button className="back-link" onClick={onBack}><Icon.chevron style={{ width: 15, height: 15 }} /> Ideas</button>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginTop: 14 }}>
           <div>
+            <span className="gold-rule" />
             <Eyebrow accent="amber">Idea · {STAGES[stageIdx]}</Eyebrow>
             <h1 className="disp" style={{ margin: "16px 0 10px", fontSize: "clamp(38px,5vw,60px)", color: "var(--a-amber)" }}>{i.name}</h1>
             <p style={{ fontSize: 17, color: "var(--ink-3)", maxWidth: "46ch", lineHeight: 1.45 }}>{i.why}</p>

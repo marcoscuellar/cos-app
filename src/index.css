@@ -216,8 +216,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
 .kicker{font-size:13px;color:var(--ink-4);font-weight:500;font-family:var(--display)}
 
-h1.disp{font-family:var(--display);font-weight:700;letter-spacing:-.035em;line-height:.98;
+h1.disp{font-family:var(--display);font-weight:800;letter-spacing:-.038em;line-height:.98;
   font-size:clamp(42px,6.4vw,74px);color:var(--ink)}
+/* the gold spine — a single bar that opens every page, threading the foyer's brand mark through every room */
+.gold-rule{display:block;width:44px;height:4px;background:var(--gold);border-radius:2px;margin-bottom:18px}
 h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-height:1.0;
   font-size:clamp(30px,4vw,46px);color:var(--ink)}
 .em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--ac,var(--a-coral));letter-spacing:0}

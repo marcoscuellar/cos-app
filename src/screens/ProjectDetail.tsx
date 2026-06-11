@@ -36,6 +36,7 @@ export function ProjectScreen({ project, onContinue, onBrainstorm, onAsk, onOpen
       <div className="fade-in">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
           <div>
+            <span className="gold-rule" />
             <Eyebrow accent={p.accent}>{p.name}</Eyebrow>
             <h1 className="disp" style={{ margin: "16px 0 10px", fontSize: "clamp(38px,5vw,60px)", color: "var(--ac)" }}>{p.name}</h1>
             <p style={{ fontSize: 17, color: "var(--ink-3)", maxWidth: "46ch", lineHeight: 1.45 }}>{p.why}</p>

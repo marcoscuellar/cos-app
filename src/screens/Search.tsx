@@ -38,6 +38,7 @@ export function SearchScreen({ onProject, initialQuery }: SearchProps) {
   return (
     <div className="wrap">
       <div className="fade-in">
+        <span className="gold-rule" />
         <h1 className="disp" style={{ marginBottom: 22, fontSize: "clamp(32px,4vw,48px)" }}>
           {ql ? <>Memory — <span className="em ac-violet">"{q}"</span></> : <>What are you looking <span className="em ac-violet">for?</span></>}
         </h1>
