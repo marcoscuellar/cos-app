@@ -9,6 +9,7 @@ import { ProjectScreen } from "./screens/ProjectDetail";
 import { IdeasScreen } from "./screens/Ideas";
 import { IdeaDetail } from "./screens/IdeaDetail";
 import { LabScreen } from "./screens/Lab";
+import { LabLock } from "./components/LabLock";
 import { SearchScreen } from "./screens/Search";
 import { Reentry } from "./overlays/Reentry";
 import { BrainstormPanel } from "./overlays/Brainstorm";
@@ -117,7 +118,7 @@ export default function App() {
         )}
         {route === "ideas" && <IdeasScreen onIdea={goIdea} />}
         {route === "idea" && idea && <IdeaDetail idea={idea} onProject={goProject} onBack={() => goNav("ideas")} />}
-        {route === "lab" && <LabScreen />}
+        {route === "lab" && <LabLock><LabScreen /></LabLock>}
         {route === "search" && <SearchScreen onProject={goProject} initialQuery={searchSeed} />}
       </main>
       {reentry && <Reentry project={reentry} onClose={() => setReentry(null)} onResume={resumeFromReentry} />}
