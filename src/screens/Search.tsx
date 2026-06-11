@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { COS_DATA } from "../data";
-import { foyerStamp } from "../brief";
 
 type Axis = "all" | "projects" | "people" | "knowledge" | "decisions";
 
@@ -37,32 +36,8 @@ export function SearchScreen({ onProject, initialQuery }: SearchProps) {
   ];
 
   return (
-    <div className="wrap room-arch">
+    <div className="wrap">
       <div className="fade-in">
-        {/* same calm header as the foyer — a motivational tag + the live stamp */}
-        <div className="foyer">
-          <div className="foyer-mark"><span className="mono-meta">We got you</span></div>
-          <span className="mono-meta q">{foyerStamp()}</span>
-        </div>
-
-        {/* black banner — same shape as the foyer's doorway */}
-        <div className="doorway room-door ac-violet">
-          <div className="dw-body">
-            <div className="dw-left">
-              <div className="dw-rule" />
-              <span className="chip">Recall</span>
-              <div className="dw-name">Memory.</div>
-            </div>
-            <div className="dw-quotewrap">
-              <div className="dw-quote">“The palest ink is better than the best memory.”</div>
-              <div className="dw-cite">— Chinese proverb</div>
-            </div>
-          </div>
-          <div className="dw-foot">
-            <span className="dw-mono">Nothing is lost. COS remembers, so you don't have to.</span>
-          </div>
-        </div>
-
         <div className="search-big">
           {/* search icon inline — matches .search-big svg styling */}
           <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.2-3.2" /></svg>
