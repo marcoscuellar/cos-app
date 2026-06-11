@@ -142,35 +142,35 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
               <div className="ch-day">{weekday}.</div>
               <div className="ch-date">{monthDay}</div>
             </div>
-          </div>
 
-          {/* TODAY'S INTENTION — the soul of the day, COS-proposed and editable */}
-          {plan && (
-            <div className="ch-intent">
-              <div className="ci-lbl">Today's intention</div>
-              {allDone ? (
-                <div className="ci-quote ci-done">Touch grass. 🌱</div>
-              ) : editingIntent ? (
-                <input
-                  className="ci-input"
-                  value={intentDraft}
-                  onChange={(e) => setIntentDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") saveIntent();
-                    if (e.key === "Escape") setEditingIntent(false);
-                  }}
-                  onBlur={saveIntent}
-                  placeholder="What matters most today?"
-                  autoFocus
-                />
-              ) : (
-                <button className={"ci-quote" + (plan.intention ? "" : " empty")} onClick={startEditIntent} title="Tap to edit">
-                  {plan.intention ? `“${plan.intention}”` : "Set today's intention…"}
-                  <span className="ci-edit">edit</span>
-                </button>
-              )}
-            </div>
-          )}
+            {/* TODAY'S INTENTION — to the right, mirroring the foyer's quote (keeps the box compact) */}
+            {plan && (
+              <div className="ch-intent">
+                <div className="ci-lbl">Today's intention</div>
+                {allDone ? (
+                  <div className="ci-quote ci-done">Touch grass. 🌱</div>
+                ) : editingIntent ? (
+                  <input
+                    className="ci-input"
+                    value={intentDraft}
+                    onChange={(e) => setIntentDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveIntent();
+                      if (e.key === "Escape") setEditingIntent(false);
+                    }}
+                    onBlur={saveIntent}
+                    placeholder="What matters most today?"
+                    autoFocus
+                  />
+                ) : (
+                  <button className={"ci-quote" + (plan.intention ? "" : " empty")} onClick={startEditIntent} title="Tap to edit">
+                    {plan.intention ? `“${plan.intention}”` : "Set today's intention…"}
+                    <span className="ci-edit">edit</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="ch-foot">
             <span className="ch-syncline">

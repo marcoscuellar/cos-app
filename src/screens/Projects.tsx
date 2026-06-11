@@ -18,9 +18,24 @@ export function ProjectsScreen({ onProject, onContinue }: ProjectsProps) {
           <span className="mono-meta q">{foyerStamp()}</span>
         </div>
         <h1 className="arch-hero">Projects.</h1>
-        <p className="dim" style={{ fontSize: 16, maxWidth: "48ch", marginBottom: 36 }}>
-          Five context containers. Everything related to each lives inside it — open one to land on where you left off.
-        </p>
+
+        {/* black banner — same shape as the foyer's doorway */}
+        <div className="doorway room-door ac-violet">
+          <div className="dw-body">
+            <div className="dw-left">
+              <div className="dw-rule" />
+              <span className="chip">The work</span>
+              <div className="dw-name">Focus.</div>
+            </div>
+            <div className="dw-quotewrap">
+              <div className="dw-quote">“The main thing is to keep the main thing the main thing.”</div>
+              <div className="dw-cite">— Stephen Covey</div>
+            </div>
+          </div>
+          <div className="dw-foot">
+            <span className="dw-mono">Five rooms. One focus at a time.</span>
+          </div>
+        </div>
         <div className="grid-2">
           {D.projects.map((p) => (
             <div key={p.id} className={"card click ac-" + p.accent}

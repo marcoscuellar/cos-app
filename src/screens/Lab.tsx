@@ -26,10 +26,24 @@ export function LabScreen() {
           <span className="mono-meta q">{foyerStamp()}</span>
         </div>
         <h1 className="arch-hero">The lab.</h1>
-        <p className="dim" style={{ fontSize: 16, maxWidth: "58ch", marginBottom: 22 }}>
-          Repeatable operating systems that turn a messy input into useful work. Pick an engine, give it
-          what it needs, and it researches live and reports back. Every run is saved.
-        </p>
+
+        {/* black banner — same shape as the foyer's doorway */}
+        <div className="doorway room-door ac-indigo">
+          <div className="dw-body">
+            <div className="dw-left">
+              <div className="dw-rule" />
+              <span className="chip">Engine room</span>
+              <div className="dw-name">Build.</div>
+            </div>
+            <div className="dw-quotewrap">
+              <div className="dw-quote">“The best way to predict the future is to invent it.”</div>
+              <div className="dw-cite">— Alan Kay</div>
+            </div>
+          </div>
+          <div className="dw-foot">
+            <span className="dw-mono">Repeatable engines. Real output. Every run saved.</span>
+          </div>
+        </div>
 
         <div className="tabs">
           <button className={"tab" + (tab === "engines" ? " on" : "")} onClick={() => setTab("engines")}>Engines</button>

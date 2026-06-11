@@ -19,9 +19,24 @@ export function IdeasScreen({ onIdea }: { onIdea: (id: string) => void }) {
           <span className="mono-meta q">{foyerStamp()}</span>
         </div>
         <h1 className="arch-hero">Ideas.</h1>
-        <p className="dim" style={{ fontSize: 16, maxWidth: "50ch", marginBottom: 34 }}>
-          Three ideas get your real attention at a time. Everything else waits as a spark. Focus is the point.
-        </p>
+
+        {/* black banner — same shape as the foyer's doorway */}
+        <div className="doorway room-door ac-amber">
+          <div className="dw-body">
+            <div className="dw-left">
+              <div className="dw-rule" />
+              <span className="chip">Incubation</span>
+              <div className="dw-name">Dream.</div>
+            </div>
+            <div className="dw-quotewrap">
+              <div className="dw-quote">“If at first the idea is not absurd, then there is no hope for it.”</div>
+              <div className="dw-cite">— Albert Einstein</div>
+            </div>
+          </div>
+          <div className="dw-foot">
+            <span className="dw-mono">Three ideas at a time. The rest wait as sparks.</span>
+          </div>
+        </div>
 
         <div className="grid-3">
           {D.ideas.map((i) => {

@@ -672,6 +672,9 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
   background:#0a0a0a;color:#fff;padding:32px 36px 26px;
   box-shadow:0 34px 80px -34px rgba(0,0,0,.6);transition:transform .16s, box-shadow .16s}
 .doorway:hover{transform:translateY(-2px);box-shadow:0 46px 96px -36px rgba(0,0,0,.66)}
+/* room banner — the foyer doorway's twin, but static (not a button) */
+.room-door{cursor:default;margin-bottom:36px}
+.room-door:hover{transform:none;box-shadow:0 34px 80px -34px rgba(0,0,0,.6)}
 .doorway .dw-body{display:grid;grid-template-columns:1.45fr 1fr;gap:40px;align-items:start}
 @media(max-width:780px){.doorway .dw-body{grid-template-columns:1fr;gap:24px;align-items:start}}
 .doorway .dw-left{display:flex;flex-direction:column;align-items:flex-start}
@@ -839,7 +842,8 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 
 .cal-hero{background:#0a0a0a;color:#fff;padding:32px 36px 24px;margin-bottom:30px;
   box-shadow:0 34px 80px -34px rgba(0,0,0,.6)}
-.cal-hero .ch-body{display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap}
+.cal-hero .ch-body{display:grid;grid-template-columns:1.45fr 1fr;gap:40px;align-items:end}
+@media(max-width:780px){.cal-hero .ch-body{grid-template-columns:1fr;gap:22px}}
 .cal-hero .ch-left{display:flex;flex-direction:column;align-items:flex-start}
 .cal-hero .dw-rule{height:4px;width:54px;background:var(--gold);opacity:1;margin-bottom:20px;border-radius:2px}
 .cal-hero .chip{background:#fff;color:#0a0a0a;border-radius:0}
@@ -879,9 +883,10 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 @media(max-width:640px){.cal-hero .ch-live{text-align:left;align-items:flex-start;margin-left:0}}
 
 /* today's intention — the soul of the day, with a divider line */
-.cal-hero .ch-intent{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.14)}
+.cal-hero .ch-intent{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+@media(max-width:780px){.cal-hero .ch-intent{align-items:flex-start;text-align:left;margin-top:6px}}
 .cal-hero .ci-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8c8c95;margin-bottom:12px}
-.cal-hero .ci-quote{display:inline-flex;align-items:baseline;gap:12px;text-align:left;background:none;cursor:pointer;
+.cal-hero .ci-quote{display:inline-flex;align-items:baseline;gap:12px;text-align:right;background:none;cursor:pointer;
   font-family:var(--display);font-weight:500;font-size:clamp(20px,2.7vw,28px);letter-spacing:-.015em;line-height:1.32;
   color:#f0f0f2;max-width:42ch}
 .cal-hero .ci-quote:hover{color:#fff}
