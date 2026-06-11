@@ -978,10 +978,10 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 /* ───────────── Engine room ───────────── */
 .engine-card{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:0;min-height:188px;position:relative}
 .engine-card .eng-num{font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--ac);font-weight:700}
-.engine-card .eng-name{font-family:var(--display);font-weight:800;font-size:27px;letter-spacing:-.025em;line-height:1.1;margin-top:8px}
-/* gold marker highlight behind the title — box-decoration-break clones it per line */
-.engine-card .eng-name span{background:linear-gradient(transparent 56%, rgba(200,144,42,.34) 0);
-  box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:0 2px}
+.engine-card .eng-name{font-family:var(--display);font-weight:800;font-size:25px;letter-spacing:-.025em;line-height:1.5;margin-top:8px}
+/* black bold marker behind the title — box-decoration-break clones the box per line */
+.engine-card .eng-name span{background:var(--ink);color:#fff;
+  box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:2px 8px}
 .engine-card .eng-tag{font-size:13.5px;color:var(--ink-3);line-height:1.45;margin-top:7px;max-width:34ch}
 .eng-stages{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:14px}
 .eng-stage{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-4);display:inline-flex;align-items:center;gap:6px}
