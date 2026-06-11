@@ -1003,10 +1003,10 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 
 /* Project cards — mirror the engine cards exactly: number, marker name,
    one-line tagline, a mono meta row, then an "Open →" affordance. */
-.project-card{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:0;min-height:192px;position:relative}
+.project-card{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:0;min-height:218px;position:relative}
 .project-card .pc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;width:100%}
 .project-card .pc-num{font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--ac);font-weight:700}
-.project-card .pc-name{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.025em;line-height:1.5;margin-top:8px}
+.project-card .pc-name{font-family:var(--display);font-weight:800;font-size:clamp(34px,3.4vw,44px);letter-spacing:-.03em;line-height:1.28;margin-top:12px}
 /* black bold marker behind the title — box-decoration-break clones the box per line */
 .project-card .pc-name span{background:var(--ink);color:#fff;
   box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:2px 8px}
