@@ -16,6 +16,18 @@ type AnyBlock = { id?: string; start: string; end: string; title: string; kind: 
 const DEFAULT_HOURS = "7:00 AM – 10:00 PM";
 const DEFAULT_PACING = "breathing-room";
 
+// Quick links to the tools you live in — open in a new tab. icon = simpleicons slug.
+const LINKS: { label: string; url: string; icon: string }[] = [
+  { label: "LinkedIn", url: "https://www.linkedin.com/feed/", icon: "linkedin" },
+  { label: "Sales Nav", url: "https://www.linkedin.com/sales/home", icon: "linkedin" },
+  { label: "Gmail", url: "https://mail.google.com", icon: "gmail" },
+  { label: "Claude", url: "https://claude.ai", icon: "claude" },
+  { label: "ChatGPT", url: "https://chatgpt.com", icon: "openai" },
+  { label: "Gemini", url: "https://gemini.google.com/app", icon: "googlegemini" },
+  { label: "Grok", url: "https://grok.com", icon: "grok" },
+  { label: "Discord", url: "https://discord.com/app", icon: "discord" },
+];
+
 // Parse a display time ("7:00 AM", "1:30 PM") into minutes-since-midnight.
 function toMinutes(t: string): number | null {
   const m = t.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
@@ -233,6 +245,9 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
           </div>
         </div>
 
+        <div className="today-body">
+          <div className="today-main">
+
         {/* BRAIN-DUMP BAR — same structure as Home: the bar right under the box */}
         <div className="chatbar dump-bar" style={{ padding: "18px 20px" }}>
           <input
@@ -355,6 +370,22 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
             </div>
           </>
         )}
+          </div>{/* /today-main */}
+
+          <aside className="today-rail">
+            <div className="rail-head"><span className="chip">Launchpad</span></div>
+            <div className="rail-links">
+              {LINKS.map((l) => (
+                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="rail-link">
+                  <img className="ri-ic" src={`https://cdn.simpleicons.org/${l.icon}/0a0a0a`} alt=""
+                    loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  <span className="ri-name">{l.label}</span>
+                  <Icon.arrow className="ri-arrow" />
+                </a>
+              ))}
+            </div>
+          </aside>
+        </div>{/* /today-body */}
       </div>
     </div>
   );

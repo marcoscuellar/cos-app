@@ -670,15 +670,20 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 /* thread the gold signature through every section label so the bold language runs the whole page */
 .home-arch .chip::before{content:"";width:9px;height:3px;border-radius:1px;background:var(--gold);flex-shrink:0}
 
-/* launchpad — quick links to external tools */
-.launchpad{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-@media(max-width:780px){.launchpad{grid-template-columns:repeat(2,1fr)}}
-.launch-tile{display:flex;align-items:center;justify-content:space-between;gap:10px;
-  border:1px solid var(--line);background:var(--paper);padding:15px 17px;transition:border-color .14s,transform .14s}
-.launch-tile:hover{border-color:var(--gold);transform:translateY(-2px)}
-.launch-tile .lt-name{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
-.launch-tile .lt-arrow{width:15px;height:15px;stroke:var(--ink-4);transform:rotate(-45deg);transition:stroke .14s,transform .14s;flex-shrink:0}
-.launch-tile:hover .lt-arrow{stroke:var(--gold);transform:rotate(-45deg) translate(2px,-2px)}
+/* calendar layout — main column + sticky launchpad rail */
+.today-body{display:grid;grid-template-columns:1fr 248px;gap:26px;align-items:start}
+@media(max-width:920px){.today-body{grid-template-columns:1fr}}
+.today-rail{position:sticky;top:24px;display:flex;flex-direction:column;gap:13px}
+@media(max-width:920px){.today-rail{position:static;margin-top:8px}}
+.today-rail .rail-head .chip{display:inline-flex}
+.rail-links{display:flex;flex-direction:column;gap:8px}
+.rail-link{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--paper);
+  padding:12px 14px;transition:border-color .14s,transform .14s}
+.rail-link:hover{border-color:var(--gold);transform:translateX(2px)}
+.rail-link .ri-ic{width:18px;height:18px;flex-shrink:0;opacity:.9}
+.rail-link .ri-name{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:-.01em;color:var(--ink);flex:1}
+.rail-link .ri-arrow{width:13px;height:13px;stroke:var(--ink-4);transform:rotate(-45deg);transition:stroke .14s;flex-shrink:0}
+.rail-link:hover .ri-arrow{stroke:var(--gold)}
 
 /* ---- architectural overrides: titles go grounded/black, meta goes mono ---- */
 .home-arch .card-title{color:var(--ink)}
