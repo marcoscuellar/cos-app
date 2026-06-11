@@ -35,7 +35,10 @@ export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setT
   return (
     <aside className={"sb" + (collapsed ? " collapsed" : "")}>
       <div className="sb-mark">
-        <div className="cos-logo">COS</div>
+        <div className="sb-brand">
+          <div className="cos-logo">COS</div>
+          <span className="sb-tag">Chief of Staff</span>
+        </div>
         <button className="sb-toggle" onClick={onToggle} title={collapsed ? "Expand" : "Collapse"}><Icon.chevron /></button>
       </div>
 

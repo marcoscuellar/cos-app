@@ -118,10 +118,7 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
             </div>
           </div>
           <div className="dw-foot">
-            <span className="dw-foot-l">
-              <span className="dw-brand">COS<span className="gd">.</span></span>
-              <span className="dw-mono">{DW.motto}</span>
-            </span>
+            <span className="dw-mono">{DW.motto}</span>
             <span className="dw-closer">Enter the foyer <Icon.arrow style={{ transform: "rotate(90deg)" }} /></span>
           </div>
         </button>

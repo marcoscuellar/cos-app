@@ -133,7 +133,7 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
           <span className="mono-meta q">{monthDay}</span>
         </div>
 
-        {/* THE BLACK BOX — branded calendar hero: the day on the left, COS brand mark on the right */}
+        {/* THE BLACK BOX — peaceful calendar hero: the day + the intention, nothing more */}
         <div className="cal-hero">
           <div className="ch-body">
             <div className="ch-left">
@@ -141,14 +141,6 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
               <span className="chip">{plan ? "Planned" : "Today"}</span>
               <div className="ch-day">{weekday}.</div>
               <div className="ch-date">{monthDay}</div>
-            </div>
-
-            {/* BRAND MARK — the bold + gold COS lockup filling the right of the banner */}
-            <div className="ch-brand">
-              <span className="cb-ey">Your Chief of Staff</span>
-              <span className="cb-mark">COS<span className="cb-dot">.</span></span>
-              <span className="cb-rule" />
-              <span className="cb-note">Plans the day gently —<br />never crams.</span>
             </div>
           </div>
 
