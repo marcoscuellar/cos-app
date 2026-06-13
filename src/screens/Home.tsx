@@ -129,23 +129,10 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
 
         <div className="spacer-m" />
 
-        {/* DASHBOARD — left: launchpad → what's next → ideas · right: recent → project status */}
+        {/* DASHBOARD — left: what's next → launchpad → ideas · right: project status → recent */}
         <div className="home-dash">
           {/* LEFT */}
           <div className="home-dash-l">
-            <div className="dash-head"><span className="mono-tag">Launchpad</span></div>
-            <div className="launch-grid">
-              {LAUNCH.map((l) => (
-                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="launch-tile">
-                  <span className="lt-ic">
-                    <img src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${l.icon}.svg`} alt=""
-                      loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                  </span>
-                  <span className="lt-name">{l.label}</span>
-                </a>
-              ))}
-            </div>
-
             {(() => {
               const wnIdx = nowIdx >= 0 ? nowIdx : 0;
               const b = todayBlocks[wnIdx];
@@ -154,7 +141,7 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
               const isNow = wnIdx === nowIdx;
               return (
                 <>
-                  <div className="dash-head sec">
+                  <div className="dash-head">
                     <span className="mono-tag">What's next</span>
                     <button className="dash-link" onClick={() => onNav("today")}>See full day</button>
                   </div>
@@ -169,6 +156,19 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
                 </>
               );
             })()}
+
+            <div className="dash-head sec"><span className="mono-tag">Launchpad</span></div>
+            <div className="launch-grid">
+              {LAUNCH.map((l) => (
+                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="launch-tile">
+                  <span className="lt-ic">
+                    <img src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${l.icon}.svg`} alt=""
+                      loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  </span>
+                  <span className="lt-name">{l.label}</span>
+                </a>
+              ))}
+            </div>
 
             <div className="dash-head sec">
               <span className="mono-tag">Ideas</span>
@@ -187,20 +187,7 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
 
           {/* RIGHT */}
           <div className="home-dash-r">
-            <div className="dash-head"><span className="mono-tag">Recent</span></div>
-            {recent.map((p) => (
-              <button key={p.id} className="recent-card" onClick={() => onContinue(p.id)}>
-                <div className="rc-top">
-                  <span className="rc-meta">Last touched · {p.lastActivity}</span>
-                  <span className="rc-dot" />
-                </div>
-                <div className="rc-name">{p.name}</div>
-                <div className="rc-body">You were {p.lastVerb}.</div>
-                <div className="rc-foot">{STATUS_LABEL[p.status]} · {p.pct}%</div>
-              </button>
-            ))}
-
-            <div className="dash-head sec">
+            <div className="dash-head">
               <span className="mono-tag">Project status</span>
               <button className="dash-link" onClick={() => onNav("projects")}>All projects</button>
             </div>
@@ -214,6 +201,19 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
                 </button>
               ))}
             </div>
+
+            <div className="dash-head sec"><span className="mono-tag">Recent</span></div>
+            {recent.slice(0, 1).map((p) => (
+              <button key={p.id} className="recent-card" onClick={() => onContinue(p.id)}>
+                <div className="rc-top">
+                  <span className="rc-meta">Last touched · {p.lastActivity}</span>
+                  <span className="rc-dot" />
+                </div>
+                <div className="rc-name">{p.name}</div>
+                <div className="rc-body">You were {p.lastVerb}.</div>
+                <div className="rc-foot">{STATUS_LABEL[p.status]} · {p.pct}%</div>
+              </button>
+            ))}
           </div>
         </div>
       </div>
