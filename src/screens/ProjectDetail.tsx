@@ -15,39 +15,16 @@ type Tab = "context" | "overview" | "research" | "ideas";
 
 export function ProjectScreen({ project, onContinue, onBrainstorm, onAsk, onOpenDoc }: ProjectScreenProps) {
   const p = project;
-  const tabs: [Tab, string, number | null][] = [
-    ["context", "Current Context", null],
-    ["overview", "Overview", null],
-    ["research", "Research", p.research ? p.research.length : 0],
-    ["ideas", "Ideas", p.ideasFlow ? p.ideasFlow.length : 0],
-  ];
-  const [tab, setTab] = useState<Tab>("context");
-  // Single source of truth for the due date — shared by Current Context's
-  // status bar and the Overview tab (fixes the prototype's split-state gap).
+  // Single source of truth for the due date — shared by the room status strip
+  // and the Overview tab (fixes the prototype's split-state gap).
   const [due, setDue] = useState<string | null>(p.due);
-  useEffect(() => {
-    setTab("context");
-    setDue(p.due);
-  }, [p.id, p.due]);
+  useEffect(() => { setDue(p.due); }, [p.id, p.due]);
 
   return (
     <div className={"wrap ac-" + p.accent}>
       <div className="fade-in">
         <ProjectRoom p={p} due={due} setDue={setDue} onContinue={onContinue}
-          onBrainstorm={onBrainstorm} onOpenDoc={onOpenDoc} />
-
-        <div className="tabs">
-          {tabs.map(([k, label, n]) => (
-            <button key={k} className={"tab" + (tab === k ? " on" : "")} onClick={() => setTab(k)}>
-              {label}{n ? <span className="tn">{n}</span> : null}
-            </button>
-          ))}
-        </div>
-
-        {tab === "context" && <CurrentContext p={p} onAsk={onAsk} />}
-        {tab === "overview" && <FacetOverview p={p} due={due} />}
-        {tab === "research" && <FacetResearch p={p} onOpenDoc={onOpenDoc} />}
-        {tab === "ideas" && <FacetIdeasFlow p={p} />}
+          onBrainstorm={onBrainstorm} onAsk={onAsk} onOpenDoc={onOpenDoc} />
       </div>
     </div>
   );
@@ -59,15 +36,25 @@ interface RoomProps {
   setDue: (d: string) => void;
   onContinue: (id: string, fromInside?: boolean) => void;
   onBrainstorm: () => void;
+  onAsk: () => void;
   onOpenDoc: (doc: DocRef, accent: Accent) => void;
 }
 
-// The project "room" — a two-column hero: black identity panel on the left,
-// work surface (where you left off + next action) on the right. Editable in place.
-function ProjectRoom({ p, due, setDue, onContinue, onBrainstorm, onOpenDoc }: RoomProps) {
+// The project "room" — a STATIC black identity panel on the left, and a work
+// surface on the right that carries the tabs (Current Context / Overview /
+// Research / Ideas) and their content. Editable in place.
+function ProjectRoom({ p, due, setDue, onContinue, onBrainstorm, onAsk, onOpenDoc }: RoomProps) {
+  const tabs: [Tab, string, number | null][] = [
+    ["context", "Current Context", null],
+    ["overview", "Overview", null],
+    ["research", "Research", p.research ? p.research.length : 0],
+    ["ideas", "Ideas", p.ideasFlow ? p.ideasFlow.length : 0],
+  ];
+  const [tab, setTab] = useState<Tab>("context");
   const [editing, setEditing] = useState(false);
   // Edits overlay the static project for the session.
   const [over, setOver] = useState<{ name?: string; why?: string; focus?: string; nextAction?: string }>({});
+  useEffect(() => { setTab("context"); setEditing(false); setOver({}); }, [p.id]);
   const v = { name: over.name ?? p.name, why: over.why ?? p.why, focus: over.focus ?? p.focus, nextAction: over.nextAction ?? p.nextAction };
   const set = (k: keyof typeof over, val: string) => setOver((o) => ({ ...o, [k]: val }));
 
@@ -76,7 +63,7 @@ function ProjectRoom({ p, due, setDue, onContinue, onBrainstorm, onOpenDoc }: Ro
 
   return (
     <div className="proom">
-      {/* ── black identity panel ── */}
+      {/* ── static black identity panel ── */}
       <div className="proom-l">
         <div className="proom-top">
           <span className="proom-logo">COS</span>
@@ -135,71 +122,80 @@ function ProjectRoom({ p, due, setDue, onContinue, onBrainstorm, onOpenDoc }: Ro
         </div>
       </div>
 
-      {/* ── work surface ── */}
+      {/* ── work surface: tabs + the active tab's content ── */}
       <div className="proom-r">
-        <span className="proom-eye">Where you left off</span>
-        {editing ? (
-          <textarea className="proom-rin leftoff" rows={2} value={v.focus} onChange={(e) => set("focus", e.target.value)} />
-        ) : (
-          <div className="proom-leftoff">{v.focus}</div>
-        )}
+        <div className="tabs proom-tabs">
+          {tabs.map(([k, label, n]) => (
+            <button key={k} className={"tab" + (tab === k ? " on" : "")} onClick={() => setTab(k)}>
+              {label}{n ? <span className="tn">{n}</span> : null}
+            </button>
+          ))}
+        </div>
 
-        {p.resume && p.resume.length > 0 && (
-          <div className="proom-pick">
-            <div className="proom-eye">Pick up where you left off</div>
-            <div className="proom-pick-rows">
-              {p.resume.map((r, i) => (
-                <button key={i} className="proom-prow"
-                  onClick={() => onOpenDoc({ t: r.t, kind: r.kind, when: r.when, summary: "You were working on this when you last stepped away. Open it to keep going — COS held the thread so you don't have to rebuild it." }, p.accent)}>
-                  <span className="proom-kind">{r.kind}</span>
-                  <span className="proom-pt">{r.t}</span>
-                  <span className="proom-pw">{r.when}</span>
-                  <Icon.arrow className="ro" />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="proom-next">
-          <div>
-            <div className="proom-next-eye">Next recommended action</div>
+        {tab === "context" && (
+          <div className="fade-in">
+            <span className="proom-eye">Where you left off</span>
             {editing ? (
-              <textarea className="proom-rin" style={{ marginTop: 7 }} rows={2} value={v.nextAction} onChange={(e) => set("nextAction", e.target.value)} />
+              <textarea className="proom-rin leftoff" rows={2} value={v.focus} onChange={(e) => set("focus", e.target.value)} />
             ) : (
-              <div className="proom-next-tx">{v.nextAction}</div>
+              <div className="proom-leftoff">{v.focus}</div>
             )}
+
+            {p.resume && p.resume.length > 0 && (
+              <div className="proom-pick">
+                <div className="proom-eye">Pick up where you left off</div>
+                <div className="proom-pick-rows">
+                  {p.resume.map((r, i) => (
+                    <button key={i} className="proom-prow"
+                      onClick={() => onOpenDoc({ t: r.t, kind: r.kind, when: r.when, summary: "You were working on this when you last stepped away. Open it to keep going — COS held the thread so you don't have to rebuild it." }, p.accent)}>
+                      <span className="proom-kind">{r.kind}</span>
+                      <span className="proom-pt">{r.t}</span>
+                      <span className="proom-pw">{r.when}</span>
+                      <Icon.arrow className="ro" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="proom-next">
+              <div>
+                <div className="proom-next-eye">Next recommended action</div>
+                {editing ? (
+                  <textarea className="proom-rin" style={{ marginTop: 7 }} rows={2} value={v.nextAction} onChange={(e) => set("nextAction", e.target.value)} />
+                ) : (
+                  <div className="proom-next-tx">{v.nextAction}</div>
+                )}
+              </div>
+              {!editing && <button className="proom-start" onClick={() => onContinue(p.id, true)}>Start <Icon.arrow /></button>}
+            </div>
+
+            {(p.blockers.length > 0 || p.openQuestions.length > 0) && (
+              <div className="card" style={{ marginTop: 16 }}>
+                <div className="card-eyebrow">Blockers & open questions</div>
+                <div style={{ display: "flex", gap: 10, marginTop: 4, flexWrap: "wrap" }}>
+                  {p.blockers.map((b, i) => (
+                    <span key={"b" + i} className="pill" style={{ color: "var(--gold)", borderColor: "transparent", background: "var(--gold-bg)" }}>
+                      <span className="d" style={{ background: "var(--gold)" }} />{b}
+                    </span>
+                  ))}
+                  {p.openQuestions.map((q, i) => (
+                    <span key={"q" + i} className="pill"><span className="d" />{q}</span>
+                  ))}
+                </div>
+                <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={onAsk}>
+                  <Icon.spark style={{ width: 14, height: 14 }} /> Ask COS about this
+                </button>
+              </div>
+            )}
+
+            <NotesPanel projectId={p.id} projectName={p.name} />
           </div>
-          {!editing && <button className="proom-start" onClick={() => onContinue(p.id, true)}>Start <Icon.arrow /></button>}
-        </div>
+        )}
+        {tab === "overview" && <FacetOverview p={p} due={due} />}
+        {tab === "research" && <FacetResearch p={p} onOpenDoc={onOpenDoc} />}
+        {tab === "ideas" && <FacetIdeasFlow p={p} />}
       </div>
-    </div>
-  );
-}
-
-function CurrentContext({ p, onAsk }: { p: Project; onAsk: () => void }) {
-  return (
-    <div className="fade-in">
-      {(p.blockers.length > 0 || p.openQuestions.length > 0) && (
-        <div className="card">
-          <div className="card-eyebrow">Blockers & open questions</div>
-          <div style={{ display: "flex", gap: 10, marginTop: 4, flexWrap: "wrap" }}>
-            {p.blockers.map((b, i) => (
-              <span key={"b" + i} className="pill" style={{ color: "var(--gold)", borderColor: "transparent", background: "var(--gold-bg)" }}>
-                <span className="d" style={{ background: "var(--gold)" }} />{b}
-              </span>
-            ))}
-            {p.openQuestions.map((q, i) => (
-              <span key={"q" + i} className="pill"><span className="d" />{q}</span>
-            ))}
-          </div>
-          <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={onAsk}>
-            <Icon.spark style={{ width: 14, height: 14 }} /> Ask COS about this
-          </button>
-        </div>
-      )}
-
-      <NotesPanel projectId={p.id} projectName={p.name} />
     </div>
   );
 }

@@ -1022,8 +1022,8 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
   box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:2px 11px}
 
 /* ───────── Project Room — two-column hero: black left, work surface right ───────── */
-.proom{display:grid;grid-template-columns:minmax(0,440px) 1fr;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:22px;box-shadow:var(--shadow)}
-.proom-l{background:#0a0a0a;color:#fff;display:flex;flex-direction:column;padding:28px 30px 26px}
+.proom{display:grid;grid-template-columns:minmax(0,400px) 1fr;gap:18px;align-items:start;margin-bottom:22px}
+.proom-l{position:sticky;top:16px;align-self:start;min-height:540px;background:#0a0a0a;color:#fff;display:flex;flex-direction:column;padding:28px 30px 26px;border-radius:var(--radius)}
 .proom-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:34px}
 .proom-logo{font-family:var(--display);font-weight:800;font-size:13px;letter-spacing:-.01em;background:#fff;color:#0a0a0a;padding:5px 8px;line-height:1}
 .proom-bc{text-align:right;display:flex;flex-direction:column;gap:4px}
@@ -1050,8 +1050,9 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .proom-btn:hover{transform:translateY(-1px)}
 .proom-btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.28)}
 .proom-sv.as-set{background:none;border:none;color:var(--gold);cursor:pointer;font-family:var(--display);font-weight:700;font-size:16px;padding:0}
-/* right work surface */
-.proom-r{background:#fafafa;display:flex;flex-direction:column;padding:28px 30px}
+/* right work surface — carries the tabs + active tab content */
+.proom-r{background:#fafafa;border:1px solid var(--line);border-radius:var(--radius);display:flex;flex-direction:column;padding:22px 26px 26px;min-width:0}
+.proom-r .tabs.proom-tabs{margin:0 0 20px}
 .proom-eye{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4);font-weight:700}
 .proom-leftoff{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.02em;line-height:1.18;color:var(--ink);margin-top:10px}
 .proom-pick{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:22px}
@@ -1063,7 +1064,7 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .proom-pw{font-family:var(--mono);font-size:10px;color:var(--ink-4);flex-shrink:0}
 .proom-prow .ro{width:14px;height:14px;stroke:var(--ink-4);flex-shrink:0;transition:transform .12s}
 .proom-prow:hover .ro{transform:translateX(3px);stroke:var(--gold)}
-.proom-next{background:#0a0a0a;color:#fff;border-radius:14px;padding:20px 22px;margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.proom-next{background:#0a0a0a;color:#fff;border-radius:14px;padding:20px 22px;margin-top:18px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .proom-next-eye{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:700}
 .proom-next-tx{font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:-.01em;margin-top:7px;max-width:34ch}
 .proom-start{background:#fff;color:#0a0a0a;border:none;cursor:pointer;font-family:var(--display);font-weight:600;font-size:13px;padding:11px 18px;display:inline-flex;align-items:center;gap:7px;flex-shrink:0;transition:transform .12s}
