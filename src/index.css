@@ -1043,9 +1043,9 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .proom-sv .muted{color:rgba(255,255,255,.5);font-weight:600}
 .proom-pbar{width:80px;height:6px;border-radius:6px;background:rgba(255,255,255,.16);overflow:hidden}
 .proom-pbar i{display:block;height:100%;background:var(--gold)}
-.proom-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:28px}
+.proom-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;row-gap:12px;margin-top:auto;padding-top:28px}
 .proom-touched{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4)}
-.proom-acts{display:flex;gap:8px;flex-shrink:0}
+.proom-acts{display:flex;gap:8px;flex-wrap:wrap}
 .proom-btn{background:#fff;color:#0a0a0a;border:none;cursor:pointer;font-family:var(--display);font-weight:600;font-size:13px;padding:11px 16px;display:inline-flex;align-items:center;gap:8px;transition:transform .12s}
 .proom-btn:hover{transform:translateY(-1px)}
 .proom-btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.28)}
@@ -1079,11 +1079,18 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .proom-rin:focus{border-color:var(--gold)}
 .proom-rin.leftoff{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.01em;margin-top:10px;resize:vertical}
 @media (max-width:860px){
-  /* single column on mobile — the left panel must NOT stay static or it
+  /* single column on mobile — the left panel must NOT stay sticky or it
      would jam the viewport; it stacks normally above the work surface. */
-  .proom{grid-template-columns:1fr;gap:14px}
-  .proom-l{position:static;min-height:0}
-  .proom-name{font-size:clamp(46px,13vw,72px)}
+  .proom{grid-template-columns:minmax(0,1fr);gap:14px}
+  .proom-l{position:static;min-height:0;padding:24px 22px}
+  .proom-top{margin-bottom:24px}
+  .proom-name{font-size:clamp(46px,13vw,76px)}
+  /* foot stacks; both actions go full-width so nothing runs off the edge */
+  .proom-foot{flex-direction:column;align-items:stretch}
+  .proom-acts{width:100%}
+  .proom-acts .proom-btn{flex:1 1 0;justify-content:center}
+  .proom-r{padding:20px 18px}
+  .proom-r .pill{white-space:normal}
 }
 
 /* ── Straight edges: flat editorial corners across the app (circles/dots stay round) ── */
