@@ -6,7 +6,7 @@ import { greeting as getGreeting, foyerStamp, pickQuote } from "../brief";
 import type { DayPlan } from "../types";
 import { loadPlan } from "../dayPlanApi";
 
-type GlanceBlock = { start: string; end: string; title: string; kind: string; proj: string | null; id?: string; done?: boolean };
+type GlanceBlock = { start: string; end: string; title: string; kind: string; proj: string | null; id?: string; done?: boolean; walkIn?: string };
 
 // Which block is happening right now (Chicago time)? Mirrors the Calendar screen.
 function currentIndex(blocks: GlanceBlock[]): number {
@@ -129,78 +129,62 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
 
         <div className="spacer-l" />
 
-        {/* TWO-UP: your day (calendar) + recently touched rooms */}
-        <div className="home-split">
-          {/* LEFT — the day */}
-          <div className="home-col">
-            <div className="arch-sec">
-              <span className="chip">Today</span>
-              <button className="more" onClick={() => onNav("today")}>Open <Icon.arrow style={{ width: 13, height: 13 }} /></button>
-            </div>
-            <div className="card ac-blue home-cal-card">
-              <div className="home-cal-list">
-                {todayBlocks.map((b, idx) => {
-                  const p = b.proj ? projOf(b.proj) : null;
-                  const accent = p ? p.accent : "blue";
-                  return (
-                    <button key={b.id ?? idx} className={"home-cal-row ac-" + accent} style={b.done ? { opacity: 0.5 } : undefined}
-                      onClick={() => (p ? onProject(p.id) : onNav("today"))}>
-                      <span className="hc-time">{b.start}</span>
-                      <span className="hc-title" style={b.done ? { textDecoration: "line-through" } : undefined}>{b.title}{idx === nowIdx && <span className="hc-now">NOW</span>}</span>
-                      {p ? <span className="hc-proj"><span className="pd" />{p.name}</span>
-                         : <span className="hc-proj" style={{ color: "var(--ink-4)" }}>{b.kind}</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT — what's next, then launchpad (social tabs), then recently touched rooms */}
-          <div className="home-col home-right">
-            {/* WHAT'S NEXT — the very next block on the day, lifted out so the black banner stays clean */}
+        {/* DASHBOARD — what's next + launchpad on the left, recent rooms on the right.
+            (No calendar here — the day lives on its own page; "See full day" links to it.) */}
+        <div className="home-dash">
+          {/* LEFT — what's next, then the launchpad */}
+          <div className="home-dash-l">
             {(() => {
-              const nb = todayBlocks.find((b, i) => i > nowIdx && !b.done) ?? todayBlocks[nowIdx + 1];
-              if (!nb) return null;
-              const np = nb.proj ? projOf(nb.proj) : null;
+              const wnIdx = nowIdx >= 0 ? nowIdx : 0;
+              const b = todayBlocks[wnIdx];
+              if (!b) return null;
+              const bp = b.proj ? projOf(b.proj) : null;
+              const isNow = wnIdx === nowIdx;
               return (
                 <>
-                  <div className="arch-sec"><span className="chip">What's next</span></div>
-                  <button className={"upnext ac-" + (np ? np.accent : "blue")}
-                    onClick={() => (np ? onProject(np.id) : onNav("today"))}>
-                    <span className="un-time">{nb.start}</span>
-                    <span className="un-main">
-                      <span className="un-title">{nb.title}</span>
-                      <span className="un-proj">{np ? <><span className="pd" />{np.name}</> : nb.kind}</span>
-                    </span>
-                    <Icon.arrow className="un-arrow" />
+                  <div className="dash-head">
+                    <span className="mono-tag">What's next</span>
+                    <button className="dash-link" onClick={() => onNav("today")}>See full day</button>
+                  </div>
+                  <button className="whatsnext" onClick={() => (bp ? onProject(bp.id) : onNav("today"))}>
+                    <div className="wn-top">
+                      <span className="wn-time">{b.start}–{b.end}{isNow && <span className="wn-now">NOW</span>}</span>
+                      {bp && <span className="wn-proj"><span className="wn-dot" />{bp.name}</span>}
+                    </div>
+                    <div className="wn-title">{b.title}</div>
+                    {b.walkIn && <div className="wn-walk"><span className="wn-wlbl">Walk in with</span>{b.walkIn}</div>}
                   </button>
                 </>
               );
             })()}
 
-            <div className="arch-sec home-launch-head"><span className="chip">Launchpad</span></div>
-            <div className="home-launch">
+            <div className="dash-head sec"><span className="mono-tag">Launchpad</span></div>
+            <div className="launch-grid">
               {LINKS.map((l) => (
-                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="home-launch-tile">
-                  <img className="hl-ic" src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${l.icon}.svg`} alt=""
-                    loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                  <span className="hl-name">{l.label}</span>
+                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="launch-tile">
+                  <span className="lt-ic">
+                    <img src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${l.icon}.svg`} alt=""
+                      loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  </span>
+                  <span className="lt-name">{l.label}</span>
                 </a>
               ))}
             </div>
+          </div>
 
-            <div className="arch-sec home-recent-head"><span className="chip">Recent</span></div>
+          {/* RIGHT — recently touched rooms */}
+          <div className="home-dash-r">
+            <div className="dash-head"><span className="mono-tag">Recent</span></div>
             {recent.map((p) => (
-              <div key={p.id} className={"card click ac-" + p.accent} style={{ padding: "18px 20px" }} onClick={() => onContinue(p.id)}>
-                <div className="arch-card-head" style={{ marginBottom: 12 }}>
-                  <span className="mono-meta">Last touched · {p.lastActivity}</span>
-                  <span className="recent-dot" style={{ width: 8, height: 8, background: "var(--ac)", flexShrink: 0 }} />
+              <button key={p.id} className="recent-card" onClick={() => onContinue(p.id)}>
+                <div className="rc-top">
+                  <span className="rc-meta">Last touched · {p.lastActivity}</span>
+                  <span className="rc-dot" />
                 </div>
-                <div className="card-title" style={{ fontSize: 22 }}>{p.name}</div>
-                <div className="card-body" style={{ marginTop: 6 }}>You were {p.lastVerb}.</div>
-                <div className="mono-meta" style={{ marginTop: 14 }}>{STATUS_LABEL[p.status]} · {p.pct}%</div>
-              </div>
+                <div className="rc-name">{p.name}</div>
+                <div className="rc-body">You were {p.lastVerb}.</div>
+                <div className="rc-foot">{STATUS_LABEL[p.status]} · {p.pct}%</div>
+              </button>
             ))}
           </div>
         </div>

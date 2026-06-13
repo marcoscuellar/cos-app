@@ -1021,6 +1021,46 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .hero-mark span{background:var(--ink);color:#fff;
   box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:2px 11px}
 
+/* ───────── Home dashboard — What's next + Launchpad / Recent ───────── */
+.home-dash{display:grid;grid-template-columns:1.7fr 1fr;gap:24px;align-items:start}
+.dash-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}
+.dash-head.sec{margin-top:28px}
+.mono-tag{display:inline-block;background:#000;color:#fff;font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;padding:7px 11px;line-height:1}
+.dash-link{font-family:var(--display);font-weight:600;font-size:14px;color:var(--ink-3);cursor:pointer;background:none;border:none}
+.dash-link:hover{color:var(--ink)}
+/* What's next hero — the red-tint now block */
+.whatsnext{display:block;width:100%;text-align:left;background:var(--gold-bg);border:none;cursor:pointer;padding:24px 26px;transition:transform .12s,box-shadow .12s}
+.whatsnext:hover{transform:translateY(-1px);box-shadow:0 16px 36px -22px rgba(12,12,14,.6)}
+.wn-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wn-time{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--ink-3);display:inline-flex;align-items:center;gap:10px}
+.wn-now{background:#000;color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:3px 7px;line-height:1}
+.wn-proj{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);display:inline-flex;align-items:center;gap:7px}
+.wn-dot{width:8px;height:8px;border-radius:50%;background:var(--gold)}
+.wn-title{font-family:var(--display);font-weight:800;font-size:clamp(28px,3vw,36px);letter-spacing:-.03em;color:var(--ink);margin-top:14px;line-height:1.04}
+.wn-walk{font-size:15px;color:var(--ink-2);line-height:1.5;margin-top:14px;max-width:54ch}
+.wn-wlbl{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-right:8px}
+/* Launchpad tiles — black icon square + label, on white cards */
+.launch-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.launch-tile{display:flex;flex-direction:column;align-items:center;gap:12px;border:1px solid var(--line);background:var(--paper);padding:20px 10px;text-decoration:none;transition:border-color .12s,transform .12s}
+.launch-tile:hover{border-color:var(--ink);transform:translateY(-1px)}
+.lt-ic{width:46px;height:46px;background:#000;display:grid;place-items:center;flex-shrink:0}
+.lt-ic img{width:23px;height:23px;filter:invert(1)}
+.lt-name{font-family:var(--display);font-weight:600;font-size:14px;color:var(--ink)}
+/* Recent room cards */
+.recent-card{display:block;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);cursor:pointer;padding:20px 22px;transition:border-color .12s,box-shadow .12s,transform .12s}
+.recent-card + .recent-card{margin-top:16px}
+.recent-card:hover{border-color:var(--ink);transform:translateY(-1px);box-shadow:0 16px 36px -24px rgba(12,12,14,.6)}
+.rc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.rc-meta{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4)}
+.rc-dot{width:9px;height:9px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:2px}
+.rc-name{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.025em;color:var(--ink);margin-top:14px}
+.rc-body{font-size:14.5px;color:var(--ink-3);line-height:1.5;margin-top:8px}
+.rc-foot{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4);margin-top:16px}
+@media (max-width:860px){
+  .home-dash{grid-template-columns:1fr;gap:20px}
+  .launch-grid{grid-template-columns:repeat(2,1fr)}
+}
+
 /* ───────── Project Room — two-column hero: black left, work surface right ───────── */
 .proom{display:grid;grid-template-columns:minmax(0,400px) 1fr;gap:18px;align-items:start;margin-bottom:22px}
 .proom-l{position:sticky;top:16px;align-self:start;min-height:540px;background:#0a0a0a;color:#fff;display:flex;flex-direction:column;padding:28px 30px 26px;border-radius:var(--radius)}
