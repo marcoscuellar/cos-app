@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import type { Project, DocRef, Accent } from "../types";
-import { Eyebrow, Status } from "../components/shared";
 import { Icon } from "../components/Icon";
 import { NotesPanel } from "../components/Notes";
 
@@ -34,23 +33,8 @@ export function ProjectScreen({ project, onContinue, onBrainstorm, onAsk, onOpen
   return (
     <div className={"wrap ac-" + p.accent}>
       <div className="fade-in">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
-          <div>
-            <span className="gold-rule" />
-            <Eyebrow accent={p.accent}>{p.name}</Eyebrow>
-            <h1 className="disp hero-mark" style={{ margin: "16px 0 14px", fontSize: "clamp(38px,5vw,60px)", lineHeight: 1.32 }}><span>{p.name}</span></h1>
-            <p style={{ fontSize: 17, color: "var(--ink-3)", maxWidth: "46ch", lineHeight: 1.45 }}>{p.why}</p>
-            <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
-              <button className="btn btn-solid" onClick={onAsk}>
-                <Icon.spark style={{ width: 15, height: 15 }} /> Ask COS
-              </button>
-              <button className="btn btn-accent" onClick={onBrainstorm}>
-                <Icon.spark style={{ width: 15, height: 15 }} /> Brainstorm with COS
-              </button>
-            </div>
-          </div>
-          <Status status={p.status} />
-        </div>
+        <ProjectRoom p={p} due={due} setDue={setDue} onContinue={onContinue}
+          onBrainstorm={onBrainstorm} onOpenDoc={onOpenDoc} />
 
         <div className="tabs">
           {tabs.map(([k, label, n]) => (
@@ -60,7 +44,7 @@ export function ProjectScreen({ project, onContinue, onBrainstorm, onAsk, onOpen
           ))}
         </div>
 
-        {tab === "context" && <CurrentContext p={p} due={due} setDue={setDue} onContinue={onContinue} onOpenDoc={onOpenDoc} />}
+        {tab === "context" && <CurrentContext p={p} onAsk={onAsk} />}
         {tab === "overview" && <FacetOverview p={p} due={due} />}
         {tab === "research" && <FacetResearch p={p} onOpenDoc={onOpenDoc} />}
         {tab === "ideas" && <FacetIdeasFlow p={p} />}
@@ -69,95 +53,153 @@ export function ProjectScreen({ project, onContinue, onBrainstorm, onAsk, onOpen
   );
 }
 
-function StatusBar({ p, due, setDue }: { p: Project; due: string | null; setDue: (d: string) => void }) {
-  const dotColor = p.status === "in-motion" ? "var(--gold)" : p.status === "blocked" ? "var(--ink-3)" : "var(--ink-4)";
+interface RoomProps {
+  p: Project;
+  due: string | null;
+  setDue: (d: string) => void;
+  onContinue: (id: string, fromInside?: boolean) => void;
+  onBrainstorm: () => void;
+  onOpenDoc: (doc: DocRef, accent: Accent) => void;
+}
+
+// The project "room" — a two-column hero: black identity panel on the left,
+// work surface (where you left off + next action) on the right. Editable in place.
+function ProjectRoom({ p, due, setDue, onContinue, onBrainstorm, onOpenDoc }: RoomProps) {
+  const [editing, setEditing] = useState(false);
+  // Edits overlay the static project for the session.
+  const [over, setOver] = useState<{ name?: string; why?: string; focus?: string; nextAction?: string }>({});
+  const v = { name: over.name ?? p.name, why: over.why ?? p.why, focus: over.focus ?? p.focus, nextAction: over.nextAction ?? p.nextAction };
+  const set = (k: keyof typeof over, val: string) => setOver((o) => ({ ...o, [k]: val }));
+
   const statusLabel = p.status === "in-motion" ? "In motion" : p.status === "blocked" ? "Blocked" : "Dormant";
+  const active = (p.openQuestions?.length || 0) + (p.openDecisions?.length || 0);
+
   return (
-    <div className="statusbar">
-      <div className="seg">
-        <span className="sl">Status</span>
-        <span className="sv"><span className="sd" style={{ background: dotColor }} />{statusLabel}</span>
+    <div className="proom">
+      {/* ── black identity panel ── */}
+      <div className="proom-l">
+        <div className="proom-top">
+          <span className="proom-logo">COS</span>
+          <div className="proom-bc">
+            <b>{v.name} · Room</b>
+            <span>Context Operating System</span>
+          </div>
+        </div>
+
+        <div>
+          <span className="proom-eyebrow">Project room</span>
+          {editing ? (
+            <input className="proom-in name" value={v.name} onChange={(e) => set("name", e.target.value)} />
+          ) : (
+            <h1 className="proom-name">{v.name}</h1>
+          )}
+          {editing ? (
+            <textarea className="proom-in tag" rows={2} value={v.why} onChange={(e) => set("why", e.target.value)} />
+          ) : (
+            <p className="proom-tag">{v.why}</p>
+          )}
+        </div>
+
+        <div className="proom-status">
+          <div className="proom-srow">
+            <span className="proom-sl">Status</span>
+            <span className="proom-sv"><span className="proom-dot" />{statusLabel}</span>
+          </div>
+          <div className="proom-srow">
+            <span className="proom-sl">Due date</span>
+            {due ? <span className="proom-sv">{due}</span>
+                 : <button className="proom-sv as-set" onClick={() => setDue("Jun 21")}>Set a date</button>}
+          </div>
+          <div className="proom-srow">
+            <span className="proom-sl">Open threads</span>
+            <span className="proom-sv">{active} <span className="muted">active · {p.blockers?.length || 0} blocked</span></span>
+          </div>
+          <div className="proom-srow">
+            <span className="proom-sl">Progress</span>
+            <span className="proom-sv"><span className="proom-pbar"><i style={{ width: (p.pct || 0) + "%" }} /></span>{p.pct || 0}%</span>
+          </div>
+        </div>
+
+        <div className="proom-foot">
+          <span className="proom-touched">Last touched {p.lastActivity}</span>
+          <div className="proom-acts">
+            {editing ? (
+              <button className="proom-btn" onClick={() => setEditing(false)}>Done</button>
+            ) : (
+              <>
+                <button className="proom-btn ghost" onClick={() => setEditing(true)}>Edit</button>
+                <button className="proom-btn" onClick={onBrainstorm}>Let COS tidy this room</button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
-      <div className={"seg" + (!due ? " warn" : "")}>
-        <span className="sl">Due date</span>
-        {due ? (
-          <span className="sv">{due}</span>
+
+      {/* ── work surface ── */}
+      <div className="proom-r">
+        <span className="proom-eye">Where you left off</span>
+        {editing ? (
+          <textarea className="proom-rin leftoff" rows={2} value={v.focus} onChange={(e) => set("focus", e.target.value)} />
         ) : (
-          <button className="due-set" onClick={() => setDue("Jun 21")}>
-            <Icon.flag /> Set a due date
-          </button>
+          <div className="proom-leftoff">{v.focus}</div>
         )}
-      </div>
-      <div className="seg">
-        <span className="sl">Last movement</span>
-        <span className="sv" style={{ fontSize: 14, fontWeight: 600 }}>{p.lastActivity}</span>
-        <span style={{ fontSize: 12, color: "var(--ink-4)", fontWeight: 500, marginTop: 1 }}>{p.lastMovement}</span>
-      </div>
-      <div className="seg">
-        <span className="sl">Progress</span>
-        <span className="sv" style={{ gap: 10 }}>
-          <span className="pbar" style={{ maxWidth: 90 }}><i style={{ width: (p.pct || 0) + "%" }} /></span>
-          <span>{(p.pct || 0) + "%"}</span>
-        </span>
+
+        {p.resume && p.resume.length > 0 && (
+          <div className="proom-pick">
+            <div className="proom-eye">Pick up where you left off</div>
+            <div className="proom-pick-rows">
+              {p.resume.map((r, i) => (
+                <button key={i} className="proom-prow"
+                  onClick={() => onOpenDoc({ t: r.t, kind: r.kind, when: r.when, summary: "You were working on this when you last stepped away. Open it to keep going — COS held the thread so you don't have to rebuild it." }, p.accent)}>
+                  <span className="proom-kind">{r.kind}</span>
+                  <span className="proom-pt">{r.t}</span>
+                  <span className="proom-pw">{r.when}</span>
+                  <Icon.arrow className="ro" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="proom-next">
+          <div>
+            <div className="proom-next-eye">Next recommended action</div>
+            {editing ? (
+              <textarea className="proom-rin" style={{ marginTop: 7 }} rows={2} value={v.nextAction} onChange={(e) => set("nextAction", e.target.value)} />
+            ) : (
+              <div className="proom-next-tx">{v.nextAction}</div>
+            )}
+          </div>
+          {!editing && <button className="proom-start" onClick={() => onContinue(p.id, true)}>Start <Icon.arrow /></button>}
+        </div>
       </div>
     </div>
   );
 }
 
-interface CurrentContextProps {
-  p: Project;
-  due: string | null;
-  setDue: (d: string) => void;
-  onContinue: (id: string, fromInside?: boolean) => void;
-  onOpenDoc: (doc: DocRef, accent: Accent) => void;
-}
-
-function CurrentContext({ p, due, setDue, onContinue, onOpenDoc }: CurrentContextProps) {
+function CurrentContext({ p, onAsk }: { p: Project; onAsk: () => void }) {
   return (
     <div className="fade-in">
-      <StatusBar p={p} due={due} setDue={setDue} />
-
-      <div className="card">
-        <div className="card-eyebrow">Current focus</div>
-        <div style={{ fontFamily: "var(--display)", fontWeight: 600, fontSize: 24, letterSpacing: "-.02em", lineHeight: 1.15, color: "var(--ink)", maxWidth: "26ch" }}>{p.focus}</div>
-        {(p.blockers.length > 0 || p.openQuestions.length > 0) && (
-          <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+      {(p.blockers.length > 0 || p.openQuestions.length > 0) && (
+        <div className="card">
+          <div className="card-eyebrow">Blockers & open questions</div>
+          <div style={{ display: "flex", gap: 10, marginTop: 4, flexWrap: "wrap" }}>
             {p.blockers.map((b, i) => (
               <span key={"b" + i} className="pill" style={{ color: "var(--gold)", borderColor: "transparent", background: "var(--gold-bg)" }}>
                 <span className="d" style={{ background: "var(--gold)" }} />{b}
               </span>
             ))}
-            {p.openQuestions.length > 0 && (
-              <span className="pill"><span className="d" />{p.openQuestions.length} open question{p.openQuestions.length > 1 ? "s" : ""}</span>
-            )}
+            {p.openQuestions.map((q, i) => (
+              <span key={"q" + i} className="pill"><span className="d" />{q}</span>
+            ))}
           </div>
-        )}
-      </div>
-
-      <NotesPanel projectId={p.id} projectName={p.name} />
-
-      {p.resume && p.resume.length > 0 && (
-        <div className="card" style={{ marginTop: 16 }}>
-          <div className="card-eyebrow">Pick up where you left off</div>
-          {p.resume.map((r, i) => (
-            <button key={i} className={"resume-row ac-" + p.accent}
-              onClick={() => onOpenDoc({ t: r.t, kind: r.kind, when: r.when, summary: "You were working on this when you last stepped away. Open it to keep going — COS held the thread so you don't have to rebuild it." }, p.accent)}>
-              <span className="resume-kind">{r.kind}</span>
-              <span className="rt">{r.t}</span>
-              <span className="rw">{r.when}</span>
-              <Icon.arrow className="ro" />
-            </button>
-          ))}
+          <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={onAsk}>
+            <Icon.spark style={{ width: 14, height: 14 }} /> Ask COS about this
+          </button>
         </div>
       )}
 
-      <div className="next">
-        <div>
-          <div className="nlbl">Next recommended action</div>
-          <div className="ntx">{p.nextAction}</div>
-        </div>
-        <button className="btn btn-solid" onClick={() => onContinue(p.id, true)}>Start <Icon.arrow /></button>
-      </div>
+      <NotesPanel projectId={p.id} projectName={p.name} />
     </div>
   );
 }
