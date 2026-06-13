@@ -56,6 +56,11 @@ const LINKS: { label: string; url: string; icon: string }[] = [
   { label: "Discord", url: "https://discord.com/app", icon: "messages-square" },
 ];
 
+// The four launchpad tiles shown on the home dashboard (order matters).
+const LAUNCH = ["LinkedIn", "ChatGPT", "Gmail", "Gemini"]
+  .map((n) => LINKS.find((l) => l.label === n)!)
+  .filter(Boolean);
+
 export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
   const D = COS_DATA;
   const T = D.today;
@@ -124,11 +129,23 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
 
         <div className="spacer-m" />
 
-        {/* DASHBOARD — what's next + launchpad on the left, recent rooms on the right.
-            (No calendar here — the day lives on its own page; "See full day" links to it.) */}
+        {/* DASHBOARD — left: launchpad → what's next → ideas · right: recent → project status */}
         <div className="home-dash">
-          {/* LEFT — what's next, then the launchpad */}
+          {/* LEFT */}
           <div className="home-dash-l">
+            <div className="dash-head"><span className="mono-tag">Launchpad</span></div>
+            <div className="launch-grid">
+              {LAUNCH.map((l) => (
+                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="launch-tile">
+                  <span className="lt-ic">
+                    <img src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${l.icon}.svg`} alt=""
+                      loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  </span>
+                  <span className="lt-name">{l.label}</span>
+                </a>
+              ))}
+            </div>
+
             {(() => {
               const wnIdx = nowIdx >= 0 ? nowIdx : 0;
               const b = todayBlocks[wnIdx];
@@ -137,7 +154,7 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
               const isNow = wnIdx === nowIdx;
               return (
                 <>
-                  <div className="dash-head">
+                  <div className="dash-head sec">
                     <span className="mono-tag">What's next</span>
                     <button className="dash-link" onClick={() => onNav("today")}>See full day</button>
                   </div>
@@ -153,21 +170,22 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
               );
             })()}
 
-            <div className="dash-head sec"><span className="mono-tag">Launchpad</span></div>
-            <div className="launch-grid">
-              {LINKS.map((l) => (
-                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="launch-tile">
-                  <span className="lt-ic">
-                    <img src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${l.icon}.svg`} alt=""
-                      loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                  </span>
-                  <span className="lt-name">{l.label}</span>
-                </a>
+            <div className="dash-head sec">
+              <span className="mono-tag">Ideas</span>
+              <button className="dash-link" onClick={() => onNav("ideas")}>Open incubator</button>
+            </div>
+            <div className="glance-card">
+              {D.ideas.map((i) => (
+                <button key={i.id} className="glance-row" onClick={() => onNav("ideas")}>
+                  <span className="gr-dot" />
+                  <span className="gr-name">{i.name}</span>
+                  <span className="gr-stage">{i.stage}</span>
+                </button>
               ))}
             </div>
           </div>
 
-          {/* RIGHT — recently touched rooms */}
+          {/* RIGHT */}
           <div className="home-dash-r">
             <div className="dash-head"><span className="mono-tag">Recent</span></div>
             {recent.map((p) => (
@@ -181,40 +199,21 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
                 <div className="rc-foot">{STATUS_LABEL[p.status]} · {p.pct}%</div>
               </button>
             ))}
-          </div>
-        </div>
 
-        <div className="spacer-m" />
-
-        {/* HIGHLIGHTS — quick glances into the rooms, each linking to its full page */}
-        <div className="home-glance">
-          <div className="glance-card">
-            <div className="glance-head">
-              <span className="mono-tag">Projects</span>
+            <div className="dash-head sec">
+              <span className="mono-tag">Project status</span>
               <button className="dash-link" onClick={() => onNav("projects")}>All projects</button>
             </div>
-            {inMotion.map((p) => (
-              <button key={p.id} className="glance-row" onClick={() => onProject(p.id)}>
-                <span className="gr-dot" />
-                <span className="gr-name">{p.name}</span>
-                <span className="pbar"><i style={{ width: (p.pct || 0) + "%" }} /></span>
-                <span className="gr-pct">{p.pct || 0}%</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="glance-card">
-            <div className="glance-head">
-              <span className="mono-tag">Ideas</span>
-              <button className="dash-link" onClick={() => onNav("ideas")}>Open incubator</button>
+            <div className="glance-card">
+              {inMotion.map((p) => (
+                <button key={p.id} className="glance-row" onClick={() => onProject(p.id)}>
+                  <span className="gr-dot" />
+                  <span className="gr-name">{p.name}</span>
+                  <span className="pbar"><i style={{ width: (p.pct || 0) + "%" }} /></span>
+                  <span className="gr-pct">{p.pct || 0}%</span>
+                </button>
+              ))}
             </div>
-            {D.ideas.map((i) => (
-              <button key={i.id} className="glance-row" onClick={() => onNav("ideas")}>
-                <span className="gr-dot" />
-                <span className="gr-name">{i.name}</span>
-                <span className="gr-stage">{i.stage}</span>
-              </button>
-            ))}
           </div>
         </div>
       </div>
