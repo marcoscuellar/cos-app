@@ -79,11 +79,6 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
     Boolean,
   ) as NonNullable<ReturnType<typeof projOf>>[]; // recently touched rooms
   const inMotion = D.projects.filter((p) => p.status !== "dormant");
-  const dormant = D.projects.filter((p) => p.status === "dormant");
-  const attention = [
-    { t: "GLVE is blocked", d: "Waiting on pricing input from finance.", proj: "glve", accent: "violet" },
-    { t: "Ōllin has gone quiet", d: "Untouched for 3 weeks — pick up or let rest.", proj: "ollin", accent: "amber" },
-  ];
   // The doorway is a brand + motivation moment that drops you into the day — it
   // doesn't navigate; it smooth-scrolls down to reveal the rest of the floor.
   const enterFoyer = () => {
@@ -127,7 +122,7 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
 
         <ChatBar big placeholder="Ask COS, or capture a thought…" onFocusNav={() => onNav("search")} />
 
-        <div className="spacer-l" />
+        <div className="spacer-m" />
 
         {/* DASHBOARD — what's next + launchpad on the left, recent rooms on the right.
             (No calendar here — the day lives on its own page; "See full day" links to it.) */}
@@ -189,97 +184,37 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
           </div>
         </div>
 
-        <div className="spacer-l" />
+        <div className="spacer-m" />
 
-        {/* THE FLOOR — wings of the building */}
-        <div className="arch-sec">
-          <span className="chip">The Floor</span>
-          <span className="mono-meta q">{D.projects.length} ROOMS · {inMotion.length} IN MOTION</span>
-        </div>
-        <div className="grid-2">
-          {/* Projects in motion */}
-          <div className="card ac-violet">
-            <div className="arch-card-head">
-              <span className="chip">In motion</span>
-              <span className="mono-meta">{inMotion.length} ACTIVE · {dormant.length} DORMANT</span>
+        {/* HIGHLIGHTS — quick glances into the rooms, each linking to its full page */}
+        <div className="home-glance">
+          <div className="glance-card">
+            <div className="glance-head">
+              <span className="mono-tag">Projects</span>
+              <button className="dash-link" onClick={() => onNav("projects")}>All projects</button>
             </div>
-            <div className="panel-body" style={{ padding: "2px 0 0" }}>
-              {inMotion.map((p) => (
-                <button key={p.id} className={"prog-row ac-" + p.accent} onClick={() => onProject(p.id)}>
-                  <span className="pr-dot" />
-                  <span className="pr-name">{p.name}</span>
-                  <span className="pbar"><i style={{ width: (p.pct || 0) + "%" }} /></span>
-                  <span className="pr-pct">{p.pct || 0}%</span>
-                </button>
-              ))}
-              {dormant.map((p) => (
-                <button key={p.id} className="prog-row" onClick={() => onContinue(p.id)} style={{ opacity: 0.65 }}>
-                  <span className="pr-dot" />
-                  <span className="pr-name dim">{p.name}</span>
-                  <span className="pbar"><i style={{ width: (p.pct || 0) + "%", background: "var(--ink-4)" }} /></span>
-                  <span className="pr-pct">{p.pct || 0}%</span>
-                </button>
-              ))}
-            </div>
-            <button className="card-link" onClick={() => onNav("projects")}>All projects <Icon.arrow style={{ width: 13, height: 13 }} /></button>
+            {inMotion.map((p) => (
+              <button key={p.id} className="glance-row" onClick={() => onProject(p.id)}>
+                <span className="gr-dot" />
+                <span className="gr-name">{p.name}</span>
+                <span className="pbar"><i style={{ width: (p.pct || 0) + "%" }} /></span>
+                <span className="gr-pct">{p.pct || 0}%</span>
+              </button>
+            ))}
           </div>
 
-          {/* Needs attention */}
-          <div className="card ac-coral">
-            <div className="arch-card-head">
-              <span className="chip">Attention</span>
-              <span className="mono-meta">{attention.length} {attention.length === 1 ? "ITEM" : "ITEMS"}</span>
+          <div className="glance-card">
+            <div className="glance-head">
+              <span className="mono-tag">Ideas</span>
+              <button className="dash-link" onClick={() => onNav("ideas")}>Open incubator</button>
             </div>
-            <div className="panel-body" style={{ padding: 0 }}>
-              {attention.map((a, idx) => (
-                <button key={idx} className={"prow ac-" + a.accent} onClick={() => onContinue(a.proj)}>
-                  <span className="pdot" />
-                  <span>
-                    <span className="ptitle">{a.t}</span>
-                    <span className="psub">{a.d}</span>
-                  </span>
-                  <Icon.arrow className="arrow-ic" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Ideas brewing */}
-          <div className="card ac-amber">
-            <div className="arch-card-head">
-              <span className="chip">Brewing</span>
-              <span className="mono-meta">{D.ideas.length} ACTIVE</span>
-            </div>
-            <div className="panel-body" style={{ padding: 0 }}>
-              {D.ideas.map((i) => (
-                <button key={i.id} className="prow ac-amber" onClick={() => onNav("ideas")}>
-                  <span className="pdot" />
-                  <span>
-                    <span className="ptitle">{i.name}</span>
-                    <span className="psub">{i.stage} · {i.why}</span>
-                  </span>
-                  <Icon.arrow className="arrow-ic" />
-                </button>
-              ))}
-            </div>
-            <button className="card-link" onClick={() => onNav("ideas")}>Open incubator <Icon.arrow style={{ width: 13, height: 13 }} /></button>
-          </div>
-
-          {/* Recent activity */}
-          <div className="card ac-mint">
-            <div className="arch-card-head">
-              <span className="chip">Activity</span>
-              <span className="mono-meta">THIS WEEK</span>
-            </div>
-            <div className="panel-body" style={{ padding: 0 }}>
-              {D.activity.map((a, idx) => (
-                <div key={idx} className={"act ac-" + a.accent} style={{ borderColor: "var(--line-2)" }}>
-                  <span className="ad" />
-                  <span className="atx"><span className="ap">{a.proj}</span> — {a.verb.toLowerCase()} <b>{a.what}</b></span>
-                  <span className="aw">{a.when}</span>
-                </div>
-              ))}
-            </div>
+            {D.ideas.map((i) => (
+              <button key={i.id} className="glance-row" onClick={() => onNav("ideas")}>
+                <span className="gr-dot" />
+                <span className="gr-name">{i.name}</span>
+                <span className="gr-stage">{i.stage}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
