@@ -17,7 +17,7 @@ export function IdeasScreen({ onIdea }: { onIdea: (id: string) => void }) {
           <span className="mono-meta q">{foyerStamp()}</span>
         </div>
         {/* black banner — same shape as the foyer's doorway */}
-        <div className="doorway room-door ac-amber">
+        <div className="doorway room-door light ac-amber">
           <div className="dw-body">
             <div className="dw-left">
               <div className="dw-rule" />

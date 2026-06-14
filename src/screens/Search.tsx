@@ -46,7 +46,7 @@ export function SearchScreen({ onProject, initialQuery }: SearchProps) {
         </div>
 
         {/* black banner — same shape as the foyer's doorway */}
-        <div className="doorway room-door ac-violet">
+        <div className="doorway room-door light ac-violet">
           <div className="dw-body">
             <div className="dw-left">
               <div className="dw-rule" />

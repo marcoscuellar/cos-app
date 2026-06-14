@@ -26,7 +26,7 @@ export function LabScreen() {
           <span className="mono-meta q">{foyerStamp()}</span>
         </div>
         {/* black banner — same shape as the foyer's doorway */}
-        <div className="doorway room-door ac-indigo">
+        <div className="doorway room-door light ac-indigo">
           <div className="dw-body">
             <div className="dw-left">
               <div className="dw-rule" />
