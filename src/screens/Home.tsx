@@ -1,7 +1,7 @@
 import { COS_DATA } from "../data";
 import { ChatBar } from "../components/shared";
 import { Icon } from "../components/Icon";
-import { greeting as getGreeting, foyerStamp, pickQuote } from "../brief";
+import { foyerGreeting, foyerStamp, pickQuote } from "../brief";
 
 interface HomeProps {
   onProject: (id: string) => void;
@@ -33,7 +33,7 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
   const projOf = (id: string) => D.projects.find((x) => x.id === id);
   // Greeting, datestamp + quote follow the user's home timezone (Central) and a
   // daily seed, so the doorway is correct from any device and rotates day to day.
-  const greeting = getGreeting();
+  const greeting = foyerGreeting(D.user.greetingName);
   const stamp = foyerStamp();
   const DW = D.doorway;
   const quote = pickQuote(DW.quotes);
@@ -67,7 +67,7 @@ export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
         </div>
 
         {/* DOORWAY — architectural briefing: CEO quote · motto · enter */}
-        <h1 className="arch-hero">{greeting}.</h1>
+        <h1 className="arch-hero">{greeting}</h1>
 
         <button className={"doorway ac-" + door.accent} onClick={enterFoyer}>
           <div className="dw-body">
