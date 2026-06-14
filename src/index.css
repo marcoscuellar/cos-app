@@ -190,7 +190,7 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 /* ── COS front door — the calm, chat-first home ──────────────────────────────
    No dashboard. Just the eyebrow, a greeting in the house type treatment
    (heavy DM Sans + gold Newsreader italic), and the universal command line. */
-.cos-front{--ac:var(--gold);min-height:calc(100vh - 170px);display:flex;align-items:center;justify-content:center}
+.cos-front{--ac:var(--gold);min-height:100vh;padding:32px 56px;display:flex;align-items:center;justify-content:center}
 .cf-inner{width:100%;max-width:760px;margin:0 auto;text-align:center}
 .cf-eyebrow{display:flex;align-items:center;justify-content:center;gap:12px;font-family:var(--mono);font-size:11px;font-weight:600;
   letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:28px}
@@ -204,7 +204,7 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
   border:1.5px solid var(--line-3);border-radius:999px;padding:9px 16px;background:var(--paper);
   transition:border-color .15s,color .15s,transform .15s}
 .cf-chip:hover{border-color:var(--gold);color:var(--ink);transform:translateY(-1px)}
-@media(max-width:1100px){.cos-front{min-height:calc(100vh - 150px)}}
+@media(max-width:1100px){.cos-front{padding:24px 36px}}
 
 /* cards */
 .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { COS_DATA } from "../data";
 import { Icon } from "../components/Icon";
-import { foyerGreeting } from "../brief";
+import { casualOpener, casualCheckin } from "../brief";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COS front door — a calm, chat-first home.
@@ -26,7 +26,8 @@ const STARTERS = [
 ];
 
 export function HomeScreen({ onCommand }: HomeProps) {
-  const greeting = foyerGreeting(COS_DATA.user.greetingName); // "Good evening, Marcos."
+  const opener = casualOpener(COS_DATA.user.greetingName); // "Hey, Marcos."
+  const checkin = casualCheckin();                          // rotates daily
   const [input, setInput] = useState("");
 
   const submit = (text?: string) => {
@@ -45,9 +46,9 @@ export function HomeScreen({ onCommand }: HomeProps) {
         </div>
 
         <h1 className="cf-greet">
-          {greeting}
+          {opener}
           <br />
-          <span className="em">Where are you right now?</span>
+          <span className="em">{checkin}</span>
         </h1>
 
         <div className="cf-composer chatbar">

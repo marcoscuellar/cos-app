@@ -51,6 +51,38 @@ export function foyerGreeting(name: string, d: Date = new Date()): string {
   return `Good evening${who}.`;
 }
 
+// ── Casual check-in voice (the front door) ──────────────────────────────────
+// Research with the ADHD / neurodivergent audience: direct, friendly check-ins
+// land far better than formal "Good afternoon" therapy-speak. A loose, time-
+// aware opener pairs with a check-in line that rotates daily (stable within a
+// day via the same seed as the quote, so it doesn't flicker on re-render).
+
+export function casualOpener(name: string, d: Date = new Date()): string {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(d),
+  );
+  const who = name ? `, ${name}` : "";
+  if (hour >= 22 || hour < 5) return `Still up${who}?`;
+  if (hour < 12) return `Morning${who}.`;
+  if (hour < 18) return `Hey${who}.`;
+  return `Evening${who}.`;
+}
+
+const CHECKINS = [
+  "Where do you find yourself right now?",
+  "What's going on, man?",
+  "Morale check — how we doing?",
+  "How's the heart?",
+  "What's taking up headspace?",
+  "Brain on fire, or just simmering?",
+  "What's the vibe today?",
+  "How's the energy?",
+];
+
+export function casualCheckin(d: Date = new Date()): string {
+  return CHECKINS[daySeed(d) % CHECKINS.length];
+}
+
 // "MONDAY, JUNE 8 · 3:07 PM" — the blueprint datestamp in the foyer header.
 export function foyerStamp(d: Date = new Date()): string {
   const date = new Intl.DateTimeFormat("en-US", {
