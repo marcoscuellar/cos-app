@@ -308,14 +308,15 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
           </div>{/* /today-main */}
 
           <aside className="today-rail">
-            <div className="rail-head"><span className="chip">Launchpad</span></div>
-            <div className="rail-links">
+            <div className="dash-head"><span className="mono-tag">Launchpad</span></div>
+            <div className="launch-grid">
               {LINKS.map((l) => (
-                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="rail-link">
-                  <img className="ri-ic" src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${l.icon}.svg`} alt=""
-                    loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                  <span className="ri-name">{l.label}</span>
-                  <Icon.arrow className="ri-arrow" />
+                <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="launch-tile">
+                  <span className="lt-ic">
+                    <img src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${l.icon}.svg`} alt=""
+                      loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  </span>
+                  <span className="lt-name">{l.label}</span>
                 </a>
               ))}
             </div>

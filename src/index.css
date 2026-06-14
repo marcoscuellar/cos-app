@@ -673,11 +673,12 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .sb.collapsed .sb-weather .wx-temp,.sb.collapsed .sb-weather .wx-cond{display:none}
 
 /* calendar layout — main column + sticky launchpad rail */
-.today-body{display:grid;grid-template-columns:1fr 248px;gap:26px;align-items:start}
+.today-body{display:grid;grid-template-columns:1fr 300px;gap:30px;align-items:start}
 @media(max-width:920px){.today-body{grid-template-columns:1fr}}
-.today-rail{position:sticky;top:24px;display:flex;flex-direction:column;gap:13px}
-@media(max-width:920px){.today-rail{position:static;margin-top:8px}}
-.today-rail .rail-head .chip{display:inline-flex}
+.today-rail{display:block}
+.today-rail .dash-head{margin-bottom:14px}
+.today-rail .launch-grid{grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:920px){.today-rail{margin-top:8px}}
 .rail-links{display:flex;flex-direction:column;gap:8px}
 .rail-link{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--paper);
   padding:12px 14px;transition:border-color .14s,transform .14s}
@@ -795,25 +796,24 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .today-arch .foyer-mark{display:flex;align-items:center;gap:13px}
 .today-arch .foyer-mark .cos-logo{font-size:15px;padding:8px 11px;border-radius:0}
 
-.cal-hero{background:#2c343b;color:#fff;padding:32px 36px 24px;margin-bottom:30px;
-  box-shadow:0 34px 80px -34px rgba(0,0,0,.6)}
+.cal-hero{background:transparent;color:var(--ink);padding:6px 0 0;margin-bottom:24px}
 .cal-hero .ch-body{display:grid;grid-template-columns:1.45fr 1fr;gap:40px;align-items:end}
 @media(max-width:780px){.cal-hero .ch-body{grid-template-columns:1fr;gap:22px}}
 .cal-hero .ch-left{display:flex;flex-direction:column;align-items:flex-start}
 .cal-hero .dw-rule{height:4px;width:54px;background:var(--gold);opacity:1;margin-bottom:20px;border-radius:2px}
-.cal-hero .chip{background:#fff;color:#2c343b;border-radius:0}
+.cal-hero .chip{background:#2c343b;color:#fff;border-radius:0}
 .cal-hero .ch-day{font-family:var(--display);font-weight:900;letter-spacing:-.045em;line-height:.88;
-  font-size:clamp(56px,9.5vw,118px);color:#fff;margin-top:18px}
+  font-size:clamp(56px,9.5vw,118px);color:var(--ink);margin-top:18px}
 .cal-hero .ch-date{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
-  color:#9a9aa2;margin-top:13px}
-.cal-hero .ch-foot{margin-top:26px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14);
+  color:var(--ink-4);margin-top:13px}
+.cal-hero .ch-foot{margin-top:24px;padding-top:18px;border-top:1px solid var(--line);
   display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .cal-hero .ch-syncline{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
-  color:#9a9aa2;display:inline-flex;align-items:center;gap:9px}
-.cal-hero .ch-syncline .cdot{width:7px;height:7px;border-radius:50%;background:#2f8a62;box-shadow:0 0 0 4px rgba(47,138,98,.22)}
-.cal-hero .ch-manage{font-family:var(--display);font-weight:700;font-size:13px;color:#fff;
+  color:var(--ink-4);display:inline-flex;align-items:center;gap:9px}
+.cal-hero .ch-syncline .cdot{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px var(--gold-bg)}
+.cal-hero .ch-manage{font-family:var(--display);font-weight:700;font-size:13px;color:var(--ink);
   display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
-.cal-hero .ch-manage svg{width:15px;height:15px;stroke:#fff;transition:transform .16s}
+.cal-hero .ch-manage svg{width:15px;height:15px;stroke:var(--ink);transition:transform .16s}
 .cal-hero .ch-manage:hover svg{transform:translateX(3px)}
 /* architectural timeline polish — square edges, mono times */
 .today-arch .tcard{border-radius:0}
@@ -839,19 +839,19 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 /* today's intention — the soul of the day, with a divider line */
 .cal-hero .ch-intent{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
 @media(max-width:780px){.cal-hero .ch-intent{align-items:flex-start;text-align:left;margin-top:6px}}
-.cal-hero .ci-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8c8c95;margin-bottom:12px}
+.cal-hero .ci-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px}
 .cal-hero .ci-quote{display:inline-flex;align-items:baseline;gap:12px;text-align:right;background:none;cursor:pointer;
   font-family:var(--display);font-weight:500;font-size:clamp(20px,2.7vw,28px);letter-spacing:-.015em;line-height:1.32;
-  color:#f0f0f2;max-width:42ch}
-.cal-hero .ci-quote:hover{color:#fff}
-.cal-hero .ci-quote.empty{color:#6a6a72;font-style:italic}
+  color:var(--ink-2);max-width:42ch}
+.cal-hero .ci-quote:hover{color:var(--ink)}
+.cal-hero .ci-quote.empty{color:var(--ink-4);font-style:italic}
 .cal-hero .ci-edit{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
-  color:#6a6a72;flex-shrink:0;opacity:0;transition:opacity .12s}
+  color:var(--ink-4);flex-shrink:0;opacity:0;transition:opacity .12s}
 .cal-hero .ci-quote:hover .ci-edit{opacity:1}
-.cal-hero .ci-input{width:100%;max-width:46ch;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.32);
-  color:#fff;font-family:var(--display);font-weight:500;font-size:clamp(20px,2.7vw,28px);letter-spacing:-.015em;
+.cal-hero .ci-input{width:100%;max-width:46ch;background:transparent;border:none;border-bottom:1px solid var(--line-3);
+  color:var(--ink);font-family:var(--display);font-weight:500;font-size:clamp(20px,2.7vw,28px);letter-spacing:-.015em;
   padding:2px 0 9px;outline:none}
-.cal-hero .ci-input::placeholder{color:#5a5a62}
+.cal-hero .ci-input::placeholder{color:var(--ink-4)}
 
 /* brain-dump bar — sits right under the black box, Home-style */
 .today-arch .cal-hero{margin-bottom:16px}
