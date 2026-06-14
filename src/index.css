@@ -198,7 +198,9 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .cf-greet{font-family:var(--display);font-weight:800;letter-spacing:-.04em;line-height:.97;
   font-size:clamp(40px,6.6vw,76px);color:var(--ink);margin-bottom:36px}
 .cf-greet .em{font-size:1em;line-height:1.02}
-.cf-composer{box-shadow:var(--shadow-lift)}
+/* a soft back shadow so the command line floats off the canvas */
+.cf-composer{box-shadow:0 18px 48px -20px rgba(16,16,20,.30), 0 6px 16px -10px rgba(16,16,20,.14)}
+.cf-composer:focus-within,.cf-composer:hover{box-shadow:0 26px 60px -22px rgba(16,16,20,.38), 0 8px 20px -10px rgba(16,16,20,.16)}
 .cf-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:18px}
 .cf-chip{font-family:var(--display);font-weight:600;font-size:13.5px;color:var(--ink-3);
   border:1.5px solid var(--line-3);border-radius:999px;padding:9px 16px;background:var(--paper);
