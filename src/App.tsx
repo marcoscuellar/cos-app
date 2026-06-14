@@ -69,6 +69,28 @@ export default function App() {
   const goIdea = (id: string) => { setIdeaId(id); setRoute("idea"); };
   const goNav = (r: string) => { if (r === "search") setSearchSeed(""); setRoute(r as Route); };
 
+  // Front-door command router. If the line names a room ("take me to GLVE",
+  // "open Personal Brand", or just "GLVE"), jump straight in. Otherwise hand the
+  // whole thing to the AI surface (Search) seeded with the text — that's where
+  // "create my day" and "ADHD is kicking my ass…" land for now.
+  const onHomeCommand = (text: string) => {
+    const t = text.trim().toLowerCase();
+    const named = D.projects.find(
+      (p) => p.name.toLowerCase() === t || p.id.toLowerCase() === t,
+    );
+    if (named) { onProjectClick(named.id); return; }
+    const nav = t.match(/^(?:take me to|open|go to|jump to|show me|navigate to)\s+(?:my\s+)?(.+?)(?:\s+project)?$/);
+    if (nav) {
+      const target = nav[1].trim();
+      const hit = D.projects.find(
+        (p) => p.name.toLowerCase().includes(target) || target.includes(p.name.toLowerCase()) || p.id.toLowerCase() === target,
+      );
+      if (hit) { onProjectClick(hit.id); return; }
+    }
+    setSearchSeed(text);
+    setRoute("search");
+  };
+
   const onContinue = (id: string, fromInside?: boolean) => {
     const p = D.projects.find((x) => x.id === id);
     if (!p) return;
@@ -103,7 +125,7 @@ export default function App() {
         onAsk={() => goNav("search")}
       />
       <main className="main" ref={mainRef}>
-        {route === "home" && <HomeScreen onProject={goProject} onNav={goNav} onContinue={onContinue} />}
+        {route === "home" && <HomeScreen onCommand={onHomeCommand} />}
         {route === "today" && <TodayScreen onProject={goProject} />}
         {route === "projects" && <ProjectsScreen onProject={onProjectClick} onContinue={onContinue} />}
         {route === "project" && project && (

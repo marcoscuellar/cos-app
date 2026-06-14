@@ -187,6 +187,25 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .chatbar .send{width:38px;height:38px;border-radius:11px;background:var(--ink);display:grid;place-items:center;flex-shrink:0}
 .chatbar .send svg{width:17px;height:17px;stroke:#fff}
 
+/* ── COS front door — the calm, chat-first home ──────────────────────────────
+   No dashboard. Just the eyebrow, a greeting in the house type treatment
+   (heavy DM Sans + gold Newsreader italic), and the universal command line. */
+.cos-front{--ac:var(--gold);min-height:calc(100vh - 170px);display:flex;align-items:center;justify-content:center}
+.cf-inner{width:100%;max-width:760px;margin:0 auto;text-align:center}
+.cf-eyebrow{display:flex;align-items:center;justify-content:center;gap:12px;font-family:var(--mono);font-size:11px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:28px}
+.cf-eyebrow .cf-tick{width:28px;height:4px;border-radius:2px;background:var(--gold);flex-shrink:0}
+.cf-greet{font-family:var(--display);font-weight:800;letter-spacing:-.04em;line-height:.97;
+  font-size:clamp(40px,6.6vw,76px);color:var(--ink);margin-bottom:36px}
+.cf-greet .em{font-size:1em;line-height:1.02}
+.cf-composer{box-shadow:var(--shadow-lift)}
+.cf-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:18px}
+.cf-chip{font-family:var(--display);font-weight:600;font-size:13.5px;color:var(--ink-3);
+  border:1.5px solid var(--line-3);border-radius:999px;padding:9px 16px;background:var(--paper);
+  transition:border-color .15s,color .15s,transform .15s}
+.cf-chip:hover{border-color:var(--gold);color:var(--ink);transform:translateY(-1px)}
+@media(max-width:1100px){.cos-front{min-height:calc(100vh - 150px)}}
+
 /* cards */
 .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;
   transition:border-color .15s, box-shadow .15s, transform .15s}
