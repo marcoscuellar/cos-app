@@ -18,8 +18,8 @@ export function ProjectsScreen({ onProject, onContinue }: ProjectsProps) {
           <div className="foyer-mark"><span className="mono-meta">Stay focused</span></div>
           <span className="mono-meta q">{foyerStamp()}</span>
         </div>
-        {/* black banner — same shape as the foyer's doorway */}
-        <div className="doorway room-door ac-violet">
+        {/* page header — same layout as the room banner, but light on white (no black box) */}
+        <div className="doorway room-door light ac-violet">
           <div className="dw-body">
             <div className="dw-left">
               <div className="dw-rule" />
