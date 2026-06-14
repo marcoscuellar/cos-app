@@ -44,11 +44,10 @@ export function HomeScreen({ onCommand }: HomeProps) {
           COS · COGNITIVE OPERATING SYSTEM
         </div>
 
-        <h1 className="cf-greet">
-          {greeting}
-          <br />
-          <span className="em">Where are you right now?</span>
-        </h1>
+        <div className="cf-greet">
+          <div className="cf-hello">{greeting}</div>
+          <h1 className="cf-where"><span className="em">Where are you right now?</span></h1>
+        </div>
 
         <div className="cf-composer chatbar">
           <input

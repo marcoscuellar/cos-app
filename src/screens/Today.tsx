@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { COS_DATA } from "../data";
 import { Icon } from "../components/Icon";
 import type { DayPlan, PlannedBlock } from "../types";
@@ -29,7 +29,16 @@ const LINKS: { label: string; url: string; icon: string }[] = [
 ];
 
 /* TODAY — black-box branding + a Home-style brain-dump bar right underneath. */
-export function TodayScreen({ onProject }: { onProject: (id: string) => void }) {
+export function TodayScreen({
+  onProject,
+  seedDump,
+  onSeedConsumed,
+}: {
+  onProject: (id: string) => void;
+  // A brain-dump handed in from the Home command line ("create my day, I have…").
+  seedDump?: string;
+  onSeedConsumed?: () => void;
+}) {
   const D = COS_DATA;
   const T = D.today;
   const projOf = (id: string) => D.projects.find((p) => p.id === id);
@@ -60,19 +69,32 @@ export function TodayScreen({ onProject }: { onProject: (id: string) => void }) 
   // not just because the clock ran past the last block.
   const allDone = !!plan && plan.blocks.length > 0 && plan.blocks.every((b) => b.done);
 
-  const submit = async () => {
-    const text = dump.trim();
-    if (!text || building) return;
+  const runBuild = async (text: string) => {
+    const t = text.trim();
+    if (!t || building) return;
     setBuilding(true);
     setError(null);
     const rooms = D.projects.map((p) => ({ id: p.id, name: p.name }));
-    const { plan: next, error: err } = await buildPlan({ dump: text, rooms, hours: DEFAULT_HOURS, pacing: DEFAULT_PACING });
+    const { plan: next, error: err } = await buildPlan({ dump: t, rooms, hours: DEFAULT_HOURS, pacing: DEFAULT_PACING });
     setBuilding(false);
     if (next) {
       setPlan(ensureIds(next));
       setDump(""); // leave the box clean for the next dump
     } else setError(err || "Couldn't build your day — try again.");
   };
+  const submit = () => runBuild(dump);
+
+  // A dump handed over from the Home command line builds the day immediately on
+  // arrival, then is consumed (ref-guarded) so it never re-fires on re-render.
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (seeded.current) return;
+    const s = seedDump?.trim();
+    if (!s) return;
+    seeded.current = true;
+    onSeedConsumed?.();
+    runBuild(s);
+  }, [seedDump]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Block editing — the day has to flex (2pm meeting pushed to 5pm, etc.) ──
   const persist = (blocks: PlannedBlock[]) => {

@@ -33,6 +33,7 @@ export default function App() {
   const [askProject, setAskProject] = useState<Project | null>(null);
   const [doc, setDoc] = useState<{ d: DocRef; accent: Accent } | null>(null);
   const [searchSeed, setSearchSeed] = useState("");
+  const [todaySeed, setTodaySeed] = useState("");
   const [loaded, setLoaded] = useState(false);
   const D = COS_DATA;
 
@@ -67,7 +68,7 @@ export default function App() {
 
   const goProject = (id: string) => { setProjectId(id); setRoute("project"); };
   const goIdea = (id: string) => { setIdeaId(id); setRoute("idea"); };
-  const goNav = (r: string) => { if (r === "search") setSearchSeed(""); setRoute(r as Route); };
+  const goNav = (r: string) => { if (r === "search") setSearchSeed(""); if (r === "today") setTodaySeed(""); setRoute(r as Route); };
 
   // Front-door command router. If the line names a room ("take me to GLVE",
   // "open Personal Brand", or just "GLVE"), jump straight in. Otherwise hand the
@@ -87,6 +88,10 @@ export default function App() {
       );
       if (hit) { onProjectClick(hit.id); return; }
     }
+    // "create my day, I have a gym session and deep work on GLVE…" → hand the
+    // brain-dump to the existing Your Day builder and land there as it builds.
+    const day = text.trim().match(/^(?:create|build|plan|make|generate)\s+(?:my\s+)?day\b[\s,:.\-–—]*(.*)$/i);
+    if (day) { setTodaySeed(day[1].trim()); setRoute("today"); return; }
     setSearchSeed(text);
     setRoute("search");
   };
@@ -126,7 +131,7 @@ export default function App() {
       />
       <main className="main" ref={mainRef}>
         {route === "home" && <HomeScreen onCommand={onHomeCommand} />}
-        {route === "today" && <TodayScreen onProject={goProject} />}
+        {route === "today" && <TodayScreen onProject={goProject} seedDump={todaySeed} onSeedConsumed={() => setTodaySeed("")} />}
         {route === "projects" && <ProjectsScreen onProject={onProjectClick} onContinue={onContinue} />}
         {route === "project" && project && (
           <ProjectScreen project={project} onContinue={onContinue} onBrainstorm={() => setBrainstorm(project)} onAsk={() => setAskProject(project)} onOpenDoc={(d, accent) => setDoc({ d, accent })} />

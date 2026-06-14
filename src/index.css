@@ -190,16 +190,19 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 /* ── COS front door — the calm, chat-first home ──────────────────────────────
    No dashboard. Just the eyebrow, a greeting in the house type treatment
    (heavy DM Sans + gold Newsreader italic), and the universal command line. */
-.cos-front{--ac:var(--gold);min-height:calc(100vh - 170px);display:flex;align-items:center;justify-content:center}
-.cf-inner{width:100%;max-width:760px;margin:0 auto;text-align:center}
-.cf-eyebrow{display:flex;align-items:center;justify-content:center;gap:12px;font-family:var(--mono);font-size:11px;font-weight:600;
-  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:28px}
+.cos-front{--ac:var(--gold);min-height:calc(100vh - 170px);display:flex;align-items:center}
+.cf-inner{width:100%;max-width:760px;text-align:left}
+.cf-eyebrow{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:11px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:24px}
 .cf-eyebrow .cf-tick{width:28px;height:4px;border-radius:2px;background:var(--gold);flex-shrink:0}
-.cf-greet{font-family:var(--display);font-weight:800;letter-spacing:-.04em;line-height:.97;
-  font-size:clamp(40px,6.6vw,76px);color:var(--ink);margin-bottom:36px}
-.cf-greet .em{font-size:1em;line-height:1.02}
+.cf-greet{margin-bottom:32px}
+/* the greeting recedes; the question is the hero font moment */
+.cf-hello{font-family:var(--display);font-weight:600;letter-spacing:-.01em;
+  font-size:clamp(17px,2vw,23px);color:var(--ink-3);margin-bottom:10px}
+.cf-where{font-size:clamp(40px,6.2vw,72px);line-height:1.0;letter-spacing:-.012em}
+.cf-where .em{font-size:1em}
 .cf-composer{box-shadow:var(--shadow-lift)}
-.cf-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:18px}
+.cf-chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
 .cf-chip{font-family:var(--display);font-weight:600;font-size:13.5px;color:var(--ink-3);
   border:1.5px solid var(--line-3);border-radius:999px;padding:9px 16px;background:var(--paper);
   transition:border-color .15s,color .15s,transform .15s}
