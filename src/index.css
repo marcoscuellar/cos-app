@@ -802,8 +802,9 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
 .cal-hero .ch-left{display:flex;flex-direction:column;align-items:flex-start}
 .cal-hero .dw-rule{height:4px;width:54px;background:var(--gold);opacity:1;margin-bottom:20px;border-radius:2px}
 .cal-hero .chip{background:#2c343b;color:#fff;border-radius:0}
-.cal-hero .ch-day{font-family:var(--display);font-weight:900;letter-spacing:-.045em;line-height:.88;
-  font-size:clamp(56px,9.5vw,118px);color:var(--ink);margin-top:18px}
+/* Matches the Projects/foyer hero (.dw-name) so the day reads at the same scale. */
+.cal-hero .ch-day{font-family:var(--display);font-weight:800;letter-spacing:-.05em;line-height:.82;
+  font-size:clamp(76px,11.5vw,156px);color:var(--ink);margin-top:16px}
 .cal-hero .ch-date{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
   color:var(--ink-4);margin-top:13px}
 .cal-hero .ch-foot{margin-top:24px;padding-top:18px;border-top:1px solid var(--line);
