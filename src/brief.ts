@@ -38,17 +38,14 @@ export function greeting(d: Date = new Date()): string {
   return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 }
 
-// Foyer doorway greeting — personalized, by home-timezone hour. The wee hours
-// and late night (10pm–5am) ask what's keeping them up; the rest are the
-// standard salutations. Returns the full line incl. punctuation (the late one
-// is a question), so the caller renders it as-is. Drops the name gracefully
-// when it's blank.
+// Foyer doorway greeting — the standard salutation by home-timezone hour, with
+// the user's name appended. Returns the full line incl. punctuation, so the
+// caller renders it as-is. Drops the name gracefully when it's blank.
 export function foyerGreeting(name: string, d: Date = new Date()): string {
   const hour = Number(
     new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(d),
   );
   const who = name ? `, ${name}` : "";
-  if (hour < 5 || hour >= 22) return `What's got you up late${who}?`;
   if (hour < 12) return `Good morning${who}.`;
   if (hour < 18) return `Good afternoon${who}.`;
   return `Good evening${who}.`;
