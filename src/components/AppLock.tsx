@@ -4,7 +4,9 @@ import * as lock from "../lib/appLock";
 // Full-screen biometric gate for the whole app. Renders the children only once
 // the device biometric check passes for this browser session.
 export function AppLock({ children }: { children: ReactNode }) {
-  const [unlocked, setUnlocked] = useState(lock.isUnlocked());
+  // TEMP: login gate disabled for a live design walkthrough.
+  // To re-enable, restore: useState(lock.isUnlocked())
+  const [unlocked, setUnlocked] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
