@@ -5,7 +5,6 @@ export type LabAccent =
   | "indigo" | "green" | "rose" | "teal";
 export type ProjectStatus = "in-motion" | "blocked" | "dormant";
 export type IdeaStage = "Spark" | "Brewing" | "Exploring" | "Testing" | "Ready";
-export type Theme = "bold" | "mono" | "slate";
 
 /** A note the user writes inside a room — persisted to KV, newest first. */
 export interface Note {

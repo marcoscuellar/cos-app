@@ -1,13 +1,10 @@
 import { COS_DATA } from "../data";
-import type { Theme } from "../types";
 import { Icon } from "./Icon";
 import { Weather } from "./Weather";
 
 interface SidebarProps {
   route: string;
   projectId: string | null;
-  theme: Theme;
-  setTheme: (t: Theme) => void;
   collapsed: boolean;
   onToggle: () => void;
   onNav: (route: string) => void;
@@ -28,7 +25,7 @@ function displayName(email: string): string {
   return name || "You";
 }
 
-export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setTheme, collapsed, onToggle, userName, userEmail }: SidebarProps) {
+export function Sidebar({ route, projectId, onNav, onProject, onAsk, collapsed, onToggle, userName, userEmail }: SidebarProps) {
   const D = COS_DATA;
   const name = userName.trim() || displayName(userEmail);
   const initial = (name[0] || "?").toUpperCase();
@@ -72,11 +69,6 @@ export function Sidebar({ route, projectId, onNav, onProject, onAsk, theme, setT
       </div>
 
       <div className="sb-foot">
-        <div className="theme-tog">
-          <button className={theme === "bold" ? "on" : ""} onClick={() => setTheme("bold")}>Bold</button>
-          <button className={theme === "mono" ? "on" : ""} onClick={() => setTheme("mono")}>Mono</button>
-          <button className={theme === "slate" ? "on" : ""} onClick={() => setTheme("slate")}>Slate</button>
-        </div>
         <div className="sb-user" title={userEmail}>
           <div className="av">{initial}</div>
           <div className="nm">{name}<span>{userEmail}</span></div>

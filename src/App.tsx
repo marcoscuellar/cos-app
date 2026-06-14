@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { COS_DATA } from "./data";
-import type { Accent, DocRef, Project, Theme } from "./types";
+import type { Accent, DocRef, Project } from "./types";
 import { Sidebar } from "./components/Sidebar";
 import { HomeScreen } from "./screens/Home";
 import { TodayScreen } from "./screens/Today";
@@ -26,7 +26,6 @@ const IDENTITY = { name: "You", email: "marcoscuellar99@icloud.com" };
 export default function App() {
   const [route, setRoute] = useState<Route>("home");
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [theme, setTheme] = useState<Theme>("bold");
   const [collapsed, setCollapsed] = useState(false);
   const [reentry, setReentry] = useState<Project | null>(null);
   const [ideaId, setIdeaId] = useState<string | null>(null);
@@ -37,11 +36,7 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const D = COS_DATA;
 
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-  }, [theme]);
-
-  // Restore UI prefs (route, selected project, theme, sidebar) from KV.
+  // Restore UI prefs (route, selected project, sidebar) from KV.
   useEffect(() => {
     let active = true;
     (async () => {
@@ -50,7 +45,6 @@ export default function App() {
       if (s) {
         if (s.route) setRoute(s.route as Route);
         if (s.projectId) setProjectId(s.projectId);
-        if (s.theme) setTheme(s.theme);
         if (s.collapsed) setCollapsed(true);
       }
       setLoaded(true);
@@ -63,8 +57,8 @@ export default function App() {
   // Persist UI prefs to KV.
   useEffect(() => {
     if (!loaded) return;
-    saveState({ route, projectId, theme, collapsed });
-  }, [loaded, route, projectId, theme, collapsed]);
+    saveState({ route, projectId, collapsed });
+  }, [loaded, route, projectId, collapsed]);
 
   const mainRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -100,8 +94,6 @@ export default function App() {
       <Sidebar
         route={route}
         projectId={projectId}
-        theme={theme}
-        setTheme={setTheme}
         collapsed={collapsed}
         onToggle={() => setCollapsed((c) => !c)}
         userName={IDENTITY.name}

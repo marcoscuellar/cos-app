@@ -1,9 +1,6 @@
-import type { Theme } from "./types";
-
 export interface PersistedState {
   route?: string;
   projectId?: string | null;
-  theme?: Theme;
   collapsed?: boolean;
 }
 
