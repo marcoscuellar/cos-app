@@ -160,5 +160,24 @@
       document.getElementById('thanks').style.display = 'block';
     });
   </script>
+
+  <!-- Owner-only door back into the real workspace (hidden for the public). -->
+  <a id="owner-return" href="/app?me=1" hidden
+     style="position:fixed;right:18px;bottom:18px;z-index:200;display:none;align-items:center;gap:8px;
+            padding:11px 18px;border-radius:999px;background:#14271d;color:#fff;text-decoration:none;
+            font-family:'DM Sans',system-ui,sans-serif;font-weight:600;font-size:14.5px;
+            box-shadow:0 10px 30px -10px rgba(20,39,29,.55);border:1px solid rgba(255,255,255,.14)">
+    Back to your workspace <span aria-hidden="true">→</span>
+  </a>
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem("cos-owner") === "1") {
+          var b = document.getElementById("owner-return");
+          if (b) { b.hidden = false; b.style.display = "inline-flex"; }
+        }
+      } catch (e) {}
+    })();
+  </script>
 </body>
 </html>

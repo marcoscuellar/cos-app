@@ -15,6 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STICKY_KEY = "cos-real"; // sticky "this tab is in the real account" flag
+export const OWNER_KEY = "cos-owner"; // durable "this browser belongs to the owner" flag
 
 function computeDemo(): boolean {
   if (typeof window === "undefined") return true; // safe default: public demo
@@ -24,10 +25,12 @@ function computeDemo(): boolean {
     const real = params.get("me") ?? params.get("real");
     if (real === "1") {
       try { sessionStorage.setItem(STICKY_KEY, "1"); } catch { /* ignore */ }
+      try { localStorage.setItem(OWNER_KEY, "1"); } catch { /* ignore */ } // durable: marks this browser as the owner's
       return false;
     }
     if (real === "0") {
       try { sessionStorage.removeItem(STICKY_KEY); } catch { /* ignore */ }
+      try { localStorage.removeItem(OWNER_KEY); } catch { /* ignore */ }
       return true;
     }
     if (pathname === "/me" || pathname.startsWith("/me/")) return false;
