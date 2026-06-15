@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { COS_DATA } from "../data";
+import { IS_DEMO } from "../session";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COS Home — the sanctuary front door (redesign · page 01 · "VariantHero").
@@ -87,7 +88,7 @@ export function HomeScreen({ onCommand, onNav }: HomeProps) {
 
       <div className="h-stage">
         <div className="h-eyebrow"><span className="a-dot" /> {clockLine(now)}</div>
-        <h1 className="h-greet">{greet},<br />{name}.</h1>
+        <h1 className="h-greet">{IS_DEMO ? "HEY YOU!" : <>{greet},<br />{name}.</>}</h1>
         <div className="h-q"><span className="serif-q">{QUESTION}</span></div>
 
         <div className="h-input-wrap">
