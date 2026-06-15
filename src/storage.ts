@@ -1,3 +1,5 @@
+import { IS_DEMO } from "./session";
+
 export interface PersistedState {
   route?: string;
   projectId?: string | null;
@@ -44,6 +46,8 @@ function writeCache(state: PersistedState): void {
  * localStorage cache when the API is unavailable (e.g. `vite` dev without KV).
  */
 export async function loadState(): Promise<PersistedState | null> {
+  // Demo is read-only: start fresh at Home, never read the real account's state.
+  if (IS_DEMO) return null;
   const id = getClientId();
   try {
     const r = await fetch(`/api/state?id=${encodeURIComponent(id)}`);
@@ -66,6 +70,8 @@ export async function loadState(): Promise<PersistedState | null> {
  * cache so a reload is instant and survives the API being offline.
  */
 export function saveState(state: PersistedState): void {
+  // Demo is read-only: never persist (no KV write, no cache pollution).
+  if (IS_DEMO) return;
   const id = getClientId();
   writeCache(state);
   try {

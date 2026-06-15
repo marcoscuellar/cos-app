@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Project } from "../types";
 import { Icon } from "../components/Icon";
+import { IS_DEMO } from "../session";
 
 interface Message {
   role: "ai" | "me";
@@ -64,19 +65,22 @@ export function BrainstormPanel({ project, onClose }: BrainstormProps) {
 
     let reply: string | null = null;
     try {
-      // Calls the /api/brainstorm serverless function, which runs Claude with
-      // the ANTHROPIC_API_KEY server-side. The key never reaches the browser.
-      const res = await fetch("/api/brainstorm", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          project: { id: p.id, name: p.name, why: p.why, notes: p.notes },
-          messages: history,
-        }),
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { reply?: string };
-        reply = data.reply?.trim() || null;
+      // Demo is read-only — skip the live AI call and fall through to the fallback.
+      if (!IS_DEMO) {
+        // Calls the /api/brainstorm serverless function, which runs Claude with
+        // the ANTHROPIC_API_KEY server-side. The key never reaches the browser.
+        const res = await fetch("/api/brainstorm", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            project: { id: p.id, name: p.name, why: p.why, notes: p.notes },
+            messages: history,
+          }),
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { reply?: string };
+          reply = data.reply?.trim() || null;
+        }
       }
     } catch {
       reply = null;

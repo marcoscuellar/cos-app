@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Scaffold, Mic, ArrowR } from "../components/CosScaffold";
 import { COS_DATA } from "../data";
+import { IS_DEMO } from "../session";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Conversation (redesign · page 06) — the spine. Submitting on Home opens into
@@ -41,12 +42,15 @@ export function ConversationScreen({ seed, onNav }: Props) {
     setBusy(true);
     let reply: string | null = null;
     try {
-      const res = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ context: {}, question: q, action: "ask" }),
-      });
-      if (res.ok) reply = ((await res.json()) as { answer?: string }).answer?.trim() || null;
+      // Demo is read-only — skip the live AI call and fall through to the stub.
+      if (!IS_DEMO) {
+        const res = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ context: {}, question: q, action: "ask" }),
+        });
+        if (res.ok) reply = ((await res.json()) as { answer?: string }).answer?.trim() || null;
+      }
     } catch {
       reply = null;
     }

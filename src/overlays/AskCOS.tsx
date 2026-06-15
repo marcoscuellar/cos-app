@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Project } from "../types";
 import { Icon } from "../components/Icon";
 import { COS_DATA } from "../data";
+import { IS_DEMO } from "../session";
 import {
   buildWorkspaceContext,
   ASK_STARTERS,
@@ -67,14 +68,17 @@ export function AskCOSPanel({ project, onClose }: AskCOSProps) {
 
     let reply: string | null = null;
     try {
-      const res = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ context, question: q, action }),
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { answer?: string };
-        reply = data.answer?.trim() || null;
+      // Demo is read-only — skip the live AI call and fall through to the fallback.
+      if (!IS_DEMO) {
+        const res = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ context, question: q, action }),
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { answer?: string };
+          reply = data.answer?.trim() || null;
+        }
       }
     } catch {
       reply = null;

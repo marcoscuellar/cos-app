@@ -1,10 +1,13 @@
 import type { Note } from "./types";
+import { IS_DEMO } from "./session";
 
 // Thin client for /api/notes. Every call resolves to the room's full note list
 // (newest first) so the UI can just replace its state. Failures resolve to null
 // (mutations) or [] (load) — the caller decides how to surface them.
+// In the read-only demo, every call is sealed off from the real backend.
 
 export async function loadNotes(project: string): Promise<Note[]> {
+  if (IS_DEMO) return [];
   try {
     const r = await fetch(`/api/notes?project=${encodeURIComponent(project)}`);
     if (!r.ok) return [];
@@ -16,6 +19,7 @@ export async function loadNotes(project: string): Promise<Note[]> {
 }
 
 export async function addNote(project: string, text: string): Promise<Note[] | null> {
+  if (IS_DEMO) return null;
   try {
     const r = await fetch("/api/notes", {
       method: "POST",
@@ -33,6 +37,7 @@ export async function addNote(project: string, text: string): Promise<Note[] | n
 /** Ask COS to organize a room's raw notes into a clean brief. Raw notes are
  *  never modified — this returns plain text to display alongside them. */
 export async function tidyNotes(room: string, notes: string[]): Promise<string | null> {
+  if (IS_DEMO) return null;
   try {
     const r = await fetch("/api/tidy", {
       method: "POST",
@@ -48,6 +53,7 @@ export async function tidyNotes(room: string, notes: string[]): Promise<string |
 }
 
 export async function deleteNote(project: string, id: string): Promise<Note[] | null> {
+  if (IS_DEMO) return null;
   try {
     const r = await fetch("/api/notes", {
       method: "DELETE",

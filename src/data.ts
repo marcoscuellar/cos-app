@@ -2,8 +2,10 @@
 // Ported from the prototype's window.COS_DATA mock; replace with a real
 // data model + persistence when wiring up the backend.
 import type { COSData } from "./types";
+import { IS_DEMO } from "./session";
+import { DEMO_DATA } from "./data.demo";
 
-export const COS_DATA: COSData = {
+const REAL_COS_DATA: COSData = {
   user: { name: "Founder", initials: "F", greetingName: "Marcos" },
   // The architectural doorway. A date-seeded quote rotates daily (see brief.ts);
   // the motto is the standing line. Both are easy to edit.
@@ -356,3 +358,7 @@ export const COS_DATA: COSData = {
     ],
   },
 };
+
+// The active workspace. The public demo (session.ts) swaps in a fictional,
+// read-only dataset; everything downstream imports COS_DATA and is none the wiser.
+export const COS_DATA: COSData = IS_DEMO ? DEMO_DATA : REAL_COS_DATA;

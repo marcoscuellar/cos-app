@@ -11,8 +11,10 @@ import { IdeasScreen } from "./screens/Ideas";
 import { IdeaDetail } from "./screens/IdeaDetail";
 import { LabScreen } from "./screens/Lab";
 import { AppLock } from "./components/AppLock";
+import { DemoBadge } from "./components/DemoBadge";
 import { SearchScreen } from "./screens/Search";
 import { loadState, saveState } from "./storage";
+import { IS_DEMO } from "./session";
 
 type Route = "home" | "today" | "summary" | "projects" | "project" | "ideas" | "idea" | "lab" | "search" | "conversation" | "help";
 
@@ -97,5 +99,10 @@ export default function App() {
   else if (route === "search") screen = <SearchScreen onProject={goProject} onNav={goNav} initialQuery={searchSeed} />;
   else screen = <HomeScreen onCommand={onHomeCommand} onNav={goNav} />;
 
-  return <AppLock>{screen}</AppLock>;
+  return (
+    <AppLock>
+      {screen}
+      {IS_DEMO && <DemoBadge />}
+    </AppLock>
+  );
 }

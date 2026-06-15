@@ -1,10 +1,15 @@
 import type { DayPlan, PlannedBlock } from "./types";
+import { IS_DEMO } from "./session";
 
 // Client for /api/plan-day. The planner returns today's full DayPlan (or null
 // when nothing is planned yet). The brain-dump → schedule call can take several
 // seconds (the AI is thinking), so callers should show a building state.
+// In the read-only demo, the planner is sealed off — no reads, no AI, no writes.
+
+const DEMO_BLOCKED = "This is a read-only demo — building a day is off here.";
 
 export async function loadPlan(): Promise<DayPlan | null> {
+  if (IS_DEMO) return null;
   try {
     const r = await fetch("/api/plan-day");
     if (!r.ok) return null;
@@ -24,6 +29,7 @@ export interface PlanRequest {
 
 /** Returns the new plan, or an error message string on failure. */
 export async function buildPlan(req: PlanRequest): Promise<{ plan?: DayPlan; error?: string }> {
+  if (IS_DEMO) return { error: DEMO_BLOCKED };
   try {
     const r = await fetch("/api/plan-day", {
       method: "POST",
@@ -40,6 +46,7 @@ export async function buildPlan(req: PlanRequest): Promise<{ plan?: DayPlan; err
 
 /** Edit just today's intention on the saved plan (no AI). Returns the updated plan. */
 export async function updateIntention(intention: string): Promise<DayPlan | null> {
+  if (IS_DEMO) return null;
   try {
     const r = await fetch("/api/plan-day", {
       method: "POST",
@@ -56,6 +63,7 @@ export async function updateIntention(intention: string): Promise<DayPlan | null
 
 /** Save an edited blocks array (reschedule / rename / check off / add / delete). */
 export async function saveBlocks(blocks: PlannedBlock[]): Promise<DayPlan | null> {
+  if (IS_DEMO) return null;
   try {
     const r = await fetch("/api/plan-day", {
       method: "POST",
@@ -71,6 +79,7 @@ export async function saveBlocks(blocks: PlannedBlock[]): Promise<DayPlan | null
 }
 
 export async function clearPlan(): Promise<void> {
+  if (IS_DEMO) return;
   try {
     await fetch("/api/plan-day", { method: "DELETE" });
   } catch {
