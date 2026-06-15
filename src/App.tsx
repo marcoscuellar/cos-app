@@ -122,6 +122,13 @@ export default function App() {
       </AppLock>
     );
   }
+  if (route === "projects") {
+    return (
+      <AppLock>
+        <ProjectsScreen onProject={goProject} onNav={goNav} />
+      </AppLock>
+    );
+  }
 
   const project = projectId ? D.projects.find((p) => p.id === projectId) : null;
   const idea = ideaId ? D.ideas.find((i) => i.id === ideaId) : null;
@@ -142,7 +149,6 @@ export default function App() {
       />
       <main className="main" ref={mainRef}>
         {route === "today" && <TodayScreen onProject={goProject} seedDump={todaySeed} onSeedConsumed={() => setTodaySeed("")} />}
-        {route === "projects" && <ProjectsScreen onProject={onProjectClick} onContinue={onContinue} />}
         {route === "project" && project && (
           <ProjectScreen project={project} onContinue={onContinue} onBrainstorm={() => setBrainstorm(project)} onAsk={() => setAskProject(project)} onOpenDoc={(d, accent) => setDoc({ d, accent })} />
         )}
