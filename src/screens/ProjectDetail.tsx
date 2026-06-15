@@ -3,6 +3,8 @@ import type { Project } from "../types";
 import { COS_DATA } from "../data";
 import { Scaffold, ArrowR } from "../components/CosScaffold";
 import { AskCOSPanel } from "../overlays/AskCOS";
+import { ProjectEditor } from "../components/ProjectEditor";
+import { IS_DEMO } from "../session";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Project room (redesign · page 03). Two columns: a dark identity cover (left)
@@ -17,10 +19,14 @@ type Tab = "context" | "overview" | "research" | "ideas";
 interface Props {
   project: Project;
   onNav: (route: string) => void;
+  onSave: (p: Project) => void;
+  onDelete: (id: string) => void;
+  onArchive: (id: string, archived: boolean) => void;
 }
 
-export function ProjectScreen({ project: p, onNav }: Props) {
+export function ProjectScreen({ project: p, onNav, onSave, onDelete, onArchive }: Props) {
   const [ask, setAsk] = useState(false);
+  const [edit, setEdit] = useState(false);
   const [showBlockers, setShowBlockers] = useState(false);
   const [tab, setTab] = useState<Tab>("context");
 
@@ -53,7 +59,7 @@ export function ProjectScreen({ project: p, onNav }: Props) {
             </div>
             <span className="rc-touched">LAST TOUCHED {p.lastActivity.toUpperCase()}</span>
             <div className="rc-btns">
-              <button className="rc-edit" onClick={() => setAsk(true)}>Edit</button>
+              {!IS_DEMO && <button className="rc-edit" onClick={() => setEdit(true)}>Edit</button>}
               <button className="rc-tidy" onClick={() => setAsk(true)}>Let COS tidy this room</button>
             </div>
           </aside>
@@ -139,6 +145,15 @@ export function ProjectScreen({ project: p, onNav }: Props) {
         </div>
       </Scaffold>
       {ask && <AskCOSPanel project={p} onClose={() => setAsk(false)} />}
+      {edit && (
+        <ProjectEditor
+          project={p}
+          onSave={onSave}
+          onClose={() => setEdit(false)}
+          onDelete={onDelete}
+          onArchive={onArchive}
+        />
+      )}
     </>
   );
 }

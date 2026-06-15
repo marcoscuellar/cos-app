@@ -106,6 +106,8 @@ export interface Project {
   decisionsList: DecisionItem[];
   knowledgeList: KnowledgeItem[];
   peopleList: PersonItem[];
+  /** Archived rooms drop out of the main grid but aren't deleted. */
+  archived?: boolean;
 }
 
 export interface Idea {

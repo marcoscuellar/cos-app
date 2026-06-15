@@ -14,12 +14,15 @@ import { AppLock } from "./components/AppLock";
 import { DemoBadge } from "./components/DemoBadge";
 import { SearchScreen } from "./screens/Search";
 import { loadState, saveState } from "./storage";
+import { loadProjects, saveProjects } from "./projectsApi";
+import type { Project } from "./types";
 import { IS_DEMO } from "./session";
 
 type Route = "home" | "today" | "summary" | "projects" | "project" | "ideas" | "idea" | "lab" | "search" | "conversation" | "help";
 
 export default function App() {
   const [route, setRoute] = useState<Route>("home");
+  const [projects, setProjects] = useState<Project[]>(COS_DATA.projects);
   const [projectId, setProjectId] = useState<string | null>(null);
   const [ideaId, setIdeaId] = useState<string | null>(null);
   const [searchSeed, setSearchSeed] = useState("");
@@ -49,6 +52,37 @@ export default function App() {
     saveState({ route, projectId });
   }, [loaded, route, projectId]);
 
+  // Load the editable project list (falls back to seed data when none saved yet).
+  useEffect(() => {
+    if (IS_DEMO) return;
+    loadProjects().then((p) => { if (p && p.length) setProjects(p); });
+  }, []);
+
+  // Create-or-update a room, then persist the whole list.
+  const saveProject = (proj: Project) => {
+    setProjects((prev) => {
+      const exists = prev.some((p) => p.id === proj.id);
+      let next: Project[];
+      if (exists) {
+        next = prev.map((p) => (p.id === proj.id ? proj : p));
+      } else {
+        let id = proj.id;
+        let n = 2;
+        while (prev.some((p) => p.id === id)) id = `${proj.id}-${n++}`;
+        next = [...prev, { ...proj, id }];
+      }
+      saveProjects(next);
+      return next;
+    });
+  };
+  const deleteProject = (id: string) => {
+    setProjects((prev) => { const next = prev.filter((p) => p.id !== id); saveProjects(next); return next; });
+    if (projectId === id) { setProjectId(null); setRoute("projects"); }
+  };
+  const archiveProject = (id: string, archived: boolean) => {
+    setProjects((prev) => { const next = prev.map((p) => (p.id === id ? { ...p, archived } : p)); saveProjects(next); return next; });
+  };
+
   const goProject = (id: string) => { setProjectId(id); setRoute("project"); };
   const goIdea = (id: string) => { setIdeaId(id); setRoute("idea"); };
   const goNav = (r: string) => { if (r === "search") setSearchSeed(""); if (r === "today") setTodaySeed(""); setRoute(r as Route); };
@@ -59,12 +93,12 @@ export default function App() {
   // into Conversation (the spine).
   const onHomeCommand = (text: string) => {
     const t = text.trim().toLowerCase();
-    const named = D.projects.find((p) => p.name.toLowerCase() === t || p.id.toLowerCase() === t);
+    const named = projects.find((p) => p.name.toLowerCase() === t || p.id.toLowerCase() === t);
     if (named) { goProject(named.id); return; }
     const nav = t.match(/^(?:take me to|open|go to|jump to|show me|navigate to)\s+(?:my\s+)?(.+?)(?:\s+project)?$/);
     if (nav) {
       const target = nav[1].trim();
-      const hit = D.projects.find(
+      const hit = projects.find(
         (p) => p.name.toLowerCase().includes(target) || target.includes(p.name.toLowerCase()) || p.id.toLowerCase() === target,
       );
       if (hit) { goProject(hit.id); return; }
@@ -82,13 +116,13 @@ export default function App() {
   // Avoid a flash before persisted prefs resolve.
   if (!loaded) return <div style={{ height: "100vh", background: "#faf9f5" }} />;
 
-  const project = projectId ? D.projects.find((p) => p.id === projectId) : null;
+  const project = projectId ? projects.find((p) => p.id === projectId) : null;
   const idea = ideaId ? D.ideas.find((i) => i.id === ideaId) : null;
 
   // Every screen is a full-viewport redesigned takeover with its own rail.
   let screen;
-  if (route === "projects") screen = <ProjectsScreen onProject={goProject} onNav={goNav} />;
-  else if (route === "project" && project) screen = <ProjectScreen project={project} onNav={goNav} />;
+  if (route === "projects") screen = <ProjectsScreen projects={projects} onProject={goProject} onNav={goNav} onSave={saveProject} onDelete={deleteProject} onArchive={archiveProject} />;
+  else if (route === "project" && project) screen = <ProjectScreen project={project} onNav={goNav} onSave={saveProject} onDelete={deleteProject} onArchive={archiveProject} />;
   else if (route === "today") screen = <TodayScreen onProject={goProject} onNav={goNav} seedDump={todaySeed} onSeedConsumed={() => setTodaySeed("")} />;
   else if (route === "summary") screen = <TodaySummary onNav={goNav} />;
   else if (route === "conversation") screen = <ConversationScreen seed={convoSeed} onNav={goNav} />;
