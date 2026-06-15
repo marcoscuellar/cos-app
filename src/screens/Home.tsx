@@ -102,8 +102,9 @@ export function HomeScreen({ onCommand, onNav }: HomeProps) {
         <div className="cos-rail-av">{initial}</div>
       </div>
 
+      <div className="h-clock"><span className="a-dot" /> {clockLine(now)}</div>
+
       <div className="h-stage">
-        <div className="h-eyebrow"><span className="a-dot" /> {clockLine(now)}</div>
         <h1 className="h-greet">{IS_DEMO ? "Hey friend." : <>{greet},<br />{name}.</>}</h1>
         <div className="h-q"><span className="serif-q">{question}</span></div>
 
