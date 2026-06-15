@@ -1,148 +1,106 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { COS_DATA } from "../data";
 import type { Idea } from "../types";
-import { Eyebrow } from "../components/shared";
-import { Icon } from "../components/Icon";
+import { Scaffold, ArrowR } from "../components/CosScaffold";
 
-const STAGES = ["Spark", "Brewing", "Exploring", "Testing", "Ready"];
+// Idea detail (redesign) — a sub-page on the shared GLVE-room look: dark identity
+// cover (left) + context column (right), the one next move leading.
+type Tab = "spark" | "questions" | "related";
 
-interface IdeaDetailProps {
+interface Props {
   idea: Idea;
   onProject: (id: string) => void;
   onBack: () => void;
+  onNav: (route: string) => void;
+  onTalk: (text: string) => void;
 }
 
-export function IdeaDetail({ idea, onProject, onBack }: IdeaDetailProps) {
-  const i = idea;
-  const [stageIdx, setStageIdx] = useState(STAGES.indexOf(i.stage));
-  const [analyzed, setAnalyzed] = useState(false);
-  const [shelved, setShelved] = useState(false);
-  useEffect(() => {
-    setStageIdx(STAGES.indexOf(i.stage));
-    setAnalyzed(false);
-    setShelved(false);
-  }, [i.id, i.stage]);
+export function IdeaDetail({ idea: i, onProject, onBack, onNav, onTalk }: Props) {
   const D = COS_DATA;
-  const heatFill = i.heat === "Hot" ? 4 : i.heat === "Warm" ? 3 : 2;
-  const isReady = stageIdx >= STAGES.length - 1;
+  const [tab, setTab] = useState<Tab>("spark");
+  const talk = () => onTalk(`Let's think through my idea "${i.name}". The next move I wrote down is: ${i.nextMove}`);
 
   return (
-    <div className="wrap ac-amber">
-      <div className="fade-in">
-        <button className="back-link" onClick={onBack}><Icon.chevron style={{ width: 15, height: 15 }} /> Ideas</button>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginTop: 14 }}>
-          <div>
-            <span className="gold-rule" />
-            <Eyebrow accent="amber">Idea · {STAGES[stageIdx]}</Eyebrow>
-            <h1 className="disp hero-mark" style={{ margin: "16px 0 14px", fontSize: "clamp(38px,5vw,60px)", lineHeight: 1.32 }}><span>{i.name}</span></h1>
-            <p style={{ fontSize: 17, color: "var(--ink-3)", maxWidth: "46ch", lineHeight: 1.45 }}>{i.why}</p>
-          </div>
-        </div>
-
-        {/* status bar */}
-        <div className="statusbar" style={{ marginTop: 24 }}>
-          <div className="seg">
-            <span className="sl">Stage</span>
-            <span className="sv"><span className="sd" style={{ background: "var(--gold)" }} />{STAGES[stageIdx]}</span>
-          </div>
-          <div className="seg">
-            <span className="sl">Heat</span>
-            {analyzed ? (
-              <span className="sv" style={{ gap: 9 }}>{i.heat}
-                <span className="hbars" style={{ display: "flex", gap: 3 }}>{[0, 1, 2, 3].map((b) => <i key={b} style={{ width: 5, height: 13, borderRadius: 2, background: b < heatFill ? "var(--gold)" : "var(--line-3)" }} />)}</span>
-              </span>
-            ) : (
-              <button className="due-set" onClick={() => setAnalyzed(true)}><Icon.spark style={{ width: 14, height: 14 }} /> Analyze</button>
-            )}
-          </div>
-          <div className="seg">
-            <span className="sl">Last activity</span>
-            <span className="sv" style={{ fontSize: 14 }}>{i.lastActivity}</span>
-            <span style={{ fontSize: 12, color: "var(--ink-4)", fontWeight: 500, marginTop: 1 }}>{i.lastMove}</span>
-          </div>
-        </div>
-
-        {/* stage track + promote */}
-        <div className="card" style={{ marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          <div className="track" style={{ flex: 1 }}>
-            {STAGES.map((s, idx) => (
-              <span key={s} className={"s" + (idx <= stageIdx ? " on" : "")}><span className="pd" />{s}</span>
-            ))}
-          </div>
-          {!isReady ? (
-            <button className="btn btn-accent" onClick={() => setStageIdx((x) => Math.min(x + 1, STAGES.length - 1))}>
-              Move to {STAGES[stageIdx + 1]} <Icon.arrow />
-            </button>
-          ) : (
-            <button className="btn btn-accent" onClick={() => D.projects[0] && onProject(D.projects[0].id)}>
-              Graduate to project <Icon.arrow />
-            </button>
-          )}
-        </div>
-
-        {analyzed && (
-          <div className="card ac-amber" style={{ marginBottom: 16, background: "var(--gold-bg)", borderColor: "transparent" }}>
-            <div className="card-eyebrow" style={{ color: "var(--gold)" }}>Heat analysis</div>
-            <div style={{ fontFamily: "var(--display)", fontWeight: 600, fontSize: 18, letterSpacing: "-.01em", color: "var(--ink)" }}>{i.heat} — {i.heatNote}</div>
-          </div>
-        )}
-
-        <div className="grid-2" style={{ alignItems: "start" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div className="card">
-              <div className="card-eyebrow">The spark — where it came from</div>
-              <div style={{ fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 19, color: "var(--ink-2)", lineHeight: 1.4 }}>"{i.spark}"</div>
-            </div>
-            <div className="card">
-              <div className="card-eyebrow">Open questions · {i.questions.length}</div>
-              {i.questions.map((q, idx) => <div key={idx} className="qrow"><span className="qm">?</span>{q}</div>)}
+    <Scaffold active="bulb" onNav={onNav} initial={(D.user.greetingName || "M")[0]}>
+      <div className="room">
+        <aside className="room-cover">
+          <div className="rc-top">
+            <button className="rc-chip" onClick={onBack}>COS</button>
+            <div className="rc-top-r">
+              <span className="rc-room"><i className="bdot" style={{ background: "var(--gold-bright)" }} />{i.name} · Idea</span>
+              <span className="rc-cos">COGNITIVE OPERATING SYSTEM</span>
             </div>
           </div>
+          <span className="hd-tick rc-tick" />
+          <span className="rc-eyebrow">INCUBATOR</span>
+          <h1 className="rc-title">{i.name}</h1>
+          <p className="rc-desc">{i.why}</p>
+          <div className="rc-meta">
+            <div className="rc-row"><span className="rc-k">STAGE</span><span className="rc-v"><i className="bdot" style={{ background: "var(--gold-bright)" }} />{i.stage}</span></div>
+            <div className="rc-row"><span className="rc-k">HEAT</span><span className="rc-v">{i.heat}</span></div>
+            <div className="rc-row"><span className="rc-k">RELATED</span><span className="rc-v">{i.related.length ? i.related.join(" · ") : "Its own thing"}</span></div>
+            <div className="rc-row"><span className="rc-k">LAST MOVE</span><span className="rc-v" style={{ fontWeight: 500 }}>{i.lastMove}</span></div>
+          </div>
+          <span className="rc-touched">LAST TOUCHED {i.lastActivity.toUpperCase()}</span>
+          <div className="rc-btns">
+            <button className="rc-edit" onClick={onBack}>Back to ideas</button>
+            <button className="rc-tidy" onClick={talk}>Think it through</button>
+          </div>
+        </aside>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div className="card">
-              <div className="card-eyebrow">Related projects</div>
-              {i.related.length ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {i.related.map((r) => {
-                    const proj = D.projects.find((p) => p.name === r);
-                    return (
-                      <button key={r} className={"pill solid ac-" + (proj ? proj.accent : "amber")} style={{ cursor: "pointer", fontWeight: 600 }}
-                        onClick={() => proj && onProject(proj.id)}>
-                        <span className="d" />{r}
-                      </button>
-                    );
-                  })}
+        <section className="room-ctx">
+          <div className="ctx-tabs">
+            <button className={"tab" + (tab === "spark" ? " is-on" : "")} onClick={() => setTab("spark")}>The Spark</button>
+            <button className={"tab" + (tab === "questions" ? " is-on" : "")} onClick={() => setTab("questions")}>Open Questions <sup>{i.questions.length}</sup></button>
+            <button className={"tab" + (tab === "related" ? " is-on" : "")} onClick={() => setTab("related")}>Related <sup>{i.related.length}</sup></button>
+          </div>
+
+          {tab === "spark" && (
+            <>
+              <span className="ctx-eyebrow">WHAT SPARKED THIS</span>
+              <h2 className="ctx-head">{i.spark}</h2>
+              <div className="ctx-next">
+                <span className="next-k">● NEXT · THE ONE MOVE</span>
+                <div className="next-row">
+                  <p className="next-t">{i.nextMove}</p>
+                  <button className="next-start" onClick={talk}>Start</button>
                 </div>
+              </div>
+              <div className="ctx-pick">
+                <span className="pick-k">HEAT · {i.heat.toUpperCase()}</span>
+                <p className="pick-t" style={{ marginTop: 14, fontWeight: 500 }}>{i.heatNote}</p>
+              </div>
+            </>
+          )}
+
+          {tab === "questions" && (
+            <div className="ctx-pick" style={{ marginTop: 30 }}>
+              <span className="pick-k">OPEN QUESTIONS</span>
+              {i.questions.map((q, idx) => (
+                <div className="pick-row" key={idx}><span className="pick-tag">Q</span><span className="pick-t">{q}</span></div>
+              ))}
+            </div>
+          )}
+
+          {tab === "related" && (
+            <div className="ctx-pick" style={{ marginTop: 30 }}>
+              <span className="pick-k">RELATED ROOMS</span>
+              {i.related.length ? (
+                i.related.map((r) => {
+                  const proj = D.projects.find((p) => p.name === r);
+                  return (
+                    <button className="pick-row" key={r} onClick={() => proj && onProject(proj.id)}>
+                      <span className="pick-tag">ROOM</span><span className="pick-t">{r}</span><ArrowR s={15} />
+                    </button>
+                  );
+                })
               ) : (
-                <div style={{ fontSize: 13.5, color: "var(--ink-4)" }}>Not linked to a project yet — it's still its own thing.</div>
+                <p className="pick-t" style={{ marginTop: 14, fontWeight: 500 }}>Not linked to a project yet — it's still its own thing.</p>
               )}
             </div>
-            <div className="card">
-              <div className="card-eyebrow">Next move</div>
-              <div style={{ fontFamily: "var(--display)", fontWeight: 600, fontSize: 18, letterSpacing: "-.015em", color: "var(--ink)", lineHeight: 1.25 }}>{i.nextMove}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* graceful exit */}
-        <div className="card" style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          {!shelved ? (
-            <>
-              <div>
-                <div style={{ fontFamily: "var(--display)", fontWeight: 600, fontSize: 16, letterSpacing: "-.01em" }}>Not every idea should survive.</div>
-                <div style={{ fontSize: 13, color: "var(--ink-4)", marginTop: 3 }}>Shelving keeps the takeaway as Knowledge, then clears the incubator.</div>
-              </div>
-              <button className="btn btn-ghost" onClick={() => setShelved(true)}>Shelve with a takeaway</button>
-            </>
-          ) : (
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span className="status in-motion"><span className="d" />Shelved</span>
-              <span style={{ fontSize: 13.5, color: "var(--ink-3)" }}>Saved the lesson to Knowledge. The incubator has room again.</span>
-            </div>
           )}
-        </div>
+        </section>
       </div>
-    </div>
+    </Scaffold>
   );
 }
