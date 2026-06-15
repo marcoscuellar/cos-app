@@ -266,6 +266,20 @@ export interface EngineDef {
   stages: string[];
 }
 
+/** A user-authored engine — same shape as a built-in, plus its director prompt. */
+export interface CustomEngine {
+  id: string;
+  name: string;
+  tagline: string;
+  accent: LabAccent;
+  stages: string[];
+  inputs: EngineField[];
+  /** The director system prompt — the engine's brain. */
+  system: string;
+  version: number;
+  createdAt: number;
+}
+
 /** A single saved run — the durable record of inputs, what ran, and the output. */
 export interface EngineRun {
   id: string;

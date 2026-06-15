@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
 import { Scaffold, Header, ArrowR, headerDate } from "../components/CosScaffold";
 import { Icon } from "../components/Icon";
-import type { EngineDef, EngineRun } from "../types";
+import type { EngineDef, EngineRun, CustomEngine } from "../types";
 import { ENGINES, getEngineDef, assemblePrompt } from "../engines";
-import { loadRuns, loadAllRuns, runEngine, patchRun } from "../enginesApi";
+import { loadRuns, loadAllRuns, runEngine, patchRun, loadCustomEngines, saveCustomEngines } from "../enginesApi";
+import { EngineEditor } from "../components/EngineEditor";
+import { IS_DEMO } from "../session";
 import { renderMarkdown } from "../lib/markdown";
 import { runToMarkdown, runFilename, copyText, downloadFile } from "../lib/exportRun";
+
+const BUILTIN_IDS = new Set(ENGINES.map((e) => e.id));
+const toDef = (c: CustomEngine, num: number): EngineDef => ({
+  id: c.id, num, name: c.name, tagline: c.tagline, accent: c.accent, inputs: c.inputs, stages: c.stages,
+});
 
 /* THE ENGINE ROOM — your sales-intelligence pipeline. Pick an engine, give it
    inputs, it researches live and returns a structured report. Every run is
@@ -13,7 +20,35 @@ import { runToMarkdown, runFilename, copyText, downloadFile } from "../lib/expor
 export function LabScreen({ onNav }: { onNav: (route: string) => void }) {
   const [tab, setTab] = useState<"engines" | "saved">("engines");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const def = activeId ? getEngineDef(activeId) : null;
+  const [customs, setCustoms] = useState<CustomEngine[]>([]);
+  const [editing, setEditing] = useState<CustomEngine | null | undefined>(undefined);
+  const canEdit = !IS_DEMO;
+
+  useEffect(() => { loadCustomEngines().then(setCustoms); }, []);
+
+  const customDefs = customs.map((c, i) => toDef(c, ENGINES.length + i));
+  const allDefs = [...ENGINES, ...customDefs];
+  const def = activeId ? allDefs.find((e) => e.id === activeId) ?? null : null;
+
+  const saveEngine = (e: CustomEngine) => {
+    setCustoms((prev) => {
+      const exists = prev.some((x) => x.id === e.id);
+      let next: CustomEngine[];
+      if (exists) {
+        next = prev.map((x) => (x.id === e.id ? e : x));
+      } else {
+        let id = e.id;
+        let n = 2;
+        while (prev.some((x) => x.id === id) || BUILTIN_IDS.has(id)) id = `${e.id}-${n++}`;
+        next = [...prev, { ...e, id }];
+      }
+      saveCustomEngines(next);
+      return next;
+    });
+  };
+  const deleteEngine = (id: string) => {
+    setCustoms((prev) => { const next = prev.filter((x) => x.id !== id); saveCustomEngines(next); return next; });
+  };
 
   if (def) return <EngineRunner def={def} onBack={() => setActiveId(null)} />;
 
@@ -33,29 +68,48 @@ export function LabScreen({ onNav }: { onNav: (route: string) => void }) {
         <button className={"tab" + (tab === "saved" ? " is-on" : "")} onClick={() => setTab("saved")}>Saved runs</button>
       </div>
       {tab === "engines" ? (
-        <div className="pj-grid">
-          {ENGINES.map((e) => (
-            <button key={e.id} className="card" onClick={() => setActiveId(e.id)}>
-              <div className="card-top">
-                <span className="card-num">{String(e.num).padStart(2, "0")}</span>
-                <span className="badge st-motion"><i className="bdot" />ENGINE</span>
-              </div>
-              <div className="idea-name">{e.name}</div>
-              <div className="eng-line">{e.tagline}</div>
-              <div className="eng-stage-row">
-                {e.stages.map((s, i) => (
-                  <span key={s} className="eng-stage-chip">{s}{i < e.stages.length - 1 && <i className="eng-arrow">→</i>}</span>
-                ))}
-              </div>
-              <div className="card-foot">
-                <span className="foot-time">{e.stages.length} STAGES</span>
-                <span className="open">Open engine <ArrowR s={15} /></span>
-              </div>
-            </button>
-          ))}
-        </div>
+        <>
+          {canEdit && (
+            <div className="pj-actions">
+              <button className="pj-new" onClick={() => setEditing(null)}>+ New engine</button>
+            </div>
+          )}
+          <div className="pj-grid">
+            {allDefs.map((e) => {
+              const custom = !BUILTIN_IDS.has(e.id);
+              return (
+                <div className="card-wrap" key={e.id}>
+                  <button className="card" onClick={() => setActiveId(e.id)}>
+                    <div className="card-top">
+                      <span className="card-num">{String(e.num).padStart(2, "0")}</span>
+                      <span className="badge st-motion"><i className="bdot" />{custom ? "CUSTOM" : "ENGINE"}</span>
+                    </div>
+                    <div className="idea-name">{e.name}</div>
+                    <div className="eng-line">{e.tagline}</div>
+                    <div className="eng-stage-row">
+                      {e.stages.map((s, i) => (
+                        <span key={s} className="eng-stage-chip">{s}{i < e.stages.length - 1 && <i className="eng-arrow">→</i>}</span>
+                      ))}
+                    </div>
+                    <div className="card-foot">
+                      <span className="foot-time">{e.stages.length} STAGES</span>
+                      <span className="open">Open engine <ArrowR s={15} /></span>
+                    </div>
+                  </button>
+                  {canEdit && custom && (
+                    <button className="pj-edit-btn" onClick={() => setEditing(customs.find((c) => c.id === e.id))}>Edit</button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
       ) : (
         <SavedRunsView />
+      )}
+
+      {editing !== undefined && (
+        <EngineEditor engine={editing ?? undefined} onSave={saveEngine} onClose={() => setEditing(undefined)} onDelete={deleteEngine} />
       )}
     </Scaffold>
   );

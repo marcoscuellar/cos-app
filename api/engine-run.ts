@@ -137,7 +137,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const body = (req.body ?? {}) as { engineId?: string; inputs?: Record<string, string>; prompt?: string; draft?: boolean };
       const draft = body.draft === true;
-      const engine = getEngine(String(body.engineId ?? ""));
+      const engineId = String(body.engineId ?? "");
+      // Built-in engines live in lib/server; user-authored ones live in KV.
+      let engine = getEngine(engineId);
+      if (!engine) {
+        const customs = (await kvGet<{ id: string; version?: number; system?: string }[]>(`engines:${OWNER}`)) ?? [];
+        const c = customs.find((e) => e.id === engineId);
+        if (c && typeof c.system === "string" && c.system.trim()) {
+          engine = { id: c.id, version: typeof c.version === "number" ? c.version : 1, system: c.system };
+        }
+      }
       if (!engine) return res.status(400).json({ error: "Unknown engine." });
       const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
       if (!prompt) return res.status(400).json({ error: "Give the engine something to run on." });
