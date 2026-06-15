@@ -6,6 +6,7 @@ import { HomeScreen } from "./screens/Home";
 import { TodayScreen } from "./screens/Today";
 import { TodaySummary } from "./screens/TodaySummary";
 import { ConversationScreen } from "./screens/Conversation";
+import { HelpScreen } from "./screens/Help";
 import { ProjectsScreen } from "./screens/Projects";
 import { ProjectScreen } from "./screens/ProjectDetail";
 import { IdeasScreen } from "./screens/Ideas";
@@ -16,7 +17,7 @@ import { SearchScreen } from "./screens/Search";
 import { Reentry } from "./overlays/Reentry";
 import { loadState, saveState } from "./storage";
 
-type Route = "home" | "today" | "summary" | "projects" | "project" | "ideas" | "idea" | "lab" | "search" | "conversation";
+type Route = "home" | "today" | "summary" | "projects" | "project" | "ideas" | "idea" | "lab" | "search" | "conversation" | "help";
 
 // Single-user personal app — no authentication. The identity shown in the
 // sidebar is static; change it here if you want a different name/email.
@@ -89,10 +90,18 @@ export default function App() {
     // brain-dump to the existing Your Day builder and land there as it builds.
     const day = text.trim().match(/^(?:create|build|plan|make|generate)\s+(?:my\s+)?day\b[\s,:.\-–—]*(.*)$/i);
     if (day) { setTodaySeed(day[1].trim()); setRoute("today"); return; }
-    // Everything else opens into Conversation (the spine).
+    // Distress lands in the rescue room (Help); everything else opens into
+    // Conversation (the spine).
+    if (/adhd|kicking my ass|winning today|overwhelm|can'?t (start|focus)|too much|i'?m stuck|help me start|falling apart|drowning|paraly/i.test(t)) {
+      setRoute("help");
+      return;
+    }
     setConvoSeed(text);
     setRoute("conversation");
   };
+
+  // Hand any text to the Conversation thread (used by Help's actions + input).
+  const goTalk = (text: string) => { setConvoSeed(text); setRoute("conversation"); };
 
   const onProjectClick = (id: string) => {
     const p = D.projects.find((x) => x.id === id);
@@ -154,6 +163,14 @@ export default function App() {
     return (
       <AppLock>
         <ConversationScreen seed={convoSeed} onNav={goNav} />
+      </AppLock>
+    );
+  }
+  // Help — the dark rescue room (where distress lands).
+  if (route === "help") {
+    return (
+      <AppLock>
+        <HelpScreen onNav={goNav} onTalk={goTalk} />
       </AppLock>
     );
   }
