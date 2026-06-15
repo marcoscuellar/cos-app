@@ -182,6 +182,14 @@ export default function App() {
       </AppLock>
     );
   }
+  // Research (Lab) — the engine room, on the shared Projects main look.
+  if (route === "lab") {
+    return (
+      <AppLock>
+        <LabScreen onNav={goNav} />
+      </AppLock>
+    );
+  }
 
   return (
     <AppLock>
@@ -199,7 +207,6 @@ export default function App() {
       />
       <main className="main" ref={mainRef}>
         {route === "idea" && idea && <IdeaDetail idea={idea} onProject={goProject} onBack={() => goNav("ideas")} />}
-        {route === "lab" && <LabScreen />}
         {route === "search" && <SearchScreen onProject={goProject} initialQuery={searchSeed} />}
       </main>
       {reentry && <Reentry project={reentry} onClose={() => setReentry(null)} onResume={resumeFromReentry} />}

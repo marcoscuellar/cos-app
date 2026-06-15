@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { foyerStamp } from "../brief";
+import { Scaffold, Header, ArrowR, headerDate } from "../components/CosScaffold";
 import { Icon } from "../components/Icon";
 import type { EngineDef, EngineRun } from "../types";
 import { ENGINES, getEngineDef, assemblePrompt } from "../engines";
@@ -10,7 +10,7 @@ import { runToMarkdown, runFilename, copyText, downloadFile } from "../lib/expor
 /* THE ENGINE ROOM — your sales-intelligence pipeline. Pick an engine, give it
    inputs, it researches live and returns a structured report. Every run is
    saved to Redis; the Saved Runs tab is the cross-engine library + export. */
-export function LabScreen() {
+export function LabScreen({ onNav }: { onNav: (route: string) => void }) {
   const [tab, setTab] = useState<"engines" | "saved">("engines");
   const [activeId, setActiveId] = useState<string | null>(null);
   const def = activeId ? getEngineDef(activeId) : null;
@@ -18,57 +18,46 @@ export function LabScreen() {
   if (def) return <EngineRunner def={def} onBack={() => setActiveId(null)} />;
 
   return (
-    <div className="wrap room-arch">
-      <div className="stagger">
-        {/* same calm header as the foyer — a motivational tag + the live stamp */}
-        <div className="foyer">
-          <div className="foyer-mark"><span className="mono-meta">Let's build shit</span></div>
-          <span className="mono-meta q">{foyerStamp()}</span>
-        </div>
-        {/* black banner — same shape as the foyer's doorway */}
-        <div className="doorway room-door light ac-indigo">
-          <div className="dw-body">
-            <div className="dw-left">
-              <div className="dw-rule" />
-              <span className="chip">Engine room</span>
-              <div className="dw-name">Lab.</div>
-            </div>
-            <div className="dw-quotewrap">
-              <div className="dw-quote">“The best way to predict the future is to invent it.”</div>
-              <div className="dw-cite">— Alan Kay</div>
-            </div>
-          </div>
-          <div className="dw-foot">
-            <span className="dw-mono">Repeatable engines. Real output. Every run saved.</span>
-          </div>
-        </div>
-
-        <div className="tabs">
-          <button className={"tab" + (tab === "engines" ? " on" : "")} onClick={() => setTab("engines")}>Engines</button>
-          <button className={"tab" + (tab === "saved" ? " on" : "")} onClick={() => setTab("saved")}>Saved runs</button>
-        </div>
-
-        {tab === "engines" ? (
-          <div className="grid-3">
-            {ENGINES.map((e) => (
-              <button key={e.id} className={"card engine-card ac-" + e.accent} onClick={() => setActiveId(e.id)}>
-                <div className="eng-num">{String(e.num).padStart(2, "0")}</div>
-                <div className="eng-name"><span>{e.name}</span></div>
-                <div className="eng-tag">{e.tagline}</div>
-                <div className="eng-stages">
-                  {e.stages.map((s, i) => (
-                    <span key={s} className="eng-stage">{s}{i < e.stages.length - 1 && <i className="eng-arrow">→</i>}</span>
-                  ))}
-                </div>
-                <div className="eng-open">Open engine <Icon.arrow style={{ width: 13, height: 13 }} /></div>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <SavedRunsView />
-        )}
+    <Scaffold active="flask" onNav={onNav}>
+      <Header
+        eyebrow="GO DEEPER"
+        date={headerDate()}
+        label="RESEARCH"
+        title="Research."
+        quote="The best way to predict the future is to invent it."
+        author="ALAN KAY"
+        sub={`${ENGINES.length} ENGINES · EVERY RUN SAVED`}
+      />
+      <div className="ctx-tabs lab-tabs">
+        <button className={"tab" + (tab === "engines" ? " is-on" : "")} onClick={() => setTab("engines")}>Engines</button>
+        <button className={"tab" + (tab === "saved" ? " is-on" : "")} onClick={() => setTab("saved")}>Saved runs</button>
       </div>
-    </div>
+      {tab === "engines" ? (
+        <div className="pj-grid">
+          {ENGINES.map((e) => (
+            <button key={e.id} className="card" onClick={() => setActiveId(e.id)}>
+              <div className="card-top">
+                <span className="card-num">{String(e.num).padStart(2, "0")}</span>
+                <span className="badge st-motion"><i className="bdot" />ENGINE</span>
+              </div>
+              <div className="idea-name">{e.name}</div>
+              <div className="eng-line">{e.tagline}</div>
+              <div className="eng-stage-row">
+                {e.stages.map((s, i) => (
+                  <span key={s} className="eng-stage-chip">{s}{i < e.stages.length - 1 && <i className="eng-arrow">→</i>}</span>
+                ))}
+              </div>
+              <div className="card-foot">
+                <span className="foot-time">{e.stages.length} STAGES</span>
+                <span className="open">Open engine <ArrowR s={15} /></span>
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <SavedRunsView />
+      )}
+    </Scaffold>
   );
 }
 
