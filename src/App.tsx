@@ -129,6 +129,14 @@ export default function App() {
       </AppLock>
     );
   }
+  // Calendar (the day planner) is a full-bleed takeover — no rail, per spec.
+  if (route === "today") {
+    return (
+      <AppLock>
+        <TodayScreen onProject={goProject} onNav={goNav} seedDump={todaySeed} onSeedConsumed={() => setTodaySeed("")} />
+      </AppLock>
+    );
+  }
 
   return (
     <AppLock>
@@ -145,7 +153,6 @@ export default function App() {
         onAsk={() => goNav("search")}
       />
       <main className="main" ref={mainRef}>
-        {route === "today" && <TodayScreen onProject={goProject} seedDump={todaySeed} onSeedConsumed={() => setTodaySeed("")} />}
         {route === "ideas" && <IdeasScreen onIdea={goIdea} />}
         {route === "idea" && idea && <IdeaDetail idea={idea} onProject={goProject} onBack={() => goNav("ideas")} />}
         {route === "lab" && <LabScreen />}
