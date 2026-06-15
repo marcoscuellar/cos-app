@@ -36,10 +36,10 @@ const QUESTIONS = [
 type Chip = { label: string; insert?: string; route?: string };
 const CHIPS: Chip[] = [
   { label: "Plan my day", insert: "Plan my day — what should today look like?" },
-  { label: "Take me to my projects", route: "projects" },
-  { label: "I've got an idea — let me unload it", insert: "I've got an idea — let me unload my brain: " },
+  { label: "My projects", route: "projects" },
+  { label: "Unload an idea", insert: "I've got an idea — let me unload my brain: " },
   { label: "Remind me…", insert: "Remind me to " },
-  { label: "ADHD's winning today — help", insert: "ADHD is winning today — can you help me start?" },
+  { label: "Help me start", insert: "ADHD is winning today — can you help me start?" },
 ];
 
 const Arrow = () => (
@@ -124,7 +124,7 @@ export function HomeScreen({ onCommand, onNav }: HomeProps) {
 
         <div className="h-pills h-suggest">
           {CHIPS.map((c) => (
-            <button key={c.label} className="cos-pill cos-pill--quiet" onClick={() => tapChip(c)}>
+            <button key={c.label} className="cos-pill" onClick={() => tapChip(c)}>
               <span className="cos-pill-ch"><Chevron /></span>
               <span>{c.label}</span>
             </button>
