@@ -40,8 +40,6 @@ interface StoredCredential {
 }
 interface Owner {
   credential: StoredCredential;
-  recoveryHash: string; // pbkdf2 hex
-  recoverySalt: string; // hex
   createdAt: number;
 }
 
@@ -49,10 +47,6 @@ interface Owner {
 const b64url = (b: Buffer | Uint8Array) => Buffer.from(b).toString("base64url");
 const fromB64url = (s: string) => new Uint8Array(Buffer.from(s, "base64url"));
 const sha256hex = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
-
-function pbkdf2(code: string, salt: string): string {
-  return crypto.pbkdf2Sync(code, salt, 120000, 32, "sha256").toString("hex");
-}
 
 async function getSecret(): Promise<string> {
   let s = await kvGet<string>(SECRET_KEY);
@@ -190,16 +184,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await kvDel(CHALLENGE_KEY);
 
       const cred = verification.registrationInfo.credential;
-      // Issue a recovery code (shown once) unless we're just re-enrolling.
-      let recoveryCode: string | undefined;
-      let recoveryHash = owner?.recoveryHash ?? "";
-      let recoverySalt = owner?.recoverySalt ?? "";
-      if (!owner) {
-        recoveryCode = crypto.randomBytes(6).toString("hex").toUpperCase().match(/.{1,4}/g)!.join("-");
-        recoverySalt = crypto.randomBytes(16).toString("hex");
-        recoveryHash = pbkdf2(recoveryCode, recoverySalt);
-      }
-
       const next: Owner = {
         credential: {
           id: cred.id,
@@ -207,15 +191,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           counter: cred.counter,
           transports: response.response.transports,
         },
-        recoveryHash,
-        recoverySalt,
         createdAt: owner?.createdAt ?? Date.now(),
       };
       await kvSet(OWNER_KEY, next);
 
       const token = signSession(await getSecret(), Date.now() + SESSION_TTL_MS);
       setSessionCookie(res, token, secure);
-      return res.status(200).json({ ok: true, recoveryCode });
+      return res.status(200).json({ ok: true });
     }
 
     // ── begin authentication ──
@@ -264,12 +246,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ ok: true });
     }
 
-    // ── recovery: a valid code clears the passkey so you can enroll a new one ──
+    // ── break-glass: the setup code clears the passkey so you can re-enroll ──
+    // (No code for the user to save day-to-day — passkeys sync via iCloud/Google;
+    //  this is only the rare "lost every device" reset, using the one setup code.)
     if (action === "recover") {
-      if (!owner) return res.status(404).json({ error: "Nothing to recover." });
-      const code = String((req.body?.recoveryCode ?? "")).trim().toUpperCase();
-      if (!owner.recoveryHash || pbkdf2(code, owner.recoverySalt) !== owner.recoveryHash) {
-        return res.status(403).json({ error: "That recovery code isn't right." });
+      if (!owner) return res.status(404).json({ error: "Nothing to reset." });
+      const code = String((req.body?.code ?? "")).trim().toUpperCase();
+      if (sha256hex(code) !== SETUP_CODE_HASH) {
+        return res.status(403).json({ error: "That setup code isn't right." });
       }
       await kvDel(OWNER_KEY);
       return res.status(200).json({ ok: true });

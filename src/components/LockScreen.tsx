@@ -24,7 +24,6 @@ export function LockScreen({ status, onUnlocked }: { status: AuthStatus; onUnloc
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [recovery, setRecovery] = useState<string | null>(null);
 
   const unlock = async () => {
     setBusy(true); setErr(null);
@@ -38,7 +37,6 @@ export function LockScreen({ status, onUnlocked }: { status: AuthStatus; onUnloc
     const r = await setupPasskey(code.trim());
     setBusy(false);
     if (r.error) { setErr(r.error); return; }
-    if (r.recoveryCode) { setRecovery(r.recoveryCode); return; } // show once, then continue
     onUnlocked();
   };
 
@@ -47,23 +45,8 @@ export function LockScreen({ status, onUnlocked }: { status: AuthStatus; onUnloc
     const r = await recover(code.trim());
     setBusy(false);
     if (r.ok) { setCode(""); setMode("setup"); setErr(null); }
-    else setErr(r.error ?? "Recovery failed.");
+    else setErr(r.error ?? "Reset failed.");
   };
-
-  // Recovery code reveal — gate continuing until they've seen it.
-  if (recovery) {
-    return (
-      <div className="lock-wrap">
-        <div className="lock-card">
-          <div className="lock-eyebrow">Save this recovery code</div>
-          <h1 className="lock-title">Keep it somewhere safe</h1>
-          <p className="lock-sub">It's the only way back in if you ever lose this device. We won't show it again.</p>
-          <div className="lock-recovery">{recovery}</div>
-          <button className="lock-btn" onClick={onUnlocked}>I've saved it — enter COS</button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="lock-wrap">
@@ -103,18 +86,19 @@ export function LockScreen({ status, onUnlocked }: { status: AuthStatus; onUnloc
 
         {mode === "recover" && (
           <>
-            <h1 className="lock-title">Recover access.</h1>
-            <p className="lock-sub">Enter your recovery code to clear the old passkey and set up a new one.</p>
+            <h1 className="lock-title">Lost your device?</h1>
+            <p className="lock-sub">Your passkey is normally saved to iCloud or Google, so a new phone
+              restores it on its own. If you're truly locked out, enter your setup code to start fresh.</p>
             <input
               className="lock-input"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="RECOVERY CODE"
+              placeholder="SETUP CODE"
               autoFocus
               onKeyDown={(e) => { if (e.key === "Enter") doRecover(); }}
             />
             <button className="lock-btn" onClick={doRecover} disabled={busy || !code.trim()}>
-              {busy ? "Checking…" : "Recover"}
+              {busy ? "Checking…" : "Reset & start over"}
             </button>
             <button className="lock-link" onClick={() => { setMode("unlock"); setErr(null); setCode(""); }}>
               Back to unlock

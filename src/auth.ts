@@ -22,8 +22,8 @@ export async function authStatus(): Promise<AuthStatus> {
   }
 }
 
-/** Enroll the first passkey using the one-time setup code. Returns a recovery code. */
-export async function setupPasskey(setupCode: string): Promise<{ recoveryCode?: string; error?: string }> {
+/** Enroll the first passkey using the one-time setup code. */
+export async function setupPasskey(setupCode: string): Promise<{ ok?: boolean; error?: string }> {
   try {
     const optRes = await post("register-options", { setupCode });
     const opt = await optRes.json();
@@ -34,7 +34,7 @@ export async function setupPasskey(setupCode: string): Promise<{ recoveryCode?: 
     const verRes = await post("register-verify", { setupCode, response: attestation });
     const ver = await verRes.json();
     if (!verRes.ok) return { error: ver.error || "Couldn't finish setup." };
-    return { recoveryCode: ver.recoveryCode };
+    return { ok: true };
   } catch (e) {
     return { error: humanError(e) };
   }
@@ -58,10 +58,10 @@ export async function loginPasskey(): Promise<{ ok?: boolean; error?: string }> 
   }
 }
 
-/** Use a recovery code to clear the lost passkey, then enroll a fresh one. */
-export async function recover(recoveryCode: string): Promise<{ ok?: boolean; error?: string }> {
+/** Break-glass: the setup code clears the lost passkey so a fresh one can enroll. */
+export async function recover(code: string): Promise<{ ok?: boolean; error?: string }> {
   try {
-    const r = await post("recover", { recoveryCode });
+    const r = await post("recover", { code });
     const d = await r.json();
     if (!r.ok) return { error: d.error || "Recovery failed." };
     return { ok: true };
