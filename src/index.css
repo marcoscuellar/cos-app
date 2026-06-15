@@ -472,6 +472,22 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .pg .lp-label{font-family:var(--disp);font-weight:600;font-size:14px;color:var(--ink)}
 @media(max-width:980px){.pg .calpage{padding:40px 28px 56px}.pg .calbig{font-size:84px}.pg .cal2{grid-template-columns:1fr}}
 
+/* ===== today · gentle summary (page 05) ===== */
+.pg .cos-serif{font-family:var(--serif);font-style:italic;font-size:30px;line-height:1.2;color:var(--gold);letter-spacing:-0.01em}
+.pg .td-line{margin-top:40px}
+.pg .td-line .cos-serif{font-size:34px}
+.pg .td-list{margin-top:34px;display:flex;flex-direction:column;gap:16px;max-width:760px}
+.pg .td-item{display:flex;gap:20px;align-items:flex-start;background:#fdfcf8;border:1px solid var(--card-line);border-radius:6px;padding:24px 26px}
+.pg .td-check{width:24px;height:24px;flex:0 0 24px;border-radius:50%;border:1.5px solid #cfd5d0;margin-top:4px;background:transparent;cursor:pointer;transition:background .15s,border-color .15s}
+.pg .td-check.is-done{background:var(--gold-bright);border-color:var(--gold-bright)}
+.pg .td-body{display:flex;flex-direction:column;gap:6px}
+.pg .td-when{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;color:var(--gold);white-space:nowrap}
+.pg .td-task{font-family:var(--disp);font-weight:600;font-size:21px;color:var(--ink);letter-spacing:-0.01em}
+.pg .td-hint{font-size:15px;color:var(--muted)}
+.pg .td-foot{display:flex;justify-content:space-between;align-items:center;max-width:760px;margin-top:26px;gap:16px}
+.pg .td-soft{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:500;font-size:15px;color:var(--ink-2);background:transparent;border:0;cursor:pointer}
+.pg .td-more{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--faint);white-space:nowrap}
+
 /* cards */
 .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;
   transition:border-color .15s, box-shadow .15s, transform .15s}

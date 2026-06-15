@@ -35,7 +35,7 @@ export const Mic = ({ s = 19 }: { s?: number }) => (
 // sun/cal both land on the existing day planner ("today") until Calendar (04)
 // and the gentle Today (05) are split out.
 const RAIL: { key: string; d: string; route: string }[] = [
-  { key: "sun", d: P.sun, route: "today" },
+  { key: "sun", d: P.sun, route: "summary" },
   { key: "home", d: P.home, route: "home" },
   { key: "cal", d: P.cal, route: "today" },
   { key: "grid", d: P.grid, route: "projects" },

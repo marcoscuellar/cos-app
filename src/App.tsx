@@ -4,6 +4,7 @@ import type { Project } from "./types";
 import { Sidebar } from "./components/Sidebar";
 import { HomeScreen } from "./screens/Home";
 import { TodayScreen } from "./screens/Today";
+import { TodaySummary } from "./screens/TodaySummary";
 import { ProjectsScreen } from "./screens/Projects";
 import { ProjectScreen } from "./screens/ProjectDetail";
 import { IdeasScreen } from "./screens/Ideas";
@@ -14,7 +15,7 @@ import { SearchScreen } from "./screens/Search";
 import { Reentry } from "./overlays/Reentry";
 import { loadState, saveState } from "./storage";
 
-type Route = "home" | "today" | "projects" | "project" | "ideas" | "idea" | "lab" | "search";
+type Route = "home" | "today" | "summary" | "projects" | "project" | "ideas" | "idea" | "lab" | "search";
 
 // Single-user personal app — no authentication. The identity shown in the
 // sidebar is static; change it here if you want a different name/email.
@@ -134,6 +135,14 @@ export default function App() {
     return (
       <AppLock>
         <TodayScreen onProject={goProject} onNav={goNav} seedDump={todaySeed} onSeedConsumed={() => setTodaySeed("")} />
+      </AppLock>
+    );
+  }
+  // Today — the gentle 3-things summary (rail's sun icon).
+  if (route === "summary") {
+    return (
+      <AppLock>
+        <TodaySummary onNav={goNav} />
       </AppLock>
     );
   }
