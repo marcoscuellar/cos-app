@@ -190,6 +190,14 @@ export default function App() {
       </AppLock>
     );
   }
+  // Search — memory recall, on the shared Projects main look.
+  if (route === "search") {
+    return (
+      <AppLock>
+        <SearchScreen onProject={goProject} onNav={goNav} initialQuery={searchSeed} />
+      </AppLock>
+    );
+  }
 
   return (
     <AppLock>
@@ -207,7 +215,6 @@ export default function App() {
       />
       <main className="main" ref={mainRef}>
         {route === "idea" && idea && <IdeaDetail idea={idea} onProject={goProject} onBack={() => goNav("ideas")} />}
-        {route === "search" && <SearchScreen onProject={goProject} initialQuery={searchSeed} />}
       </main>
       {reentry && <Reentry project={reentry} onClose={() => setReentry(null)} onResume={resumeFromReentry} />}
     </div>
