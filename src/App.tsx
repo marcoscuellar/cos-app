@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { COS_DATA } from "./data";
-import type { Accent, DocRef, Project } from "./types";
+import type { Project } from "./types";
 import { Sidebar } from "./components/Sidebar";
 import { HomeScreen } from "./screens/Home";
 import { TodayScreen } from "./screens/Today";
@@ -12,9 +12,6 @@ import { LabScreen } from "./screens/Lab";
 import { AppLock } from "./components/AppLock";
 import { SearchScreen } from "./screens/Search";
 import { Reentry } from "./overlays/Reentry";
-import { BrainstormPanel } from "./overlays/Brainstorm";
-import { AskCOSPanel } from "./overlays/AskCOS";
-import { DocViewer } from "./overlays/DocViewer";
 import { loadState, saveState } from "./storage";
 
 type Route = "home" | "today" | "projects" | "project" | "ideas" | "idea" | "lab" | "search";
@@ -29,9 +26,6 @@ export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [reentry, setReentry] = useState<Project | null>(null);
   const [ideaId, setIdeaId] = useState<string | null>(null);
-  const [brainstorm, setBrainstorm] = useState<Project | null>(null);
-  const [askProject, setAskProject] = useState<Project | null>(null);
-  const [doc, setDoc] = useState<{ d: DocRef; accent: Accent } | null>(null);
   const [searchSeed, setSearchSeed] = useState("");
   const [todaySeed, setTodaySeed] = useState("");
   const [loaded, setLoaded] = useState(false);
@@ -79,14 +73,14 @@ export default function App() {
     const named = D.projects.find(
       (p) => p.name.toLowerCase() === t || p.id.toLowerCase() === t,
     );
-    if (named) { onProjectClick(named.id); return; }
+    if (named) { goProject(named.id); return; }
     const nav = t.match(/^(?:take me to|open|go to|jump to|show me|navigate to)\s+(?:my\s+)?(.+?)(?:\s+project)?$/);
     if (nav) {
       const target = nav[1].trim();
       const hit = D.projects.find(
         (p) => p.name.toLowerCase().includes(target) || target.includes(p.name.toLowerCase()) || p.id.toLowerCase() === target,
       );
-      if (hit) { onProjectClick(hit.id); return; }
+      if (hit) { goProject(hit.id); return; }
     }
     // "create my day, I have a gym session and deep work on GLVE…" → hand the
     // brain-dump to the existing Your Day builder and land there as it builds.
@@ -96,12 +90,6 @@ export default function App() {
     setRoute("search");
   };
 
-  const onContinue = (id: string, fromInside?: boolean) => {
-    const p = D.projects.find((x) => x.id === id);
-    if (!p) return;
-    if (!fromInside && (p.status === "dormant" || p.away === "3 weeks")) setReentry(p);
-    else goProject(id);
-  };
   const onProjectClick = (id: string) => {
     const p = D.projects.find((x) => x.id === id);
     if (p && p.status === "dormant") setReentry(p);
@@ -133,6 +121,15 @@ export default function App() {
   const project = projectId ? D.projects.find((p) => p.id === projectId) : null;
   const idea = ideaId ? D.ideas.find((i) => i.id === ideaId) : null;
 
+  // Project room is a redesigned takeover (own rail + folded-in Ask COS).
+  if (route === "project" && project) {
+    return (
+      <AppLock>
+        <ProjectScreen project={project} onNav={goNav} />
+      </AppLock>
+    );
+  }
+
   return (
     <AppLock>
     <div className="app">
@@ -149,18 +146,12 @@ export default function App() {
       />
       <main className="main" ref={mainRef}>
         {route === "today" && <TodayScreen onProject={goProject} seedDump={todaySeed} onSeedConsumed={() => setTodaySeed("")} />}
-        {route === "project" && project && (
-          <ProjectScreen project={project} onContinue={onContinue} onBrainstorm={() => setBrainstorm(project)} onAsk={() => setAskProject(project)} onOpenDoc={(d, accent) => setDoc({ d, accent })} />
-        )}
         {route === "ideas" && <IdeasScreen onIdea={goIdea} />}
         {route === "idea" && idea && <IdeaDetail idea={idea} onProject={goProject} onBack={() => goNav("ideas")} />}
         {route === "lab" && <LabScreen />}
         {route === "search" && <SearchScreen onProject={goProject} initialQuery={searchSeed} />}
       </main>
       {reentry && <Reentry project={reentry} onClose={() => setReentry(null)} onResume={resumeFromReentry} />}
-      {brainstorm && <BrainstormPanel project={brainstorm} onClose={() => setBrainstorm(null)} />}
-      {askProject && <AskCOSPanel project={askProject} onClose={() => setAskProject(null)} />}
-      {doc && <DocViewer doc={doc.d} accent={doc.accent} onClose={() => setDoc(null)} />}
     </div>
     </AppLock>
   );
