@@ -5,6 +5,7 @@ import { Sidebar } from "./components/Sidebar";
 import { HomeScreen } from "./screens/Home";
 import { TodayScreen } from "./screens/Today";
 import { TodaySummary } from "./screens/TodaySummary";
+import { ConversationScreen } from "./screens/Conversation";
 import { ProjectsScreen } from "./screens/Projects";
 import { ProjectScreen } from "./screens/ProjectDetail";
 import { IdeasScreen } from "./screens/Ideas";
@@ -15,7 +16,7 @@ import { SearchScreen } from "./screens/Search";
 import { Reentry } from "./overlays/Reentry";
 import { loadState, saveState } from "./storage";
 
-type Route = "home" | "today" | "summary" | "projects" | "project" | "ideas" | "idea" | "lab" | "search";
+type Route = "home" | "today" | "summary" | "projects" | "project" | "ideas" | "idea" | "lab" | "search" | "conversation";
 
 // Single-user personal app — no authentication. The identity shown in the
 // sidebar is static; change it here if you want a different name/email.
@@ -29,6 +30,7 @@ export default function App() {
   const [ideaId, setIdeaId] = useState<string | null>(null);
   const [searchSeed, setSearchSeed] = useState("");
   const [todaySeed, setTodaySeed] = useState("");
+  const [convoSeed, setConvoSeed] = useState("");
   const [loaded, setLoaded] = useState(false);
   const D = COS_DATA;
 
@@ -87,8 +89,9 @@ export default function App() {
     // brain-dump to the existing Your Day builder and land there as it builds.
     const day = text.trim().match(/^(?:create|build|plan|make|generate)\s+(?:my\s+)?day\b[\s,:.\-–—]*(.*)$/i);
     if (day) { setTodaySeed(day[1].trim()); setRoute("today"); return; }
-    setSearchSeed(text);
-    setRoute("search");
+    // Everything else opens into Conversation (the spine).
+    setConvoSeed(text);
+    setRoute("conversation");
   };
 
   const onProjectClick = (id: string) => {
@@ -143,6 +146,14 @@ export default function App() {
     return (
       <AppLock>
         <TodaySummary onNav={goNav} />
+      </AppLock>
+    );
+  }
+  // Conversation — the thread Home opens into.
+  if (route === "conversation") {
+    return (
+      <AppLock>
+        <ConversationScreen seed={convoSeed} onNav={goNav} />
       </AppLock>
     );
   }
