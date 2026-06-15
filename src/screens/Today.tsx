@@ -60,6 +60,46 @@ function currentIndex(blocks: Block[]): number {
   });
 }
 
+// Parse "8:00 AM" / "14:30" → {h, m} (24h). null if unparseable.
+function parseHM(t: string): { h: number; m: number } | null {
+  const m = t.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
+  if (!m) return null;
+  let h = +m[1];
+  const mn = m[2] ? +m[2] : 0;
+  const ap = m[3]?.toLowerCase();
+  if (ap === "pm" && h < 12) h += 12;
+  if (ap === "am" && h === 12) h = 0;
+  return { h, m: mn };
+}
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const icsEsc = (s: string) => s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+
+// Build a standards-compliant .ics (Apple Calendar + Google Calendar both import this).
+// Floating local times — events land at their wall-clock hour in whatever calendar opens them.
+function buildIcs(blocks: Block[], y: string, mo: string, d: string): string {
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//COS//Day Plan//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
+  blocks.forEach((b, i) => {
+    const s = parseHM(b.start);
+    if (!s) return;
+    const e = parseHM(b.end) ?? { h: Math.floor((s.h * 60 + s.m + 30) / 60) % 24, m: (s.m + 30) % 60 };
+    const at = (hm: { h: number; m: number }) => `${y}${mo}${d}T${pad2(hm.h)}${pad2(hm.m)}00`;
+    const desc = [b.walkIn ? `Walk in with: ${b.walkIn}` : "", b.who ? `With ${b.who}` : "", "Planned by COS"].filter(Boolean).join(" · ");
+    lines.push(
+      "BEGIN:VEVENT",
+      `UID:cos-${y}${mo}${d}-${i}@costhread.app`,
+      `DTSTAMP:${stamp}`,
+      `DTSTART:${at(s)}`,
+      `DTEND:${at(e)}`,
+      `SUMMARY:${icsEsc(b.title)}`,
+      `DESCRIPTION:${icsEsc(desc)}`,
+      "END:VEVENT",
+    );
+  });
+  lines.push("END:VCALENDAR");
+  return lines.join("\r\n");
+}
+
 interface Props {
   onProject: (id: string) => void;
   onNav: (route: string) => void;
@@ -107,6 +147,22 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
   const now = new Date();
   const weekday = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long" }).format(now);
 
+  // Download today's plan as an .ics file — drops straight into Apple/Google Calendar.
+  const downloadDay = () => {
+    if (!blocks.length) return;
+    const [y, mo, d] = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" })
+      .format(now).split("-");
+    const blob = new Blob([buildIcs(blocks, y, mo, d)], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cos-${y}-${mo}-${d}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   return (
     <Scaffold active="cal" onNav={onNav} initial={(D.user.greetingName || "M")[0]}>
       <Header
@@ -133,11 +189,17 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
             <button className="cos-mic" tabIndex={-1} aria-label="Voice"><Mic /></button>
             <button className="cos-send" onClick={submit} aria-label="Build my day"><ArrowR s={19} /></button>
           </div>
-          <p className="caldump-help">
-            {building ? "Building your day — focused sprints, real breaks, overflow deferred…"
-              : error ? error
-              : "Messy is fine. COS plans gently and never crams. ↵ to build."}
-          </p>
+          <div className="caldump-foot">
+            <p className="caldump-help">
+              {building ? "Building your day — focused sprints, real breaks, overflow deferred…"
+                : error ? error
+                : "Messy is fine. COS plans gently and never crams. ↵ to build."}
+            </p>
+            <button className="cal-export" onClick={downloadDay} disabled={!blocks.length} title="Download .ics — opens in Apple or Google Calendar">
+              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></svg>
+              Add to calendar
+            </button>
+          </div>
         </div>
 
         <div className="cal2">
@@ -146,22 +208,20 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
               const p = b.proj ? projOf(b.proj) : null;
               const tagk = b.kind === "meeting" ? "meeting" : b.kind === "ritual" ? "ritual" : "focus";
               return (
-                <div className="tl-item" key={b.id ?? i}>
-                  <div className="tl-time">
-                    <span className="tl-start">{b.start}</span>
-                    <span className="tl-end">{b.end}</span>
-                    <span className={"tl-node" + (i === nowIdx ? " is-now" : "")} />
+                <div className={"tl-card" + (i === nowIdx ? " is-now" : "")} key={b.id ?? i}>
+                  <div className="tl-cardtop">
+                    <span className="tl-time">
+                      <span className="tl-start">{b.start}</span>
+                      <span className="tl-end">– {b.end}</span>
+                    </span>
+                    {i === nowIdx && <span className="tl-now">NOW</span>}
+                    <span className={"ttag ttag-" + tagk}>{b.kind.toUpperCase()}</span>
+                    {b.who && <span className="tl-meta">with {b.who}</span>}
+                    {p && <span className="tl-proj"><i className="bdot" style={{ background: "var(--gold-bright)" }} />{p.name}</span>}
                   </div>
-                  <div className="tl-card">
-                    <div className="tl-cardtop">
-                      <span className={"ttag ttag-" + tagk}>{b.kind.toUpperCase()}</span>
-                      {b.who && <span className="tl-meta">with {b.who}</span>}
-                      {p && <span className="tl-proj"><i className="bdot" style={{ background: "var(--gold-bright)" }} />{p.name}</span>}
-                    </div>
-                    <h3 className="tl-title">{b.title}</h3>
-                    {b.walkIn && <p className="tl-walk"><span className="tl-walk-k">WALK IN WITH</span> {b.walkIn}</p>}
-                    {p && <button className="tl-enter" onClick={() => onProject(p.id)}>Enter {p.name} <ArrowR s={15} /></button>}
-                  </div>
+                  <h3 className="tl-title">{b.title}</h3>
+                  {b.walkIn && <p className="tl-walk"><span className="tl-walk-k">WALK IN WITH</span> {b.walkIn}</p>}
+                  {p && <button className="tl-enter" onClick={() => onProject(p.id)}>Enter {p.name} <ArrowR s={15} /></button>}
                 </div>
               );
             })}
