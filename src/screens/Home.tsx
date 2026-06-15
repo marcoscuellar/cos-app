@@ -11,7 +11,7 @@ import { COS_DATA } from "../data";
 // Directions.html <style> + home-variants.jsx VariantHero.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const THEME: "dark" | "light" = "dark"; // flip to "light" for the cream mood
+const THEME: "dark" | "light" = "light"; // flip to "dark" for the "lights low" mood
 
 const TZ = "America/Chicago";
 const GREETS = ["What's up", "Yo", "What's shaking", "Hey"];
