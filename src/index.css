@@ -474,25 +474,27 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .pg .caldump .cos-field{font-size:18px}
 .pg .caldump-help{font-size:14px;color:var(--muted);margin-top:13px}
 .pg .cal2{display:grid;grid-template-columns:1fr 360px;gap:56px;margin-top:42px;align-items:start}
-.pg .tl{display:flex;flex-direction:column;gap:16px}
-.pg .tl-card{position:relative;border:1px solid var(--card-line);border-radius:12px;padding:22px 26px 24px;background:#fdfcf8;transition:border-color .15s,box-shadow .15s}
-.pg .tl-card:hover{border-color:#d8cfb8}
-.pg .tl-card.is-now{border-color:var(--gold-bright);background:#fdfaef;box-shadow:inset 3px 0 0 var(--gold-bright)}
+/* The day planner — one rectangle; each block is a divided row inside it. */
+.pg .tl{border:1px solid var(--card-line);border-radius:16px;background:#fdfcf8;overflow:hidden}
+.pg .tl-row{display:grid;grid-template-columns:108px 1fr;gap:26px;padding:24px 30px;position:relative;transition:background .15s}
+.pg .tl-row + .tl-row{border-top:1px solid var(--line)}
+.pg .tl-row.is-now{background:#fdfaef;box-shadow:inset 3px 0 0 var(--gold-bright)}
+.pg .tl-body{min-width:0}
 .pg .tl-cardtop{display:flex;align-items:center;gap:13px}
-.pg .tl-time{display:inline-flex;align-items:baseline;gap:7px}
-.pg .tl-start{font-family:var(--mono);font-weight:700;font-size:17px;letter-spacing:.02em;color:var(--ink)}
+.pg .tl-time{display:flex;flex-direction:column;gap:3px;padding-top:3px}
+.pg .tl-start{font-family:var(--mono);font-weight:700;font-size:16px;letter-spacing:.02em;color:var(--ink)}
 .pg .tl-end{font-family:var(--mono);font-size:13px;color:var(--faint)}
-.pg .tl-now{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:#fff;background:var(--gold-bright);border-radius:999px;padding:4px 9px}
+.pg .tl-now{margin-top:7px;align-self:flex-start;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:#fff;background:var(--gold-bright);border-radius:999px;padding:3px 8px}
 .pg .ttag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;border-radius:999px;padding:6px 13px;white-space:nowrap}
 .pg .ttag-ritual{border:1px solid var(--card-line);color:var(--ink-2)}
 .pg .ttag-focus{background:#efe7d0;color:#8a7a2e}
 .pg .ttag-meeting{background:#eef2f7;border:1px solid #cdd8e6;color:#5a6b82}
 .pg .tl-meta{font-family:var(--disp);font-size:15px;color:var(--muted)}
 .pg .tl-proj{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:600;font-size:14px;color:var(--ink-2);white-space:nowrap}
-.pg .tl-title{font-family:var(--disp);font-weight:700;font-size:25px;letter-spacing:-0.02em;color:var(--ink);margin-top:15px}
-.pg .tl-walk{font-size:16px;line-height:1.5;color:var(--muted);margin-top:12px;max-width:56ch}
+.pg .tl-title{font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:-0.02em;color:var(--ink);margin-top:11px}
+.pg .tl-walk{font-size:15.5px;line-height:1.5;color:var(--muted);margin-top:9px;max-width:56ch}
 .pg .tl-walk-k{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;color:var(--gold)}
-.pg .tl-enter{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:600;font-size:15px;color:var(--gold);margin-top:16px;white-space:nowrap;background:transparent;border:0;cursor:pointer}
+.pg .tl-enter{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:600;font-size:15px;color:var(--gold);margin-top:13px;white-space:nowrap;background:transparent;border:0;cursor:pointer}
 .pg .cal-export{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:600;font-size:14px;color:var(--ink);background:#fdfcf8;border:1px solid var(--card-line);border-radius:999px;padding:9px 17px;cursor:pointer;transition:border-color .15s,background .15s}
 .pg .cal-export:hover{border-color:var(--gold-bright);background:#fdfaef;color:var(--gold)}
 .pg .cal-export:disabled{opacity:.5;cursor:default}

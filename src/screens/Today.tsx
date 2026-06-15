@@ -208,20 +208,22 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
               const p = b.proj ? projOf(b.proj) : null;
               const tagk = b.kind === "meeting" ? "meeting" : b.kind === "ritual" ? "ritual" : "focus";
               return (
-                <div className={"tl-card" + (i === nowIdx ? " is-now" : "")} key={b.id ?? i}>
-                  <div className="tl-cardtop">
-                    <span className="tl-time">
-                      <span className="tl-start">{b.start}</span>
-                      <span className="tl-end">– {b.end}</span>
-                    </span>
+                <div className={"tl-row" + (i === nowIdx ? " is-now" : "")} key={b.id ?? i}>
+                  <div className="tl-time">
+                    <span className="tl-start">{b.start}</span>
+                    <span className="tl-end">{b.end}</span>
                     {i === nowIdx && <span className="tl-now">NOW</span>}
-                    <span className={"ttag ttag-" + tagk}>{b.kind.toUpperCase()}</span>
-                    {b.who && <span className="tl-meta">with {b.who}</span>}
-                    {p && <span className="tl-proj"><i className="bdot" style={{ background: "var(--gold-bright)" }} />{p.name}</span>}
                   </div>
-                  <h3 className="tl-title">{b.title}</h3>
-                  {b.walkIn && <p className="tl-walk"><span className="tl-walk-k">WALK IN WITH</span> {b.walkIn}</p>}
-                  {p && <button className="tl-enter" onClick={() => onProject(p.id)}>Enter {p.name} <ArrowR s={15} /></button>}
+                  <div className="tl-body">
+                    <div className="tl-cardtop">
+                      <span className={"ttag ttag-" + tagk}>{b.kind.toUpperCase()}</span>
+                      {b.who && <span className="tl-meta">with {b.who}</span>}
+                      {p && <span className="tl-proj"><i className="bdot" style={{ background: "var(--gold-bright)" }} />{p.name}</span>}
+                    </div>
+                    <h3 className="tl-title">{b.title}</h3>
+                    {b.walkIn && <p className="tl-walk"><span className="tl-walk-k">WALK IN WITH</span> {b.walkIn}</p>}
+                    {p && <button className="tl-enter" onClick={() => onProject(p.id)}>Enter {p.name} <ArrowR s={15} /></button>}
+                  </div>
                 </div>
               );
             })}
