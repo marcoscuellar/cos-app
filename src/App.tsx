@@ -112,6 +112,17 @@ export default function App() {
   // Avoid a flash before persisted prefs resolve.
   if (!loaded) return <div style={{ height: "100vh", background: "var(--canvas)" }} />;
 
+  // Home is a full-viewport sanctuary with its own minimal rail — render it as a
+  // takeover (no app sidebar). The "Take me to my projects" chip is the way back
+  // into the rest of the app.
+  if (route === "home") {
+    return (
+      <AppLock>
+        <HomeScreen onCommand={onHomeCommand} onNav={goNav} />
+      </AppLock>
+    );
+  }
+
   const project = projectId ? D.projects.find((p) => p.id === projectId) : null;
   const idea = ideaId ? D.ideas.find((i) => i.id === ideaId) : null;
 
@@ -130,7 +141,6 @@ export default function App() {
         onAsk={() => goNav("search")}
       />
       <main className="main" ref={mainRef}>
-        {route === "home" && <HomeScreen onCommand={onHomeCommand} />}
         {route === "today" && <TodayScreen onProject={goProject} seedDump={todaySeed} onSeedConsumed={() => setTodaySeed("")} />}
         {route === "projects" && <ProjectsScreen onProject={onProjectClick} onContinue={onContinue} />}
         {route === "project" && project && (

@@ -187,26 +187,98 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .chatbar .send{width:38px;height:38px;border-radius:11px;background:var(--ink);display:grid;place-items:center;flex-shrink:0}
 .chatbar .send svg{width:17px;height:17px;stroke:#fff}
 
-/* ── COS front door — the calm, chat-first home ──────────────────────────────
-   No dashboard. Just the eyebrow, a greeting in the house type treatment
-   (heavy DM Sans + gold Newsreader italic), and the universal command line. */
-.cos-front{--ac:var(--gold);min-height:100vh;padding:32px 56px;display:flex;align-items:center;justify-content:center}
-.cf-inner{width:100%;max-width:760px;margin:0 auto;text-align:center}
-.cf-eyebrow{display:flex;align-items:center;justify-content:center;gap:12px;font-family:var(--mono);font-size:11px;font-weight:600;
-  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:28px}
-.cf-eyebrow .cf-tick{width:28px;height:4px;border-radius:2px;background:var(--gold);flex-shrink:0}
-.cf-greet{font-family:var(--display);font-weight:800;letter-spacing:-.04em;line-height:.97;
-  font-size:clamp(40px,6.6vw,76px);color:var(--ink);margin-bottom:36px}
-.cf-greet .em{font-size:1em;line-height:1.02}
-/* a soft back shadow so the command line floats off the canvas */
-.cf-composer{box-shadow:0 18px 48px -20px rgba(16,16,20,.30), 0 6px 16px -10px rgba(16,16,20,.14)}
-.cf-composer:focus-within,.cf-composer:hover{box-shadow:0 26px 60px -22px rgba(16,16,20,.38), 0 8px 20px -10px rgba(16,16,20,.16)}
-.cf-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:18px}
-.cf-chip{font-family:var(--display);font-weight:600;font-size:13.5px;color:var(--ink-3);
-  border:1.5px solid var(--line-3);border-radius:999px;padding:9px 16px;background:var(--paper);
-  transition:border-color .15s,color .15s,transform .15s}
-.cf-chip:hover{border-color:var(--gold);color:var(--ink);transform:translateY(-1px)}
-@media(max-width:1100px){.cos-front{padding:24px 36px}}
+/* ── COS Home — the sanctuary front door (redesign · page 01) ────────────────
+   Full-viewport, vertically centered, no scroll. Two moods via theme class.
+   Ported from COS Home — Directions.html (authoritative <style>). */
+.cos-home{position:relative;width:100%;height:100vh;overflow:hidden;
+  background:var(--canvas);color:var(--ink);font-feature-settings:"ss01"}
+.cos-home .serif-q{font-family:var(--serif);font-style:italic}
+
+/* theme — dark "lights low" (default) */
+.cos-home.v-a{
+  --canvas:#14271d;--ink:#ece7da;--ac:#c6b24a;--muted:rgba(236,231,218,.5);
+  --rail-line:rgba(236,231,218,.08);
+  --field-bg:#f7f4ec;--field-line:#f7f4ec;--send-bg:#22332b;
+  --field-shadow:0 30px 80px -40px rgba(0,0,0,.7);
+  --field-shadow-focus:0 30px 80px -34px rgba(0,0,0,.7);
+  --mic-bg:#e7e0cd;--mic-bg-h:#ded4ba;--mic-ink:#6b6243;
+  --pill-ink:rgba(236,231,218,.72);--pill-line:rgba(236,231,218,.16);--pill-hover:rgba(236,231,218,.05);
+}
+/* theme — light cream */
+.cos-home.v-light{
+  --canvas:#faf9f5;--ink:#232a30;--ac:#b5a642;--muted:rgba(40,52,59,.55);
+  --rail-line:#e9e2d4;
+  --field-bg:#fff;--field-line:#e7e0d0;--send-bg:#232a30;
+  --field-shadow:0 18px 50px -30px rgba(70,60,30,.30);
+  --field-shadow-focus:0 18px 50px -24px rgba(70,60,30,.30);
+  --mic-bg:#ece5d2;--mic-bg-h:#e2d8be;--mic-ink:#6b6243;
+  --pill-ink:rgba(40,52,59,.7);--pill-line:#ddd4c2;--pill-hover:rgba(40,52,59,.04);
+}
+
+/* quiet rail (COS mark top · avatar bottom) */
+.cos-home .cos-rail{position:absolute;left:0;top:0;bottom:0;width:84px;display:flex;
+  flex-direction:column;align-items:center;justify-content:space-between;padding:30px 0 34px;
+  border-right:1px solid var(--rail-line);z-index:5}
+.cos-home .cos-rail-mark{font-family:var(--mono);font-size:13px;letter-spacing:.14em;font-weight:500;
+  color:var(--ink);opacity:.85;border:1px solid var(--rail-line);border-radius:7px;padding:7px 8px}
+.cos-home .cos-rail-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  font-size:13px;font-weight:600;color:var(--canvas);background:var(--ink);opacity:.85}
+
+/* centered stage */
+.cos-home .h-stage{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:0 120px}
+.cos-home .h-eyebrow{display:inline-flex;align-items:center;gap:11px;white-space:nowrap;
+  font-family:var(--mono);font-size:13px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:34px}
+.cos-home .a-dot{width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 12px var(--ac)}
+.cos-home .h-greet{font-family:var(--display);font-weight:700;font-size:84px;line-height:.98;
+  letter-spacing:-0.04em;color:var(--ink)}
+.cos-home .h-q{margin-top:26px;min-height:60px}
+.cos-home .h-q .serif-q{font-size:56px;line-height:1.04;color:var(--ac);letter-spacing:-0.01em}
+.cos-home .h-input-wrap{width:700px;max-width:100%;margin-top:52px}
+.cos-home .h-pills{display:flex;gap:12px;justify-content:center;margin-top:26px;flex-wrap:wrap}
+.cos-home .h-suggest{max-width:720px;margin-left:auto;margin-right:auto;row-gap:11px}
+
+/* command bar */
+.cos-home .cos-input{display:flex;align-items:center;gap:12px;background:var(--field-bg);
+  border:1px solid var(--field-line);border-radius:16px;padding:12px 12px 12px 16px;
+  box-shadow:var(--field-shadow);transition:box-shadow .3s ease,border-color .3s ease}
+.cos-home .cos-input:focus-within{border-color:var(--ac);box-shadow:var(--field-shadow-focus)}
+.cos-home .cos-field{flex:1;border:0;outline:0;background:transparent;font-family:var(--ui);
+  font-size:19px;color:#1c2620;letter-spacing:-0.01em}
+.cos-home .cos-field::placeholder{color:#9aa6a0}
+.cos-home .cos-mic{width:44px;height:44px;flex:0 0 44px;border:0;cursor:pointer;border-radius:11px;
+  background:var(--mic-bg);color:var(--mic-ink);display:grid;place-items:center;transition:background .2s ease}
+.cos-home .cos-mic:hover{background:var(--mic-bg-h)}
+.cos-home .cos-send{width:48px;height:48px;flex:0 0 48px;border:0;cursor:pointer;border-radius:12px;
+  background:var(--send-bg);color:#fff;display:grid;place-items:center;transition:transform .15s ease,background .2s ease}
+.cos-home .cos-send:hover{transform:translateX(2px)}
+
+/* ghost / quiet pills */
+.cos-home .cos-pill{display:inline-flex;align-items:center;gap:9px;font-family:var(--ui);
+  font-size:15.5px;font-weight:500;color:var(--pill-ink);background:transparent;
+  border:1px solid var(--pill-line);border-radius:999px;padding:11px 19px 11px 15px;cursor:pointer;
+  transition:border-color .2s ease,color .2s ease,background .2s ease}
+.cos-home .cos-pill:hover{border-color:var(--ac);color:var(--ink);background:var(--pill-hover)}
+.cos-home .cos-pill-ch{color:var(--ac);display:inline-flex}
+.cos-home .cos-pill--quiet{border-color:transparent;background:transparent;padding:10px 15px 10px 12px}
+.cos-home .cos-pill--quiet:hover{border-color:transparent;background:var(--pill-hover);color:var(--ink)}
+.cos-home .h-suggest .cos-pill{font-size:15px}
+
+/* mobile (≤640px) — rail becomes a top bar, type shrinks, pills stack */
+@media(max-width:640px){
+  .cos-home .cos-rail{flex-direction:row;width:auto;left:0;right:0;bottom:auto;height:62px;
+    justify-content:space-between;padding:0 22px;border-right:0;border-bottom:1px solid var(--rail-line)}
+  .cos-home .h-stage{padding:70px 26px 46px}
+  .cos-home .h-eyebrow{margin-bottom:22px;font-size:12px}
+  .cos-home .h-greet{font-size:47px;letter-spacing:-0.035em;line-height:1}
+  .cos-home .h-q .serif-q{font-size:28px;line-height:1.12}
+  .cos-home .h-input-wrap{width:100%;margin-top:34px}
+  .cos-home .h-pills.h-suggest{flex-direction:column;gap:10px;margin-top:18px;width:100%}
+  .cos-home .h-suggest .cos-pill{width:100%;justify-content:flex-start;padding:13px 18px 13px 15px}
+}
+
+@media(prefers-reduced-motion:reduce){.cos-home .serif-q{transition:none}}
 
 /* cards */
 .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;
