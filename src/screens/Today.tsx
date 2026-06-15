@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { COS_DATA } from "../data";
-import { Mic, ArrowR } from "../components/CosScaffold";
+import { Scaffold, Header, Mic, ArrowR, headerDate } from "../components/CosScaffold";
 import type { DayPlan } from "../types";
 import { loadPlan, buildPlan } from "../dayPlanApi";
 
@@ -106,29 +106,19 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
   const nowIdx = currentIndex(blocks);
   const now = new Date();
   const weekday = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long" }).format(now);
-  const dateLong = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "long", day: "numeric", year: "numeric" }).format(now).toUpperCase();
 
   return (
-    <div className="pg pg-light">
-      <div className="calpage">
-        <div className="calhd-top">
-          <div className="calhd-l">
-            <button className="rc-chip" onClick={() => onNav("home")}>COS</button>
-            <span className="calhd-lbl">CALENDAR</span>
-          </div>
-          <span className="calhd-date">{dateLong}</span>
-        </div>
-        <div className="hd-rule" />
-
-        <div className="cal2-head">
-          <span className="hd-tick" />
-          <span className="hd-label">TODAY</span>
-          <h1 className="calbig">{weekday}.</h1>
-          <span className="calbig-date">{dateLong}</span>
-        </div>
-        <div className="hd-rule" />
-        <div className="calsync"><i className="bdot" style={{ background: "var(--gold-bright)" }} /> SYNCED WITH WORK · GOOGLE CALENDAR · COS ATTACHES CONTEXT</div>
-
+    <Scaffold active="cal" onNav={onNav} initial={(D.user.greetingName || "M")[0]}>
+      <Header
+        eyebrow="PLAN THE DAY"
+        date={headerDate()}
+        label="CALENDAR"
+        title={`${weekday}.`}
+        quote="Plan the day you can actually finish."
+        author="COS"
+        sub="SYNCED WITH WORK · GOOGLE CALENDAR · COS ATTACHES CONTEXT"
+      />
+      <div className="calbody">
         <div className="caldump">
           <div className="cos-input">
             <input
@@ -192,6 +182,6 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
           </aside>
         </div>
       </div>
-    </div>
+    </Scaffold>
   );
 }

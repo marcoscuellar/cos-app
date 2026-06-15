@@ -468,7 +468,8 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .pg .calbig{font-family:var(--disp);font-weight:800;font-size:150px;line-height:.82;letter-spacing:-0.055em;color:var(--ink);margin-top:22px}
 .pg .calbig-date{display:block;font-family:var(--mono);font-size:14px;letter-spacing:.14em;color:var(--faint);margin-top:26px}
 .pg .calsync{font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--muted);display:flex;align-items:center;gap:10px;margin-top:22px}
-.pg .caldump{margin-top:24px}
+.pg .calbody{margin-top:36px}
+.pg .caldump{margin-top:0}
 .pg .caldump .cos-input{border-radius:6px;padding:13px 13px 13px 22px;box-shadow:none;border-color:#ddd6c6}
 .pg .caldump .cos-field{font-size:18px}
 .pg .caldump-help{font-size:14px;color:var(--muted);margin-top:13px}
