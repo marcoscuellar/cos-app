@@ -7,8 +7,8 @@ import { IS_DEMO } from "../session";
 //
 // Full-viewport, vertically centered, no scroll. Two moods via a theme class:
 // dark "lights low" (default) / light cream. A random casual greeting per load,
-// ONE static gold Newsreader line (principle #5 — never rotating), a quiet
-// command bar, and low-key suggestion chips. Source of truth: COS Home —
+// a warm gold Newsreader line that also rotates per load, a quiet command bar,
+// and low-key suggestion chips. Source of truth: COS Home —
 // Directions.html <style> + home-variants.jsx VariantHero.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -16,7 +16,22 @@ const THEME: "dark" | "light" = "dark"; // flip to "dark" for the "lights low" m
 
 const TZ = "America/Chicago";
 const GREETS = ["What's up", "Yo", "What's shaking", "Hey"];
-const QUESTION = "Where are you right now?"; // static — the one gold human line
+// The gold human line — rotates per load, warm and low-pressure by design.
+const QUESTIONS = [
+  "Where are you right now?",
+  "What's on your mind?",
+  "Where'd you leave off?",
+  "What's pulling at you?",
+  "What matters today?",
+  "Where should we start?",
+  "Where's your energy at?",
+  "Tell me where you're at — no pressure.",
+  "How's today treating you so far?",
+  "What's the vibe right now?",
+  "Where's your head at?",
+  "You good? Or is it one of those days?",
+  "Catch me up — where are we at?",
+];
 
 type Chip = { label: string; insert?: string; route?: string };
 const CHIPS: Chip[] = [
@@ -55,6 +70,7 @@ export function HomeScreen({ onCommand, onNav }: HomeProps) {
   const name = COS_DATA.user.greetingName || "";
   const initial = (name || "Y").charAt(0).toUpperCase();
   const [greet] = useState(() => GREETS[Math.floor(Math.random() * GREETS.length)]);
+  const [question] = useState(() => QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)]);
   const [now, setNow] = useState(() => new Date());
   const [val, setVal] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -88,8 +104,8 @@ export function HomeScreen({ onCommand, onNav }: HomeProps) {
 
       <div className="h-stage">
         <div className="h-eyebrow"><span className="a-dot" /> {clockLine(now)}</div>
-        <h1 className="h-greet">{IS_DEMO ? "Hey you." : <>{greet},<br />{name}.</>}</h1>
-        <div className="h-q"><span className="serif-q">{QUESTION}</span></div>
+        <h1 className="h-greet">{IS_DEMO ? "Hey friend." : <>{greet},<br />{name}.</>}</h1>
+        <div className="h-q"><span className="serif-q">{question}</span></div>
 
         <div className="h-input-wrap">
           <div className="cos-input">
