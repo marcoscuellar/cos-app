@@ -174,6 +174,14 @@ export default function App() {
       </AppLock>
     );
   }
+  // Ideas — the incubator, on the shared Projects main look.
+  if (route === "ideas") {
+    return (
+      <AppLock>
+        <IdeasScreen onIdea={goIdea} onNav={goNav} />
+      </AppLock>
+    );
+  }
 
   return (
     <AppLock>
@@ -190,7 +198,6 @@ export default function App() {
         onAsk={() => goNav("search")}
       />
       <main className="main" ref={mainRef}>
-        {route === "ideas" && <IdeasScreen onIdea={goIdea} />}
         {route === "idea" && idea && <IdeaDetail idea={idea} onProject={goProject} onBack={() => goNav("ideas")} />}
         {route === "lab" && <LabScreen />}
         {route === "search" && <SearchScreen onProject={goProject} initialQuery={searchSeed} />}
