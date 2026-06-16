@@ -59,6 +59,17 @@ interface TodoItem {
   done: boolean;
   createdAt: number;
   steps?: TodoStep[];
+  when?: string;
+  hint?: string;
+  essential?: boolean;
+  cos?: string;
+  tomorrow?: boolean;
+  carried?: boolean;
+}
+interface JournalEntry {
+  id: string;
+  text: string;
+  createdAt: number;
 }
 
 const todoId = () => `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
@@ -75,7 +86,12 @@ function sanitizeSteps(raw: unknown): TodoStep[] | undefined {
   return steps.length ? steps : undefined;
 }
 
-// Accept a client-edited to-dos array (add / check off / restore / delete / step toggle).
+const trimOpt = (v: unknown, max: number): string | undefined => {
+  const s = typeof v === "string" ? v.trim().slice(0, max) : "";
+  return s || undefined;
+};
+
+// Accept a client-edited to-dos array (add / check off / restore / delete / step toggle / move).
 function sanitizeTodos(raw: unknown): TodoItem[] {
   if (!Array.isArray(raw)) return [];
   return raw
@@ -88,9 +104,30 @@ function sanitizeTodos(raw: unknown): TodoItem[] {
         done: o.done === true,
         createdAt: typeof o.createdAt === "number" ? o.createdAt : Date.now(),
         steps: sanitizeSteps(o.steps),
+        when: trimOpt(o.when, 40),
+        hint: trimOpt(o.hint, 160),
+        essential: o.essential === true ? true : undefined,
+        cos: trimOpt(o.cos, 80),
+        tomorrow: o.tomorrow === true ? true : undefined,
+        carried: o.carried === true ? true : undefined,
       };
     })
     .filter((t) => t.text.trim());
+}
+
+function sanitizeJournal(raw: unknown): JournalEntry[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .slice(0, 200)
+    .map((e): JournalEntry => {
+      const o = (e ?? {}) as Record<string, unknown>;
+      return {
+        id: typeof o.id === "string" && o.id ? o.id.slice(0, 40) : todoId(),
+        text: String(o.text ?? "").slice(0, 4000),
+        createdAt: typeof o.createdAt === "number" ? o.createdAt : Date.now(),
+      };
+    })
+    .filter((e) => e.text.trim());
 }
 
 interface DayPlan {
@@ -101,14 +138,25 @@ interface DayPlan {
   note?: string;
   todos?: TodoItem[];
   notes?: string;
+  journal?: JournalEntry[];
+  carryDone?: boolean;
   createdAt: number;
 }
 
-function dateKey(): string {
+const TZ = "America/Chicago";
+function dateKey(d: Date = new Date()): string {
   // YYYY-MM-DD in the user's home timezone, so "today" is correct everywhere.
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(d);
 }
-const planKey = () => `plan:${OWNER}:${dateKey()}`;
+const planKey = (key: string = dateKey()) => `plan:${OWNER}:${key}`;
+const yesterdayKey = () => dateKey(new Date(Date.now() - 24 * 60 * 60 * 1000));
+
+// Yesterday's still-open to-dos — offered back as today's "From yesterday" carry-over.
+async function loadCarryover(): Promise<TodoItem[]> {
+  const prev = await kvGet<DayPlan>(planKey(yesterdayKey()));
+  if (!prev?.todos) return [];
+  return prev.todos.filter((t) => !t.done).slice(0, 12);
+}
 
 function buildPrompt(
   dump: string,
@@ -144,6 +192,9 @@ function buildPrompt(
     "- `kind` is one of: ritual, focus, meeting, break, admin, errand, meal.",
     "- `intention` is the ONE directive line for the day, in the user's own voice — short, punchy, specific to their dump (≤14 words). Example: \"Protect the GLVE morning. Everything else can wait.\" Name what matters most; make it motivating, not generic.",
     "- `todos` is a list of concrete action items the user needs to DO and check off. Pull EVERY actionable task from the dump here — even ones you also placed as a scheduled block. Each todo is an object: {\"text\":\"Call finance\"}. Keep `text` ≤10 words, imperative, no times.",
+    "- Each todo SHOULD carry a short `when` (rough time-of-day or anchor: \"Morning\", \"Afternoon\", \"Evening\", \"Before 11:30\") and a one-line `hint` (a gentle, encouraging nudge — why it's quick, or where to pick up). Keep `hint` ≤12 words.",
+    "- Mark `essential: true` on ONLY the 2–3 truest must-dos of the day — the ones that matter even on a hard day. Everything else: omit `essential`. These are what survive when the user asks to 'make it lighter'.",
+    "- You MAY add 1–2 of your OWN protective todos the user would forget — e.g. guarding rest/downtime before an evening event, prepping for a meeting, picking something up that's tied to a plan. Mark each with a short `cos` tag naming why, like \"COS added · from your 7 PM with John\". Use sparingly; never invent obligations, only gentle supports.",
     "- A todo MAY include `steps` (an array of 2–5 short sub-steps) — but ONLY when a task is one people commonly avoid or struggle to START (admin, medical, financial, bureaucratic, anything draining). Default to NO steps. When the user signals difficulty with something (\"I have a hard time getting to my medical stuff\", \"ADHD moment\", \"I keep putting this off\"), DO add steps for THAT task: break it into the smallest, most concrete, do-able actions so they can check them off one at a time. Never pad — fewer, clearer steps win.",
     "- `note` is ONE warm, encouraging sentence about the day (no lists).",
     "",
@@ -151,7 +202,7 @@ function buildPrompt(
     roomList,
     "",
     "Respond with ONLY valid JSON, no prose, no code fences, in exactly this shape:",
-    '{"intention":"...","blocks":[{"start":"7:00 AM","end":"7:45 AM","title":"...","kind":"focus","proj":"glve","walkIn":"..."}],"todos":[{"text":"Ship the engine editor"},{"text":"Submit medical forms","steps":["Find the form link in your email","Fill in sections 1–3","Attach a photo of your ID","Hit submit"]}],"deferred":["..."],"note":"..."}',
+    '{"intention":"...","blocks":[{"start":"7:00 AM","end":"7:45 AM","title":"...","kind":"focus","proj":"glve","walkIn":"..."}],"todos":[{"text":"Ship the engine editor","when":"Morning","hint":"Pick up where you left off.","essential":true},{"text":"Submit medical forms","when":"Afternoon","hint":"Two minutes once you start.","steps":["Find the form link in your email","Fill in sections 1–3","Attach a photo of your ID","Hit submit"]},{"text":"Protect time to rest before dinner","when":"Evening","hint":"So you arrive rested, not running on empty.","essential":true,"cos":"COS added · from your 7 PM"}],"deferred":["..."],"note":"..."}',
   ].join("\n");
 
   const user = `Here is my brain-dump for today:\n\n${dump}`;
@@ -211,7 +262,17 @@ function normalize(
           const steps = Array.isArray(o.steps)
             ? o.steps.slice(0, 6).map((s) => String(s).trim().slice(0, 160)).filter(Boolean).map((tx) => ({ text: tx, done: false }))
             : [];
-          return { id: todoId(), text, done: false, createdAt: Date.now(), steps: steps.length ? steps : undefined };
+          return {
+            id: todoId(),
+            text,
+            done: false,
+            createdAt: Date.now(),
+            steps: steps.length ? steps : undefined,
+            when: trimOpt(o.when, 40),
+            hint: trimOpt(o.hint, 160),
+            essential: o.essential === true ? true : undefined,
+            cos: trimOpt(o.cos, 80),
+          };
         })
         .filter((t): t is TodoItem => t !== null)
     : [];
@@ -224,7 +285,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method === "GET") {
       const plan = await kvGet<DayPlan>(planKey());
-      return res.status(200).json({ plan: plan ?? null });
+      // Offer yesterday's unfinished work back, unless they've already answered today.
+      const carryover = plan?.carryDone ? [] : await loadCarryover();
+      return res.status(200).json({ plan: plan ?? null, carryover });
     }
 
     if (req.method === "DELETE") {
@@ -242,19 +305,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         blocks?: unknown;
         todos?: unknown;
         notes?: unknown;
+        journal?: unknown;
+        carryDone?: unknown;
       };
 
-      // Patch to-dos and/or the day's notes — no AI. Creates a bare plan if none
-      // exists yet, so the to-do list and notes work even before a brain-dump.
+      // Patch to-dos, journal, notes, and/or the carry-over flag — no AI. Creates a
+      // bare plan if none exists yet, so these work even before a brain-dump.
       const hasTodos = Array.isArray(body.todos);
       const hasNotes = typeof body.notes === "string";
-      if ((hasTodos || hasNotes) && !body.dump) {
+      const hasJournal = Array.isArray(body.journal);
+      const hasCarry = typeof body.carryDone === "boolean";
+      if ((hasTodos || hasNotes || hasJournal || hasCarry) && !body.dump) {
         const existing = await kvGet<DayPlan>(planKey());
         const base: DayPlan = existing ?? { dump: "", blocks: [], deferred: [], createdAt: Date.now() };
         const updated: DayPlan = {
           ...base,
           ...(hasTodos ? { todos: sanitizeTodos(body.todos) } : {}),
           ...(hasNotes ? { notes: String(body.notes).slice(0, 4000) } : {}),
+          ...(hasJournal ? { journal: sanitizeJournal(body.journal) } : {}),
+          ...(hasCarry ? { carryDone: body.carryDone === true } : {}),
         };
         await kvSet(planKey(), updated);
         return res.status(200).json({ plan: updated });
@@ -299,12 +368,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         const { blocks, deferred, intention, note, todos } = normalize(parsePlanJSON(answer), roomIds);
         if (!blocks.length) throw new Error("no blocks");
-        // Keep any to-dos the user already checked off today, so a rebuild doesn't wipe progress.
-        const prior = (await kvGet<DayPlan>(planKey()))?.todos ?? [];
-        const keptDone = prior.filter((t) => t.done);
-        const seen = new Set(keptDone.map((t) => t.text.toLowerCase()));
-        const merged = [...keptDone, ...todos.filter((t) => !seen.has(t.text.toLowerCase()))];
-        plan = { dump, blocks, deferred, intention, note, todos: merged, createdAt: Date.now() };
+        // Preserve every to-do the user already has (checked-off progress, carried-over
+        // items, hand-added tasks, things parked for tomorrow) — a rebuild only ADDS the
+        // new AI items whose text isn't already on the list. Carry journal + carry flag too.
+        const existing = await kvGet<DayPlan>(planKey());
+        const prior = existing?.todos ?? [];
+        const seen = new Set(prior.map((t) => t.text.toLowerCase()));
+        const merged = [...prior, ...todos.filter((t) => !seen.has(t.text.toLowerCase()))];
+        plan = {
+          dump,
+          blocks,
+          deferred,
+          intention,
+          note,
+          todos: merged,
+          journal: existing?.journal,
+          carryDone: existing?.carryDone,
+          createdAt: Date.now(),
+        };
       } catch {
         return res.status(502).json({ error: "Couldn't build a clean schedule from that — try again." });
       }

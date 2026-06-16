@@ -39,6 +39,18 @@ export interface TodoItem {
   createdAt: number;
   /** Small step-by-step breakdown — present only when the task warrants it. */
   steps?: TodoStep[];
+  /** Rough time-of-day label ("Morning", "Before 11:30") — surfaced in "lighter" mode. */
+  when?: string;
+  /** One gentle nudge about the task — surfaced in "lighter" mode. */
+  hint?: string;
+  /** One of the day's truest must-dos — survives the "make it lighter" filter. */
+  essential?: boolean;
+  /** When COS added this itself, the short reason tag (e.g. "COS added · from your 7 PM with John"). */
+  cos?: string;
+  /** Parked for tomorrow — hidden from today's list, lands in the "Move to tomorrow" pane. */
+  tomorrow?: boolean;
+  /** Carried in from yesterday's unfinished list — shows a "From yesterday" tag. */
+  carried?: boolean;
 }
 
 /** Today's AI-built plan, persisted per day. */
@@ -51,8 +63,12 @@ export interface DayPlan {
   note?: string;
   /** Check-off tasks (right pane): seeded from the dump, plus your own. */
   todos?: TodoItem[];
-  /** Freeform scratchpad for the day. */
+  /** Freeform scratchpad for the day (legacy single note). */
   notes?: string;
+  /** The day's saved journal entries (Notes tab), newest first. */
+  journal?: Note[];
+  /** True once the user has answered yesterday's carry-over prompt. */
+  carryDone?: boolean;
   createdAt: number;
 }
 

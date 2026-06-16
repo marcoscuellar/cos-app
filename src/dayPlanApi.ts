@@ -1,4 +1,4 @@
-import type { DayPlan, PlannedBlock, TodoItem } from "./types";
+import type { DayPlan, Note, PlannedBlock, TodoItem } from "./types";
 import { IS_DEMO } from "./session";
 
 // Client for /api/plan-day. The planner returns today's full DayPlan (or null
@@ -8,15 +8,21 @@ import { IS_DEMO } from "./session";
 
 const DEMO_BLOCKED = "This is a read-only demo — building a day is off here.";
 
-export async function loadPlan(): Promise<DayPlan | null> {
-  if (IS_DEMO) return null;
+export interface LoadedDay {
+  plan: DayPlan | null;
+  /** Yesterday's still-open to-dos, offered back as "From yesterday". */
+  carryover: TodoItem[];
+}
+
+export async function loadDay(): Promise<LoadedDay> {
+  if (IS_DEMO) return { plan: null, carryover: [] };
   try {
     const r = await fetch("/api/plan-day");
-    if (!r.ok) return null;
-    const { plan } = (await r.json()) as { plan?: DayPlan | null };
-    return plan ?? null;
+    if (!r.ok) return { plan: null, carryover: [] };
+    const { plan, carryover } = (await r.json()) as { plan?: DayPlan | null; carryover?: TodoItem[] };
+    return { plan: plan ?? null, carryover: carryover ?? [] };
   } catch {
-    return null;
+    return { plan: null, carryover: [] };
   }
 }
 
@@ -78,8 +84,8 @@ export async function saveBlocks(blocks: PlannedBlock[]): Promise<DayPlan | null
   }
 }
 
-/** Patch today's to-dos and/or notes (no AI). Works even before a brain-dump. */
-export async function patchPlan(patch: { todos?: TodoItem[]; notes?: string }): Promise<DayPlan | null> {
+/** Patch today's to-dos, journal, notes, and/or carry-over flag (no AI). Works even before a brain-dump. */
+export async function patchPlan(patch: { todos?: TodoItem[]; notes?: string; journal?: Note[]; carryDone?: boolean }): Promise<DayPlan | null> {
   if (IS_DEMO) return null;
   try {
     const r = await fetch("/api/plan-day", {
