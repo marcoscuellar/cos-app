@@ -338,9 +338,9 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .pg .pj-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:40px}
 .pg .card{border:1px solid var(--card-line);border-radius:4px;padding:28px 30px 24px;background:#ffffff;
   display:flex;flex-direction:column;text-align:left;width:100%;font:inherit;color:inherit;cursor:pointer;
-  box-shadow:0 6px 16px -12px rgba(60,50,20,.34);
+  box-shadow:0 14px 32px -16px rgba(60,50,20,.42), 0 4px 10px -6px rgba(60,50,20,.18);
   transition:border-color .15s,box-shadow .15s,transform .15s}
-.pg .card:hover{border-color:#d8cfb8;box-shadow:0 16px 36px -20px rgba(60,50,20,.5);transform:translateY(-2px)}
+.pg .card:hover{border-color:#d8cfb8;box-shadow:0 26px 54px -20px rgba(60,50,20,.55), 0 8px 18px -10px rgba(60,50,20,.22);transform:translateY(-3px)}
 .pg .card-top{display:flex;justify-content:space-between;align-items:center}
 .pg .card-num{font-family:var(--mono);font-size:15px;letter-spacing:.1em;color:var(--gold)}
 .pg .badge{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;white-space:nowrap}
