@@ -1655,3 +1655,44 @@ input,textarea,select{border-radius:0!important}
 .ed-row-x:hover{color:#b4452f}
 .ed-add{align-self:flex-start;margin-top:2px;font-family:var(--disp);font-weight:600;font-size:13.5px;color:var(--gold);background:transparent;border:0;cursor:pointer;padding:4px 0}
 .ed-system{font-family:var(--mono);font-size:13px;line-height:1.5}
+
+/* ── Today redesign — project-room layout (schedule · to-do · finished · notes) ── */
+.pg .tdy-room{margin-top:34px}
+/* left: schedule inside the dark cover */
+.pg .tdy-sched{display:flex;flex-direction:column;margin-top:26px;border-top:1px solid rgba(236,231,218,.14)}
+.pg .tdy-srow{display:grid;grid-template-columns:104px 1fr;gap:16px;align-items:baseline;padding:13px 0;border-bottom:1px solid rgba(236,231,218,.1)}
+.pg .tdy-srow.is-now{box-shadow:inset 3px 0 0 var(--gold-bright);padding-left:12px;margin-left:-12px}
+.pg .tdy-time{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--gold-bright);display:flex;flex-direction:column;gap:2px}
+.pg .tdy-time i{font-style:normal;font-size:11px;color:rgba(236,231,218,.4)}
+.pg .tdy-stitle{font-family:var(--disp);font-weight:700;font-size:18px;line-height:1.25;color:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.pg .tdy-now{font-family:var(--mono);font-style:normal;font-size:9px;letter-spacing:.14em;color:#14271d;background:var(--gold-bright);border-radius:999px;padding:2px 7px}
+.pg .tdy-proj{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:rgba(236,231,218,.55);background:transparent;border:0;cursor:pointer;padding:0}
+.pg .tdy-proj:hover{color:var(--gold-bright)}
+.pg .tdy-sched-empty{margin-top:26px;color:rgba(236,231,218,.5);font-size:15px;line-height:1.5}
+.pg .tdy-note{margin-top:22px;font-family:var(--serif);font-style:italic;font-size:16px;line-height:1.5;color:rgba(236,231,218,.72)}
+/* right: to-do / finished / notes */
+.pg .tdy-pane{margin-top:26px}
+.pg .tdy-add{display:flex;gap:10px;margin-bottom:20px}
+.pg .tdy-add-input{flex:1;font-family:var(--disp);font-size:16px;color:var(--ink);background:#fff;border:1px solid var(--card-line);border-radius:10px;padding:13px 16px;outline:none}
+.pg .tdy-add-input:focus{border-color:var(--gold-bright)}
+.pg .tdy-add-btn{flex:0 0 48px;font-size:22px;line-height:1;color:#fff;background:var(--ink);border:0;border-radius:10px;cursor:pointer}
+.pg .tdy-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.pg .tdy-todo{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--card-line);border-radius:10px;padding:15px 16px;box-shadow:0 6px 16px -12px rgba(60,50,20,.34)}
+.pg .tdy-check{flex:0 0 22px;width:22px;height:22px;border-radius:50%;border:2px solid var(--ink-4);background:transparent;cursor:pointer;display:grid;place-items:center;font-size:13px;color:#14271d;transition:border-color .15s,background .15s}
+.pg .tdy-check:hover{border-color:var(--gold-bright)}
+.pg .tdy-check.on{background:var(--gold-bright);border-color:var(--gold-bright)}
+.pg .tdy-todo-txt{flex:1;font-family:var(--disp);font-weight:600;font-size:17px;color:var(--ink);min-width:0}
+.pg .tdy-todo.is-done .tdy-todo-txt{color:var(--ink-4);text-decoration:line-through}
+.pg .tdy-todo-x{flex:0 0 auto;font-size:20px;line-height:1;color:var(--ink-5);background:transparent;border:0;cursor:pointer;padding:2px 6px}
+.pg .tdy-todo-x:hover{color:#b4452f}
+.pg .tdy-empty{margin-top:8px;color:var(--muted);font-size:15.5px;line-height:1.5}
+.pg .tdy-progress{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.pg .tdy-progress-k{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--muted);white-space:nowrap}
+.pg .tdy-bar{flex:1;height:6px;border-radius:999px;background:var(--line-2);overflow:hidden}
+.pg .tdy-bar i{display:block;height:100%;background:var(--gold-bright);border-radius:999px;transition:width .3s ease}
+.pg .tdy-notes{width:100%;min-height:340px;resize:vertical;font-family:var(--disp);font-size:16px;line-height:1.6;color:var(--ink);background:#fff;border:1px solid var(--card-line);border-radius:12px;padding:20px;outline:none}
+.pg .tdy-notes:focus{border-color:var(--gold-bright)}
+/* launchpad strip below the room */
+.pg .tdy-launch{margin-top:46px}
+.pg .tdy-launch-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:14px;margin-top:16px}
+@media(max-width:980px){.pg .tdy-launch-grid{grid-template-columns:repeat(4,1fr)}}

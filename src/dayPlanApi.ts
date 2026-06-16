@@ -1,4 +1,4 @@
-import type { DayPlan, PlannedBlock } from "./types";
+import type { DayPlan, PlannedBlock, TodoItem } from "./types";
 import { IS_DEMO } from "./session";
 
 // Client for /api/plan-day. The planner returns today's full DayPlan (or null
@@ -69,6 +69,24 @@ export async function saveBlocks(blocks: PlannedBlock[]): Promise<DayPlan | null
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ blocks }),
+    });
+    if (!r.ok) return null;
+    const { plan } = (await r.json()) as { plan?: DayPlan | null };
+    return plan ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Patch today's to-dos and/or notes (no AI). Works even before a brain-dump. */
+export async function patchPlan(patch: { todos?: TodoItem[]; notes?: string }): Promise<DayPlan | null> {
+  if (IS_DEMO) return null;
+  try {
+    const r = await fetch("/api/plan-day", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(patch),
+      keepalive: true,
     });
     if (!r.ok) return null;
     const { plan } = (await r.json()) as { plan?: DayPlan | null };

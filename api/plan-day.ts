@@ -49,12 +49,40 @@ function sanitizeBlocks(raw: unknown): PlannedBlock[] {
     })
     .filter((b) => b.title && b.start);
 }
+interface TodoItem {
+  id: string;
+  text: string;
+  done: boolean;
+  createdAt: number;
+}
+
+const todoId = () => `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+
+// Accept a client-edited to-dos array (add / check off / restore / delete).
+function sanitizeTodos(raw: unknown): TodoItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .slice(0, 120)
+    .map((t): TodoItem => {
+      const o = (t ?? {}) as Record<string, unknown>;
+      return {
+        id: typeof o.id === "string" && o.id ? o.id.slice(0, 40) : todoId(),
+        text: String(o.text ?? "").slice(0, 200),
+        done: o.done === true,
+        createdAt: typeof o.createdAt === "number" ? o.createdAt : Date.now(),
+      };
+    })
+    .filter((t) => t.text.trim());
+}
+
 interface DayPlan {
   dump: string;
   blocks: PlannedBlock[];
   deferred: string[];
   intention?: string;
   note?: string;
+  todos?: TodoItem[];
+  notes?: string;
   createdAt: number;
 }
 
@@ -97,33 +125,34 @@ function buildPrompt(
     "- Titles short and concrete. `walkIn` is an optional ≤8-word gentle cue to start the block.",
     "- `kind` is one of: ritual, focus, meeting, break, admin, errand, meal.",
     "- `intention` is the ONE directive line for the day, in the user's own voice — short, punchy, specific to their dump (≤14 words). Example: \"Protect the GLVE morning. Everything else can wait.\" Name what matters most; make it motivating, not generic.",
+    "- `todos` is a flat list of concrete action items the user needs to DO and check off (e.g. \"Call finance\", \"Ship the engine editor\", \"Email Dana\"). Pull EVERY actionable task from the dump here — even ones you also placed as a scheduled block. Each ≤10 words, imperative, no times.",
     "- `note` is ONE warm, encouraging sentence about the day (no lists).",
     "",
     "Rooms you may tie blocks to (use the id):",
     roomList,
     "",
     "Respond with ONLY valid JSON, no prose, no code fences, in exactly this shape:",
-    '{"intention":"...","blocks":[{"start":"7:00 AM","end":"7:45 AM","title":"...","kind":"focus","proj":"glve","walkIn":"..."}],"deferred":["..."],"note":"..."}',
+    '{"intention":"...","blocks":[{"start":"7:00 AM","end":"7:45 AM","title":"...","kind":"focus","proj":"glve","walkIn":"..."}],"todos":["Call finance","Ship the engine editor"],"deferred":["..."],"note":"..."}',
   ].join("\n");
 
   const user = `Here is my brain-dump for today:\n\n${dump}`;
   return { system, user };
 }
 
-function parsePlanJSON(text: string): { blocks?: unknown; deferred?: unknown; intention?: unknown; note?: unknown } {
+function parsePlanJSON(text: string): { blocks?: unknown; deferred?: unknown; intention?: unknown; note?: unknown; todos?: unknown } {
   let t = text.trim();
   const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fence) t = fence[1].trim();
   const start = t.indexOf("{");
   const end = t.lastIndexOf("}");
   if (start >= 0 && end > start) t = t.slice(start, end + 1);
-  return JSON.parse(t) as { blocks?: unknown; deferred?: unknown; intention?: unknown; note?: unknown };
+  return JSON.parse(t) as { blocks?: unknown; deferred?: unknown; intention?: unknown; note?: unknown; todos?: unknown };
 }
 
 function normalize(
-  parsed: { blocks?: unknown; deferred?: unknown; intention?: unknown; note?: unknown },
+  parsed: { blocks?: unknown; deferred?: unknown; intention?: unknown; note?: unknown; todos?: unknown },
   roomIds: Set<string>,
-): { blocks: PlannedBlock[]; deferred: string[]; intention?: string; note?: string } {
+): { blocks: PlannedBlock[]; deferred: string[]; intention?: string; note?: string; todos: TodoItem[] } {
   const rawBlocks = Array.isArray(parsed.blocks) ? parsed.blocks : [];
   const blocks: PlannedBlock[] = rawBlocks
     .slice(0, 40)
@@ -148,7 +177,14 @@ function normalize(
   const note = typeof parsed.note === "string" && parsed.note.trim() ? parsed.note.trim().slice(0, 300) : undefined;
   const intention =
     typeof parsed.intention === "string" && parsed.intention.trim() ? parsed.intention.trim().slice(0, 200) : undefined;
-  return { blocks, deferred, intention, note };
+  const todos: TodoItem[] = Array.isArray(parsed.todos)
+    ? parsed.todos
+        .slice(0, 40)
+        .map((d) => String(d).trim().slice(0, 200))
+        .filter(Boolean)
+        .map((text) => ({ id: todoId(), text, done: false, createdAt: Date.now() }))
+    : [];
+  return { blocks, deferred, intention, note, todos };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -173,7 +209,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         pacing?: string;
         intention?: string;
         blocks?: unknown;
+        todos?: unknown;
+        notes?: unknown;
       };
+
+      // Patch to-dos and/or the day's notes — no AI. Creates a bare plan if none
+      // exists yet, so the to-do list and notes work even before a brain-dump.
+      const hasTodos = Array.isArray(body.todos);
+      const hasNotes = typeof body.notes === "string";
+      if ((hasTodos || hasNotes) && !body.dump) {
+        const existing = await kvGet<DayPlan>(planKey());
+        const base: DayPlan = existing ?? { dump: "", blocks: [], deferred: [], createdAt: Date.now() };
+        const updated: DayPlan = {
+          ...base,
+          ...(hasTodos ? { todos: sanitizeTodos(body.todos) } : {}),
+          ...(hasNotes ? { notes: String(body.notes).slice(0, 4000) } : {}),
+        };
+        await kvSet(planKey(), updated);
+        return res.status(200).json({ plan: updated });
+      }
 
       // Edit just the intention on the existing plan — no AI needed.
       if (typeof body.intention === "string" && !body.dump) {
@@ -212,9 +266,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       let plan: DayPlan;
       try {
-        const { blocks, deferred, intention, note } = normalize(parsePlanJSON(answer), roomIds);
+        const { blocks, deferred, intention, note, todos } = normalize(parsePlanJSON(answer), roomIds);
         if (!blocks.length) throw new Error("no blocks");
-        plan = { dump, blocks, deferred, intention, note, createdAt: Date.now() };
+        // Keep any to-dos the user already checked off today, so a rebuild doesn't wipe progress.
+        const prior = (await kvGet<DayPlan>(planKey()))?.todos ?? [];
+        const keptDone = prior.filter((t) => t.done);
+        const seen = new Set(keptDone.map((t) => t.text.toLowerCase()));
+        const merged = [...keptDone, ...todos.filter((t) => !seen.has(t.text.toLowerCase()))];
+        plan = { dump, blocks, deferred, intention, note, todos: merged, createdAt: Date.now() };
       } catch {
         return res.status(502).json({ error: "Couldn't build a clean schedule from that — try again." });
       }

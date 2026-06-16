@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { COS_DATA } from "../data";
 import { Scaffold, Header, Mic, ArrowR, headerDate } from "../components/CosScaffold";
-import type { DayPlan } from "../types";
-import { loadPlan, buildPlan } from "../dayPlanApi";
+import type { DayPlan, TodoItem } from "../types";
+import { loadPlan, buildPlan, patchPlan } from "../dayPlanApi";
+import { IS_DEMO } from "../session";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Calendar — the day planner (redesign · page 04). Only ever shows today.
@@ -114,9 +115,36 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
   const [dump, setDump] = useState("");
   const [building, setBuilding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<"todo" | "done" | "notes">("todo");
+  const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [notes, setNotes] = useState("");
+  const [newTodo, setNewTodo] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => { loadPlan().then((p) => { if (p) setPlan(p); }); }, []);
+  // Pull a plan's to-dos + notes into local state (after load and after a build).
+  const hydrate = (p: DayPlan) => { setTodos(p.todos ?? []); setNotes(p.notes ?? ""); };
+  useEffect(() => { loadPlan().then((p) => { if (p) { setPlan(p); hydrate(p); } }); }, []);
+
+  // To-dos persist to the day plan; update optimistically, then save.
+  const persistTodos = (next: TodoItem[]) => { setTodos(next); patchPlan({ todos: next }); };
+  const addTodo = () => {
+    const t = newTodo.trim();
+    if (!t) return;
+    persistTodos([...todos, { id: `t_${Date.now().toString(36)}`, text: t, done: false, createdAt: Date.now() }]);
+    setNewTodo("");
+  };
+  const toggleTodo = (id: string) => persistTodos(todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+  const removeTodo = (id: string) => persistTodos(todos.filter((t) => t.id !== id));
+  const onNotes = (v: string) => {
+    setNotes(v);
+    if (notesTimer.current) clearTimeout(notesTimer.current);
+    notesTimer.current = setTimeout(() => patchPlan({ notes: v }), 600);
+  };
+
+  const openTodos = todos.filter((t) => !t.done);
+  const doneTodos = todos.filter((t) => t.done);
+  const donePct = todos.length ? Math.round((doneTodos.length / todos.length) * 100) : 0;
 
   const runBuild = async (text: string) => {
     const t = text.trim();
@@ -126,7 +154,7 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
     const rooms = D.projects.map((p) => ({ id: p.id, name: p.name }));
     const { plan: next, error: err } = await buildPlan({ dump: t, rooms, hours: DEFAULT_HOURS, pacing: DEFAULT_PACING });
     setBuilding(false);
-    if (next) { setPlan(next); setDump(""); }
+    if (next) { setPlan(next); hydrate(next); setDump(""); }
     else setError(err || "Couldn't build your day — try again.");
   };
   const submit = () => runBuild(dump);
@@ -189,59 +217,137 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
             <button className="cos-mic" tabIndex={-1} aria-label="Voice"><Mic /></button>
             <button className="cos-send" onClick={submit} aria-label="Build my day"><ArrowR s={19} /></button>
           </div>
-          <div className="caldump-foot">
-            <p className="caldump-help">
-              {building ? "Building your day — focused sprints, real breaks, overflow deferred…"
-                : error ? error
-                : "Messy is fine. COS plans gently and never crams. ↵ to build."}
-            </p>
-            <button className="cal-export" onClick={downloadDay} disabled={!blocks.length} title="Download .ics — opens in Apple or Google Calendar">
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></svg>
-              Add to calendar
-            </button>
-          </div>
+          <p className="caldump-help">
+            {building ? "Building your day — focused sprints, real breaks, overflow deferred…"
+              : error ? error
+              : "Messy is fine. COS plans gently, builds your schedule, and pulls out your to-dos. ↵ to build."}
+          </p>
         </div>
 
-        <div className="cal2">
-          <div className="tl">
-            {blocks.map((b, i) => {
-              const p = b.proj ? projOf(b.proj) : null;
-              const tagk = b.kind === "meeting" ? "meeting" : b.kind === "ritual" ? "ritual" : "focus";
-              return (
-                <div className={"tl-row" + (i === nowIdx ? " is-now" : "")} key={b.id ?? i}>
-                  <div className="tl-time">
-                    <span className="tl-start">{b.start}</span>
-                    <span className="tl-end">{b.end}</span>
-                    {i === nowIdx && <span className="tl-now">NOW</span>}
-                  </div>
-                  <div className="tl-body">
-                    <div className="tl-cardtop">
-                      <span className={"ttag ttag-" + tagk}>{b.kind.toUpperCase()}</span>
-                      {b.who && <span className="tl-meta">with {b.who}</span>}
-                      {p && <span className="tl-proj"><i className="bdot" style={{ background: "var(--gold-bright)" }} />{p.name}</span>}
-                    </div>
-                    <h3 className="tl-title">{b.title}</h3>
-                    {b.walkIn && <p className="tl-walk"><span className="tl-walk-k">WALK IN WITH</span> {b.walkIn}</p>}
-                    {p && <button className="tl-enter" onClick={() => onProject(p.id)}>Enter {p.name} <ArrowR s={15} /></button>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <aside className="lp">
-            <span className="lp-k">LAUNCHPAD</span>
-            <div className="lp-grid">
-              {LP_APPS.map(([name, ico, url]) => (
-                <a className="lp-tile" key={name} href={url} target="_blank" rel="noopener noreferrer">
-                  <span className="lp-ico">
-                    <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="#faf9f5" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d={LP_ICONS[ico]} /></svg>
-                  </span>
-                  <span className="lp-label">{name}</span>
-                </a>
-              ))}
+        <div className="room tdy-room">
+          {/* LEFT — today's schedule (static reference) */}
+          <aside className="room-cover">
+            <div className="rc-top">
+              <button className="rc-chip" onClick={() => onNav("home")}>COS</button>
+              <div className="rc-top-r">
+                <span className="rc-room"><i className="bdot" style={{ background: "var(--gold-bright)" }} />{weekday} · Today</span>
+                <span className="rc-cos">CONTEXT OPERATING SYSTEM</span>
+              </div>
             </div>
+            <span className="hd-tick rc-tick" />
+            <span className="rc-eyebrow">TODAY'S SCHEDULE</span>
+            <h1 className="rc-title">TODAY</h1>
+            {plan?.intention && <p className="rc-desc">{plan.intention}</p>}
+
+            <div className="tdy-sched">
+              {blocks.length ? (
+                blocks.map((b, i) => {
+                  const p = b.proj ? projOf(b.proj) : null;
+                  return (
+                    <div className={"tdy-srow" + (i === nowIdx ? " is-now" : "")} key={b.id ?? i}>
+                      <span className="tdy-time">{b.start}{b.end && <i>{b.end}</i>}</span>
+                      <span className="tdy-stitle">
+                        {b.title}
+                        {p && <button className="tdy-proj" onClick={() => onProject(p.id)}>{p.name} →</button>}
+                        {i === nowIdx && <em className="tdy-now">NOW</em>}
+                      </span>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="tdy-sched-empty">Brain-dump your day above — COS builds the schedule here.</p>
+              )}
+            </div>
+
+            {plan?.note && <p className="tdy-note">{plan.note}</p>}
+
+            {!!blocks.length && (
+              <div className="rc-btns">
+                <button className="rc-tidy" onClick={downloadDay}>Add to calendar</button>
+              </div>
+            )}
           </aside>
+
+          {/* RIGHT — To Do / Finished / Notes */}
+          <section className="room-ctx">
+            <div className="ctx-tabs">
+              <button className={"tab" + (tab === "todo" ? " is-on" : "")} onClick={() => setTab("todo")}>To Do <sup>{openTodos.length}</sup></button>
+              <button className={"tab" + (tab === "done" ? " is-on" : "")} onClick={() => setTab("done")}>Finished <sup>{doneTodos.length}</sup></button>
+              <button className={"tab" + (tab === "notes" ? " is-on" : "")} onClick={() => setTab("notes")}>Notes</button>
+            </div>
+
+            {tab === "todo" && (
+              <div className="tdy-pane">
+                {!IS_DEMO && (
+                  <form className="tdy-add" onSubmit={(e) => { e.preventDefault(); addTodo(); }}>
+                    <input className="tdy-add-input" value={newTodo} placeholder="Add a task…" onChange={(e) => setNewTodo(e.target.value)} />
+                    <button className="tdy-add-btn" type="submit" aria-label="Add task">＋</button>
+                  </form>
+                )}
+                {openTodos.length ? (
+                  <ul className="tdy-list">
+                    {openTodos.map((t) => (
+                      <li key={t.id} className="tdy-todo">
+                        <button className="tdy-check" onClick={() => toggleTodo(t.id)} aria-label="Mark done" />
+                        <span className="tdy-todo-txt">{t.text}</span>
+                        {!IS_DEMO && <button className="tdy-todo-x" onClick={() => removeTodo(t.id)} aria-label="Delete">×</button>}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="tdy-empty">All clear. Brain-dump to seed tasks, or add your own above.</p>
+                )}
+              </div>
+            )}
+
+            {tab === "done" && (
+              <div className="tdy-pane">
+                <div className="tdy-progress">
+                  <span className="tdy-progress-k">{doneTodos.length} of {todos.length} done</span>
+                  <span className="tdy-bar"><i style={{ width: donePct + "%" }} /></span>
+                </div>
+                {doneTodos.length ? (
+                  <ul className="tdy-list">
+                    {doneTodos.map((t) => (
+                      <li key={t.id} className="tdy-todo is-done">
+                        <button className="tdy-check on" onClick={() => toggleTodo(t.id)} aria-label="Restore">✓</button>
+                        <span className="tdy-todo-txt">{t.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="tdy-empty">Nothing finished yet — tap a task's circle when you're done.</p>
+                )}
+              </div>
+            )}
+
+            {tab === "notes" && (
+              <div className="tdy-pane">
+                <textarea
+                  className="tdy-notes"
+                  value={notes}
+                  disabled={IS_DEMO}
+                  placeholder="Notes for the day — anything you want to remember…"
+                  onChange={(e) => onNotes(e.target.value)}
+                  onBlur={() => patchPlan({ notes })}
+                />
+              </div>
+            )}
+          </section>
+        </div>
+
+        <div className="tdy-launch">
+          <span className="lp-k">LAUNCHPAD</span>
+          <div className="tdy-launch-grid">
+            {LP_APPS.map(([name, ico, url]) => (
+              <a className="lp-tile" key={name} href={url} target="_blank" rel="noopener noreferrer">
+                <span className="lp-ico">
+                  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d={LP_ICONS[ico]} /></svg>
+                </span>
+                <span className="lp-label">{name}</span>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </Scaffold>

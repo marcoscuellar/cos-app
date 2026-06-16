@@ -25,6 +25,14 @@ export interface PlannedBlock {
   done?: boolean;
 }
 
+/** A single check-off task for the day (seeded from the brain-dump + added by hand). */
+export interface TodoItem {
+  id: string;
+  text: string;
+  done: boolean;
+  createdAt: number;
+}
+
 /** Today's AI-built plan, persisted per day. */
 export interface DayPlan {
   dump: string;
@@ -33,6 +41,10 @@ export interface DayPlan {
   /** The one directive line for the day — shown in the black box, editable. */
   intention?: string;
   note?: string;
+  /** Check-off tasks (right pane): seeded from the dump, plus your own. */
+  todos?: TodoItem[];
+  /** Freeform scratchpad for the day. */
+  notes?: string;
   createdAt: number;
 }
 
