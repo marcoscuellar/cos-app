@@ -1,7 +1,7 @@
-# Handoff: COS — Context Operating System
+# Handoff: COS — Cognitive Operating System
 
 ## Overview
-COS ("Context Operating System") is a calm, editorial personal-continuity app. Its single job is **re-entry**: letting someone return to any project, idea, or day after any gap and resume in seconds — without reconstructing where they were. The north star is *"continue where you left off."* It is **not** a task manager, wiki, or note pile; it is a continuity layer that holds the state of your work between sessions.
+COS ("Cognitive Operating System") is a calm, editorial personal-continuity app. Its single job is **re-entry**: letting someone return to any project, idea, or day after any gap and resume in seconds — without reconstructing where they were. The north star is *"continue where you left off."* It is **not** a task manager, wiki, or note pile; it is a continuity layer that holds the state of your work between sessions.
 
 The product is built around six user-facing surfaces: **Now (Home)**, **Today (calendar)**, **Projects + Project detail**, **Ideas Brewing + Idea detail**, **Memory (search)**, plus a **Re-entry overlay**, a per-project **Brainstorm with COS** drawer (live AI), and a **Login**.
 

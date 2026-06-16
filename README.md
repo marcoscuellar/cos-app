@@ -1,4 +1,4 @@
-# COS — Context Operating System
+# COS — Cognitive Operating System
 
 A calm, editorial personal-continuity app. Its single job is **re-entry**: letting
 you return to any project, idea, or day after any gap and resume in seconds —

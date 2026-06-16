@@ -283,7 +283,7 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
   }
 
   const now = new Date();
-  const weekday = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long" }).format(now);
+  const dateLabel = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long", month: "long", day: "numeric" }).format(now);
 
   const downloadDay = () => {
     if (!blocks.length) return;
@@ -359,12 +359,12 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
             <div className="rc-top">
               <button className="rc-chip" onClick={() => onNav("home")}>COS</button>
               <div className="rc-top-r">
-                <span className="rc-room"><i className="bdot" />{weekday} · Today</span>
-                <span className="rc-cos">Context Operating System</span>
+                <span className="rc-room"><i className="bdot" />{dateLabel}</span>
+                <span className="rc-cos">Cognitive Operating System</span>
               </div>
             </div>
             <span className="rc-tick" />
-            <span className="rc-eyebrow">Today's schedule</span>
+            <span className="rc-eyebrow">Today's your day</span>
             <h2 className="rc-title">TODAY</h2>
             {plan?.intention && <p className="rc-desc">{plan.intention}</p>}
 
@@ -458,7 +458,7 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
             {/* TO DO */}
             <div className={"pane" + (tab === "todo" ? " is-on" : "")}>
               <div className="pane-top">
-                <span className="pane-eyebrow">Today's to-dos</span>
+                <span className="pane-eyebrow">Your to-dos</span>
                 <button className={"lighter-link" + (lighter ? " on" : "")} onClick={() => setLighter((l) => !l)}>
                   {lighter ? "Show the full day" : "Too much? Make it lighter"}
                 </button>
