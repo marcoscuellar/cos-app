@@ -25,12 +25,20 @@ export interface PlannedBlock {
   done?: boolean;
 }
 
+/** An optional sub-step under a task — COS adds these when a task is hard to start. */
+export interface TodoStep {
+  text: string;
+  done: boolean;
+}
+
 /** A single check-off task for the day (seeded from the brain-dump + added by hand). */
 export interface TodoItem {
   id: string;
   text: string;
   done: boolean;
   createdAt: number;
+  /** Small step-by-step breakdown — present only when the task warrants it. */
+  steps?: TodoStep[];
 }
 
 /** Today's AI-built plan, persisted per day. */

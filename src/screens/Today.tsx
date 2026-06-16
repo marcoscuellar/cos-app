@@ -115,7 +115,7 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
   const [dump, setDump] = useState("");
   const [building, setBuilding] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<"todo" | "done" | "notes">("todo");
+  const [tab, setTab] = useState<"todo" | "done" | "notes" | "launch">("todo");
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [notes, setNotes] = useState("");
   const [newTodo, setNewTodo] = useState("");
@@ -136,6 +136,12 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
   };
   const toggleTodo = (id: string) => persistTodos(todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
   const removeTodo = (id: string) => persistTodos(todos.filter((t) => t.id !== id));
+  const toggleStep = (id: string, idx: number) =>
+    persistTodos(
+      todos.map((t) =>
+        t.id === id ? { ...t, steps: t.steps?.map((s, i) => (i === idx ? { ...s, done: !s.done } : s)) } : t,
+      ),
+    );
   const onNotes = (v: string) => {
     setNotes(v);
     if (notesTimer.current) clearTimeout(notesTimer.current);
@@ -274,6 +280,7 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
               <button className={"tab" + (tab === "todo" ? " is-on" : "")} onClick={() => setTab("todo")}>To Do <sup>{openTodos.length}</sup></button>
               <button className={"tab" + (tab === "done" ? " is-on" : "")} onClick={() => setTab("done")}>Finished <sup>{doneTodos.length}</sup></button>
               <button className={"tab" + (tab === "notes" ? " is-on" : "")} onClick={() => setTab("notes")}>Notes</button>
+              <button className={"tab" + (tab === "launch" ? " is-on" : "")} onClick={() => setTab("launch")}>Launchpad</button>
             </div>
 
             {tab === "todo" && (
@@ -289,7 +296,19 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
                     {openTodos.map((t) => (
                       <li key={t.id} className="tdy-todo">
                         <button className="tdy-check" onClick={() => toggleTodo(t.id)} aria-label="Mark done" />
-                        <span className="tdy-todo-txt">{t.text}</span>
+                        <div className="tdy-todo-main">
+                          <span className="tdy-todo-txt">{t.text}</span>
+                          {!!t.steps?.length && (
+                            <ul className="tdy-steps">
+                              {t.steps.map((s, i) => (
+                                <li key={i} className={"tdy-step" + (s.done ? " is-done" : "")}>
+                                  <button className={"tdy-step-check" + (s.done ? " on" : "")} onClick={() => toggleStep(t.id, i)} aria-label="Step done">{s.done ? "✓" : ""}</button>
+                                  <span className="tdy-step-txt">{s.text}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
                         {!IS_DEMO && <button className="tdy-todo-x" onClick={() => removeTodo(t.id)} aria-label="Delete">×</button>}
                       </li>
                     ))}
@@ -333,21 +352,22 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
                 />
               </div>
             )}
-          </section>
-        </div>
 
-        <div className="tdy-launch">
-          <span className="lp-k">LAUNCHPAD</span>
-          <div className="tdy-launch-grid">
-            {LP_APPS.map(([name, ico, url]) => (
-              <a className="lp-tile" key={name} href={url} target="_blank" rel="noopener noreferrer">
-                <span className="lp-ico">
-                  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d={LP_ICONS[ico]} /></svg>
-                </span>
-                <span className="lp-label">{name}</span>
-              </a>
-            ))}
-          </div>
+            {tab === "launch" && (
+              <div className="tdy-pane">
+                <div className="tdy-launchgrid">
+                  {LP_APPS.map(([name, ico, url]) => (
+                    <a className="lp-tile" key={name} href={url} target="_blank" rel="noopener noreferrer">
+                      <span className="lp-ico">
+                        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d={LP_ICONS[ico]} /></svg>
+                      </span>
+                      <span className="lp-label">{name}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </Scaffold>

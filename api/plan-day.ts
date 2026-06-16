@@ -49,16 +49,33 @@ function sanitizeBlocks(raw: unknown): PlannedBlock[] {
     })
     .filter((b) => b.title && b.start);
 }
+interface TodoStep {
+  text: string;
+  done: boolean;
+}
 interface TodoItem {
   id: string;
   text: string;
   done: boolean;
   createdAt: number;
+  steps?: TodoStep[];
 }
 
 const todoId = () => `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
 
-// Accept a client-edited to-dos array (add / check off / restore / delete).
+function sanitizeSteps(raw: unknown): TodoStep[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const steps = raw
+    .slice(0, 8)
+    .map((s): TodoStep => {
+      const o = (s ?? {}) as Record<string, unknown>;
+      return { text: String(o.text ?? "").slice(0, 160), done: o.done === true };
+    })
+    .filter((s) => s.text.trim());
+  return steps.length ? steps : undefined;
+}
+
+// Accept a client-edited to-dos array (add / check off / restore / delete / step toggle).
 function sanitizeTodos(raw: unknown): TodoItem[] {
   if (!Array.isArray(raw)) return [];
   return raw
@@ -70,6 +87,7 @@ function sanitizeTodos(raw: unknown): TodoItem[] {
         text: String(o.text ?? "").slice(0, 200),
         done: o.done === true,
         createdAt: typeof o.createdAt === "number" ? o.createdAt : Date.now(),
+        steps: sanitizeSteps(o.steps),
       };
     })
     .filter((t) => t.text.trim());
@@ -125,14 +143,15 @@ function buildPrompt(
     "- Titles short and concrete. `walkIn` is an optional ≤8-word gentle cue to start the block.",
     "- `kind` is one of: ritual, focus, meeting, break, admin, errand, meal.",
     "- `intention` is the ONE directive line for the day, in the user's own voice — short, punchy, specific to their dump (≤14 words). Example: \"Protect the GLVE morning. Everything else can wait.\" Name what matters most; make it motivating, not generic.",
-    "- `todos` is a flat list of concrete action items the user needs to DO and check off (e.g. \"Call finance\", \"Ship the engine editor\", \"Email Dana\"). Pull EVERY actionable task from the dump here — even ones you also placed as a scheduled block. Each ≤10 words, imperative, no times.",
+    "- `todos` is a list of concrete action items the user needs to DO and check off. Pull EVERY actionable task from the dump here — even ones you also placed as a scheduled block. Each todo is an object: {\"text\":\"Call finance\"}. Keep `text` ≤10 words, imperative, no times.",
+    "- A todo MAY include `steps` (an array of 2–5 short sub-steps) — but ONLY when a task is one people commonly avoid or struggle to START (admin, medical, financial, bureaucratic, anything draining). Default to NO steps. When the user signals difficulty with something (\"I have a hard time getting to my medical stuff\", \"ADHD moment\", \"I keep putting this off\"), DO add steps for THAT task: break it into the smallest, most concrete, do-able actions so they can check them off one at a time. Never pad — fewer, clearer steps win.",
     "- `note` is ONE warm, encouraging sentence about the day (no lists).",
     "",
     "Rooms you may tie blocks to (use the id):",
     roomList,
     "",
     "Respond with ONLY valid JSON, no prose, no code fences, in exactly this shape:",
-    '{"intention":"...","blocks":[{"start":"7:00 AM","end":"7:45 AM","title":"...","kind":"focus","proj":"glve","walkIn":"..."}],"todos":["Call finance","Ship the engine editor"],"deferred":["..."],"note":"..."}',
+    '{"intention":"...","blocks":[{"start":"7:00 AM","end":"7:45 AM","title":"...","kind":"focus","proj":"glve","walkIn":"..."}],"todos":[{"text":"Ship the engine editor"},{"text":"Submit medical forms","steps":["Find the form link in your email","Fill in sections 1–3","Attach a photo of your ID","Hit submit"]}],"deferred":["..."],"note":"..."}',
   ].join("\n");
 
   const user = `Here is my brain-dump for today:\n\n${dump}`;
@@ -180,9 +199,21 @@ function normalize(
   const todos: TodoItem[] = Array.isArray(parsed.todos)
     ? parsed.todos
         .slice(0, 40)
-        .map((d) => String(d).trim().slice(0, 200))
-        .filter(Boolean)
-        .map((text) => ({ id: todoId(), text, done: false, createdAt: Date.now() }))
+        .map((d): TodoItem | null => {
+          // Accept either a plain string or an object {text, steps?}.
+          if (typeof d === "string") {
+            const text = d.trim().slice(0, 200);
+            return text ? { id: todoId(), text, done: false, createdAt: Date.now() } : null;
+          }
+          const o = (d ?? {}) as Record<string, unknown>;
+          const text = String(o.text ?? "").trim().slice(0, 200);
+          if (!text) return null;
+          const steps = Array.isArray(o.steps)
+            ? o.steps.slice(0, 6).map((s) => String(s).trim().slice(0, 160)).filter(Boolean).map((tx) => ({ text: tx, done: false }))
+            : [];
+          return { id: todoId(), text, done: false, createdAt: Date.now(), steps: steps.length ? steps : undefined };
+        })
+        .filter((t): t is TodoItem => t !== null)
     : [];
   return { blocks, deferred, intention, note, todos };
 }
