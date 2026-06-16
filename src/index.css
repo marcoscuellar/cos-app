@@ -487,7 +487,7 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .pg .tl-body{min-width:0}
 .pg .tl-cardtop{display:flex;align-items:center;gap:13px}
 .pg .tl-time{display:flex;flex-direction:column;gap:3px;padding-top:3px}
-.pg .tl-start{font-family:var(--mono);font-weight:700;font-size:16px;letter-spacing:.02em;color:var(--ink)}
+.pg .tl-start{font-family:var(--mono);font-weight:700;font-size:18px;letter-spacing:.01em;color:var(--ink)}
 .pg .tl-end{font-family:var(--mono);font-size:13px;color:var(--faint)}
 .pg .tl-now{margin-top:7px;align-self:flex-start;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:#fff;background:var(--gold-bright);border-radius:999px;padding:3px 8px}
 .pg .ttag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;border-radius:999px;padding:6px 13px;white-space:nowrap}
@@ -496,7 +496,7 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
 .pg .ttag-meeting{background:#eef2f7;border:1px solid #cdd8e6;color:#5a6b82}
 .pg .tl-meta{font-family:var(--disp);font-size:15px;color:var(--muted)}
 .pg .tl-proj{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:600;font-size:14px;color:var(--ink-2);white-space:nowrap}
-.pg .tl-title{font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:-0.02em;color:var(--ink);margin-top:11px}
+.pg .tl-title{font-family:var(--disp);font-weight:800;font-size:31px;line-height:1.04;letter-spacing:-0.035em;color:var(--ink);margin-top:12px}
 .pg .tl-walk{font-size:15.5px;line-height:1.5;color:var(--muted);margin-top:9px;max-width:56ch}
 .pg .tl-walk-k{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;color:var(--gold)}
 .pg .tl-enter{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:600;font-size:15px;color:var(--gold);margin-top:13px;white-space:nowrap;background:transparent;border:0;cursor:pointer}
