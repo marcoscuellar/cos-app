@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { COS_DATA } from "../data";
-import { IS_DEMO } from "../session";
+import { IS_DEMO, OWNER_KEY } from "../session";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COS Home — the sanctuary front door (redesign · page 01 · "VariantHero").
@@ -73,7 +73,20 @@ export function HomeScreen({ onCommand, onNav }: HomeProps) {
   const [question] = useState(() => QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)]);
   const [now, setNow] = useState(() => new Date());
   const [val, setVal] = useState("");
+  const [owner, setOwner] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // The browser is the owner's if it has entered the real account before.
+  useEffect(() => {
+    try { setOwner(localStorage.getItem(OWNER_KEY) === "1"); } catch { /* ignore */ }
+  }, []);
+
+  // COS mark = re-entry point. In the demo on the owner's browser it's the door
+  // back into the real workspace; otherwise it just takes you home.
+  const reentry = () => {
+    if (IS_DEMO && owner) { window.location.href = "/app?me=1"; return; }
+    onNav("home");
+  };
 
   // Live clock — minute precision is enough, so a 20s tick keeps it honest.
   useEffect(() => {
@@ -98,7 +111,8 @@ export function HomeScreen({ onCommand, onNav }: HomeProps) {
   return (
     <div className={"cos-home " + (THEME === "light" ? "v-light" : "v-a")}>
       <div className="cos-rail">
-        <div className="cos-rail-mark">COS</div>
+        <button className="cos-rail-mark" onClick={reentry}
+          title={IS_DEMO && owner ? "Back to your workspace" : "Home"}>COS</button>
         <div className="cos-rail-av">{initial}</div>
       </div>
 
