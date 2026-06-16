@@ -1668,7 +1668,7 @@ input,textarea,select{border-radius:0!important}
   --dark:#1B2128;--dark-line:rgba(255,255,255,.10);
   --on-dark:#f3f1ea;--on-dark-2:#aab0b6;--on-dark-3:#767d84;
   --gb:#C9BA46;--gold-soft:#EDE6CC;
-  margin-top:30px;
+  margin-top:0;
 }
 
 /* the split */

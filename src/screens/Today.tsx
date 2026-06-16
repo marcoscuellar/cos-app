@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { COS_DATA } from "../data";
-import { Scaffold, Header, Mic, ArrowR, headerDate } from "../components/CosScaffold";
+import { Scaffold, Mic, ArrowR } from "../components/CosScaffold";
 import type { DayPlan, Note, TodoItem } from "../types";
 import { loadDay, buildPlan, patchPlan } from "../dayPlanApi";
 import { IS_DEMO } from "../session";
@@ -352,16 +352,6 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
 
   return (
     <Scaffold active="cal" onNav={onNav} initial={(D.user.greetingName || "M")[0]}>
-      <Header
-        eyebrow="MY DAY"
-        date={headerDate()}
-        label="TODAY"
-        title={`${weekday}.`}
-        quote="Plan the day you can actually finish."
-        author="COS"
-        sub="BRAIN-DUMP · COS BUILDS THE SCHEDULE & PULLS THE TO-DOS"
-      />
-
       <div className={rootCls}>
         <div className="room">
           {/* LEFT — dark schedule cover */}
