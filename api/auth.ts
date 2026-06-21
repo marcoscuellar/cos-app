@@ -24,7 +24,7 @@ import { kvGet, kvSet, kvDel } from "../lib/server/kv.js";
 // ─────────────────────────────────────────────────────────────────────────────
 
 // sha256 of the one-time setup code, delivered to the owner out-of-band (chat).
-const SETUP_CODE_HASH = "7ed450cbc8df08f6c7ad38bc788a696b94b0bdd0e32513754c5fe95b602aeea3";
+const SETUP_CODE_HASH = "fdb2da9675f1b906cff67d216d88585d9772467f2eb4c911750b557651837803";
 
 const OWNER_KEY = "cos-auth:owner";
 const SECRET_KEY = "cos-auth:secret";
