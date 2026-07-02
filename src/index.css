@@ -51,6 +51,26 @@
   --shadow:0 1px 2px rgba(16,16,20,.04), 0 8px 30px -16px rgba(16,16,20,.10);
   --shadow-lift:0 2px 4px rgba(16,16,20,.05), 0 24px 60px -24px rgba(16,16,20,.18);
   --sidebar-w:248px;
+
+  /* ── OLLIN BRAND TOKENS ──────────────────────────────────────────────
+     The interior speaks the same language as the Ollin landing/lock screen.
+     Green is the sanctuary surface (Doorway, Regroup); gold is THE action
+     color — exactly ONE gold CTA per screen; cream is the light working canvas. */
+  --ollin-green:#2d4a30;      /* primary surface — Doorway, Regroup */
+  --ollin-green-2:#3d5f41;
+  --ollin-green-deep:#22392a; /* cards on green */
+  --ollin-gold:#d9a441;       /* THE action color — one gold CTA per screen MAX */
+  --ollin-gold-bg:#f6edd8;
+  --ollin-cream:#faf8f3;      /* light canvas (Front Page + section pages) */
+  --ollin-ink:#2c343b;        /* text on light */
+  /* text tiers on green */
+  --on-green:#ffffff;
+  --on-green-2:#dfe6df;
+  --on-green-3:#b9c6ba;
+  --on-green-line:rgba(255,255,255,.16);
+  /* --gold was referenced across the home before it was ever defined; make it
+     the Ollin gold so the existing signature (chip dash, launch hovers) lights up. */
+  --gold:#d9a441;
 }
 
 /* MONOCHROME THEME — same treatment, accents → graphite */
@@ -752,3 +772,234 @@ select.lfield{appearance:auto;cursor:pointer;background:var(--paper);color:var(-
   background:var(--a-coral-bg);border-radius:20px;padding:2px 7px}
 .report-d{font-size:13px;color:var(--ink-3);line-height:1.5;max-width:62ch}
 .report-when{font-size:11.5px;color:var(--ink-4);font-weight:600;white-space:nowrap;flex-shrink:0;padding-top:3px}
+
+/* ============================================================
+   OLLIN — Regroup (the rescue flow) · Stuck pill · Companion Home
+   Every surface here is a calm sanctuary on green or cream, never a
+   dashboard. Zero red. Exactly one gold CTA per beat. Squared edges.
+   ============================================================ */
+
+/* ---- persistent "Stuck?" pill — gold, bottom-right, above the input bar ----
+   Always visible on authed screens. Never badges, never counts (a counter
+   would turn a rescue into a scoreboard). */
+.stuck-pill{position:fixed;right:26px;bottom:26px;z-index:80;
+  display:inline-flex;align-items:center;gap:9px;
+  background:var(--ollin-gold);color:#241c07;
+  font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:-.01em;
+  padding:13px 20px;border-radius:999px;
+  box-shadow:0 6px 22px -6px rgba(217,164,65,.55),0 2px 6px rgba(16,16,20,.16);
+  transition:transform .14s,box-shadow .14s}
+.stuck-pill:hover{transform:translateY(-2px);box-shadow:0 12px 30px -8px rgba(217,164,65,.6),0 3px 8px rgba(16,16,20,.2)}
+.stuck-pill:active{transform:translateY(0)}
+.stuck-pill .sp-dot{width:8px;height:8px;border-radius:50%;background:#241c07;opacity:.8}
+@media(max-width:560px){.stuck-pill{right:16px;bottom:88px;padding:11px 17px;font-size:13px}}
+
+/* ---- Regroup takeover — a modal panel on green, ONE thing per beat ---- */
+.regroup-scrim{position:fixed;inset:0;z-index:120;background:rgba(15,26,17,.55);
+  backdrop-filter:blur(4px);display:grid;place-items:center;padding:26px;animation:fade .22s ease}
+.regroup{position:relative;width:min(540px,100%);max-height:92vh;overflow-y:auto;
+  background:var(--ollin-green);color:var(--on-green);
+  padding:40px 40px 34px;border-radius:4px;
+  box-shadow:0 40px 100px -30px rgba(0,0,0,.6);
+  animation:rgIn .3s cubic-bezier(.2,.9,.3,1)}
+@keyframes rgIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.regroup .rg-x{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:8px;
+  display:grid;place-items:center;color:var(--on-green-3);transition:background .12s,color .12s}
+.regroup .rg-x:hover{background:rgba(255,255,255,.08);color:var(--on-green)}
+.regroup .rg-x svg{width:18px;height:18px;stroke:currentColor}
+
+/* the calm rule + eyebrow that opens every beat */
+.rg-rule{height:3px;width:46px;background:var(--ollin-gold);margin-bottom:22px;border-radius:1px}
+
+/* Beat 1 — Validate (serif, warm; the human line) */
+.rg-validate{font-family:var(--serif);font-weight:400;font-size:clamp(24px,4vw,30px);
+  line-height:1.32;color:var(--on-green);letter-spacing:0;max-width:24ch}
+
+/* Beat 2 — Triage: four big tiles, one tap, nothing to weigh */
+.rg-lead{font-size:14px;color:var(--on-green-2);margin:20px 0 16px;font-weight:500}
+.rg-tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:460px){.rg-tiles{grid-template-columns:1fr}}
+.rg-tile{display:flex;flex-direction:column;gap:5px;text-align:left;
+  background:var(--ollin-green-deep);border:1px solid var(--on-green-line);
+  color:var(--on-green);border-radius:3px;padding:20px 18px;
+  transition:border-color .14s,transform .14s,background .14s}
+.rg-tile:hover{border-color:var(--ollin-gold);transform:translateY(-2px);background:#284434}
+.rg-tile .t{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em}
+.rg-tile .s{font-size:12.5px;color:var(--on-green-3);font-weight:500}
+
+/* Beat 3 — the matched move: one card, one gold CTA */
+.rg-move{margin-top:6px}
+.rg-move .rg-move-head{font-family:var(--serif);font-weight:400;font-size:clamp(21px,3.4vw,26px);
+  line-height:1.34;color:var(--on-green);letter-spacing:0;max-width:26ch}
+.rg-move-card{margin-top:22px;background:var(--ollin-green-deep);border:1px solid var(--on-green-line);
+  border-radius:3px;padding:22px 22px 24px}
+.rg-move-card .rg-move-label{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ollin-gold);margin-bottom:11px}
+.rg-move-card .rg-move-body{font-size:16px;line-height:1.5;color:var(--on-green);font-weight:500}
+.rg-move-card .rg-move-sub{font-size:13px;color:var(--on-green-3);margin-top:8px;line-height:1.5}
+.rg-moved-list{margin-top:14px;display:flex;flex-direction:column;gap:2px}
+.rg-moved-list .mv{font-size:13px;color:var(--on-green-3);display:flex;gap:9px;align-items:baseline;padding:3px 0}
+.rg-moved-list .mv .mk{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--on-green-3);opacity:.7}
+
+/* the single gold CTA — the only glowing button in the whole flow */
+.rg-cta{margin-top:22px;display:inline-flex;align-items:center;gap:9px;
+  background:var(--ollin-gold);color:#241c07;
+  font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em;
+  padding:14px 22px;border-radius:999px;transition:transform .12s,filter .12s}
+.rg-cta:hover{transform:translateY(-1px);filter:brightness(1.04)}
+.rg-cta svg{width:16px;height:16px;stroke:#241c07}
+
+/* Beat 4 — close soft: one line, no upsell, no streak talk */
+.rg-close{font-family:var(--serif);font-weight:400;font-size:clamp(22px,3.6vw,28px);
+  line-height:1.34;color:var(--on-green);max-width:22ch}
+.rg-close-sub{font-size:13.5px;color:var(--on-green-3);margin-top:18px}
+.rg-done{margin-top:26px;display:inline-flex;align-items:center;gap:8px;
+  border:1px solid var(--on-green-line);color:var(--on-green-2);background:transparent;
+  font-family:var(--display);font-weight:600;font-size:14px;padding:12px 20px;border-radius:999px;
+  transition:border-color .14s,color .14s}
+.rg-done:hover{border-color:var(--on-green-2);color:var(--on-green)}
+
+/* back affordance between beats (never a "step counter") */
+.rg-back{margin-top:24px;font-size:12.5px;color:var(--on-green-3);font-weight:600;
+  display:inline-flex;align-items:center;gap:6px;transition:color .12s}
+.rg-back:hover{color:var(--on-green)}
+.rg-back svg{width:14px;height:14px;stroke:currentColor;transform:rotate(180deg)}
+
+/* ---- Safety Net panel — served instead of any productivity move ----
+   Warm, resource-forward, never a "move". No diagnosis, no storage. */
+.rg-safety .rg-safe-lead{font-family:var(--serif);font-weight:400;font-size:clamp(22px,3.6vw,27px);
+  line-height:1.36;color:var(--on-green);max-width:28ch}
+.rg-safe-sub{font-size:14px;color:var(--on-green-2);margin:18px 0 6px;line-height:1.55;max-width:44ch}
+.rg-resources{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+.rg-resource{display:block;text-align:left;background:var(--ollin-green-deep);border:1px solid var(--on-green-line);
+  border-radius:3px;padding:15px 17px;color:var(--on-green);text-decoration:none;transition:border-color .14s}
+.rg-resource:hover{border-color:var(--ollin-gold)}
+.rg-resource .rr-name{font-family:var(--display);font-weight:700;font-size:15px}
+.rg-resource .rr-note{font-size:12.5px;color:var(--on-green-3);margin-top:3px}
+.rg-resource .rr-num{font-family:var(--display);font-weight:700;color:var(--ollin-gold)}
+
+/* ============================================================
+   OLLIN COMPANION HOME — Doorway (green check-in) + Front Page (cream)
+   ============================================================ */
+
+/* ---- Beat 1 — the Doorway: dark green, energy check-in ---- */
+.ollin-doorway{min-height:calc(100vh - 0px);display:flex;flex-direction:column;justify-content:center;
+  background:var(--ollin-green);color:var(--on-green);padding:64px clamp(24px,6vw,88px);position:relative}
+.od-inner{width:100%;max-width:660px;margin:0 auto}
+.od-mark{display:flex;align-items:center;gap:12px;margin-bottom:44px}
+.od-logo{font-family:var(--display);font-weight:800;letter-spacing:-.03em;font-size:19px;color:var(--on-green)}
+.od-stamp{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--on-green-3)}
+.od-greeting{font-family:var(--serif);font-weight:400;font-size:clamp(34px,6vw,54px);line-height:1.06;
+  color:var(--on-green);letter-spacing:-.01em;margin-bottom:8px}
+.od-ask{font-family:var(--serif);font-style:italic;font-weight:500;color:var(--ollin-gold);
+  font-size:clamp(34px,6vw,54px);line-height:1.1;letter-spacing:-.01em;margin-bottom:34px}
+.od-answers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:30px}
+@media(max-width:560px){.od-answers{grid-template-columns:1fr}}
+.od-answer{display:flex;flex-direction:column;gap:5px;text-align:left;background:var(--ollin-green-deep);
+  border:1px solid var(--on-green-line);color:var(--on-green);border-radius:3px;padding:22px 20px;
+  transition:border-color .14s,transform .14s,background .14s}
+.od-answer:hover{border-color:var(--ollin-gold);transform:translateY(-2px);background:#284434}
+.od-answer .oa-t{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em}
+.od-answer .oa-s{font-size:12.5px;color:var(--on-green-3);font-weight:500;margin-top:4px}
+.od-chatwrap{margin-top:6px}
+.od-chatbar{display:flex;align-items:center;gap:12px;border:1px solid var(--on-green-line);border-radius:3px;
+  padding:15px 17px;background:var(--ollin-green-deep)}
+.od-chatbar input{flex:1;border:none;outline:none;background:transparent;color:var(--on-green);
+  font-family:var(--ui);font-size:15px}
+.od-chatbar input::placeholder{color:var(--on-green-3)}
+.od-chatbar .oc-btn{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;
+  background:rgba(255,255,255,.06);transition:background .12s}
+.od-chatbar .oc-btn:hover{background:rgba(255,255,255,.12)}
+.od-chatbar .oc-btn svg{width:17px;height:17px;stroke:var(--on-green-2)}
+.od-chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
+.od-chip{font-size:12.5px;font-weight:600;color:var(--on-green-2);background:transparent;
+  border:1px solid var(--on-green-line);border-radius:999px;padding:8px 14px;transition:border-color .12s,color .12s}
+.od-chip:hover{border-color:var(--on-green-2);color:var(--on-green)}
+
+/* ---- Beat 2 — the Front Page: cream working home ---- */
+.frontpage{min-height:100vh;background:var(--ollin-cream);color:var(--ollin-ink)}
+.fp-wrap{max-width:760px;margin:0 auto;padding:34px clamp(22px,5vw,48px) 140px}
+/* masthead — deliberately small; content starts immediately */
+.fp-masthead{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding-bottom:18px;margin-bottom:30px;border-bottom:1px solid var(--line,#e1dacc)}
+.fp-mast-l{display:flex;align-items:baseline;gap:12px}
+.fp-mast-logo{font-family:var(--display);font-weight:800;letter-spacing:-.03em;font-size:17px;color:var(--ollin-ink)}
+.fp-mast-date{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-4,#9aa2ac)}
+.fp-energy-badge{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-3,#d4ccbd);
+  border-radius:999px;padding:6px 12px;font-size:11.5px;font-weight:600;color:var(--ink-3,#6c7682);
+  font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase;transition:border-color .12s,color .12s}
+.fp-energy-badge:hover{border-color:var(--ollin-gold);color:var(--ollin-ink)}
+.fp-energy-badge .eb-dot{width:7px;height:7px;border-radius:50%;background:var(--ollin-gold)}
+
+.fp-section{margin-bottom:34px}
+.fp-eyebrow{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-4,#9aa2ac);margin-bottom:12px;display:flex;align-items:center;gap:9px}
+.fp-eyebrow::before{content:"";width:9px;height:3px;border-radius:1px;background:var(--ollin-gold);flex-shrink:0}
+
+/* THE ONE THING — the biggest element on the page */
+.fp-onething{padding:6px 0 4px}
+.fp-ot-room{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-4,#9aa2ac);margin-bottom:12px;display:inline-flex;align-items:center;gap:8px}
+.fp-ot-room .otd{width:8px;height:8px;border-radius:50%;background:var(--ac,var(--ollin-gold))}
+.fp-ot-title{font-family:var(--serif);font-weight:400;font-size:clamp(30px,5.4vw,46px);line-height:1.12;
+  letter-spacing:-.01em;color:var(--ollin-ink);max-width:20ch}
+.fp-ot-title .micro-flag{display:block;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ollin-gold);margin-bottom:10px}
+.fp-start{margin-top:22px;display:inline-flex;align-items:center;gap:9px;
+  background:var(--ollin-gold);color:#241c07;font-family:var(--display);font-weight:700;font-size:15px;
+  letter-spacing:-.01em;padding:13px 24px;border-radius:999px;transition:transform .12s,filter .12s}
+.fp-start:hover{transform:translateY(-1px);filter:brightness(1.04)}
+.fp-start svg{width:16px;height:16px;stroke:#241c07}
+
+/* THE THREAD — rooms as one-liners, never a grid, never taller than a line + context */
+.fp-thread-row{display:flex;align-items:baseline;gap:12px;width:100%;text-align:left;
+  padding:13px 10px;margin:0 -10px;border-radius:3px;border-bottom:1px solid var(--line-2,#ece6da);
+  transition:background .12s}
+.fp-thread-row:last-child{border-bottom:none}
+.fp-thread-row:hover{background:rgba(45,74,48,.05)}
+.fp-thread-row .tr-name{font-family:var(--display);font-weight:700;font-size:15px;color:var(--ollin-ink);flex-shrink:0}
+.fp-thread-row .tr-name .trd{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ac,var(--ink-4));margin-right:8px;vertical-align:middle}
+.fp-thread-row .tr-pick{font-size:13.5px;color:var(--ink-3,#6c7682);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.fp-thread-row .tr-pick b{color:var(--ink-2,#3c4651);font-weight:600}
+.fp-thread-row .tr-when{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.04em;color:var(--ink-4,#9aa2ac);white-space:nowrap;flex-shrink:0}
+
+/* TODAY, LIGHTLY — max 3, with the promoted "make it lighter" link */
+.fp-today-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}
+.fp-lighter{font-family:var(--display);font-size:12.5px;font-weight:700;color:var(--ollin-green-2);
+  display:inline-flex;align-items:center;gap:6px;padding:4px 0;transition:color .12s}
+.fp-lighter:hover{color:var(--ollin-green)}
+.fp-todo{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-2,#ece6da);font-size:14.5px;color:var(--ink-2,#3c4651)}
+.fp-todo:last-child{border-bottom:none}
+.fp-todo .td-mark{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--ink-5,#c0c0c6);flex-shrink:0}
+.fp-todo .td-room{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-4,#9aa2ac);white-space:nowrap}
+.fp-buffer{margin-top:12px;font-size:13px;color:var(--ink-3,#6c7682);font-style:italic;font-family:var(--serif)}
+
+/* ONE SPARK — a single, tiny rotating idea chip */
+.fp-spark{display:inline-flex;align-items:center;gap:9px;border:1px dashed var(--line-3,#d4ccbd);
+  border-radius:999px;padding:8px 15px;font-size:12.5px;color:var(--ink-3,#6c7682);font-weight:500;
+  transition:border-color .12s,color .12s}
+.fp-spark:hover{border-color:var(--ollin-gold);color:var(--ollin-ink)}
+.fp-spark .fs-dot{width:6px;height:6px;border-radius:50%;background:var(--ollin-gold)}
+.fp-spark .fs-label{font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4,#9aa2ac)}
+
+/* resting state — "Rest. Ollin's got it": pressure UI cleared, nothing expires */
+.fp-rest{background:var(--ollin-green);color:var(--on-green);border-radius:3px;padding:30px 32px;text-align:left}
+.fp-rest .fr-line{font-family:var(--serif);font-weight:400;font-size:clamp(22px,3.6vw,28px);line-height:1.34;max-width:26ch}
+.fp-rest .fr-sub{font-size:14px;color:var(--on-green-2);margin-top:14px;line-height:1.55;max-width:42ch}
+.fp-rest .fr-undo{margin-top:22px;font-size:12.5px;color:var(--on-green-3);font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.fp-rest .fr-undo:hover{color:var(--on-green)}
+
+/* the persistent bottom input on the Front Page */
+.fp-inputbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:linear-gradient(to top,var(--ollin-cream) 62%,transparent);
+  padding:18px clamp(22px,5vw,48px) 20px;display:flex;justify-content:center}
+.fp-inputbar-inner{width:100%;max-width:760px;display:flex;align-items:center;gap:12px;
+  border:1.5px solid var(--line-3,#d4ccbd);border-radius:3px;padding:14px 16px;background:#fff;box-shadow:var(--shadow)}
+.fp-inputbar-inner:focus-within{border-color:var(--ollin-green-2)}
+.fp-inputbar-inner input{flex:1;border:none;outline:none;background:transparent;font-family:var(--ui);font-size:15px;color:var(--ollin-ink)}
+.fp-inputbar-inner input::placeholder{color:var(--ink-4,#9aa2ac)}
+.fp-inputbar-inner .fi-btn{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;background:var(--paper-3,#f2eee6);transition:background .12s}
+.fp-inputbar-inner .fi-btn:hover{background:#e9e3d7}
+.fp-inputbar-inner .fi-btn svg{width:17px;height:17px;stroke:var(--ink-2,#3c4651)}
+
+/* Ollin voice line — small, optional, never a famous-person quote */
+.fp-voice{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--ink-4,#9aa2ac);text-align:center;margin-top:6px}

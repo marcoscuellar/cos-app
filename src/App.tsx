@@ -14,7 +14,18 @@ import { Reentry } from "./overlays/Reentry";
 import { BrainstormPanel } from "./overlays/Brainstorm";
 import { AskCOSPanel } from "./overlays/AskCOS";
 import { DocViewer } from "./overlays/DocViewer";
+import { Regroup } from "./overlays/Regroup";
+import { PlanProvider } from "./plan";
+import { detectIntent, type RegroupMode } from "./regroup";
 import { loadState, saveState } from "./storage";
+
+// State passed to the Regroup takeover when it opens (session-only; never stored).
+interface RegroupState {
+  mode?: RegroupMode | null;
+  preValidated?: boolean;
+  safety?: boolean;
+  text?: string;
+}
 
 type Route = "home" | "today" | "projects" | "project" | "ideas" | "idea" | "lab" | "search";
 
@@ -33,6 +44,7 @@ export default function App() {
   const [askProject, setAskProject] = useState<Project | null>(null);
   const [doc, setDoc] = useState<{ d: DocRef; accent: Accent } | null>(null);
   const [searchSeed, setSearchSeed] = useState("");
+  const [regroup, setRegroup] = useState<RegroupState | null>(null);
   const [loaded, setLoaded] = useState(false);
   const D = COS_DATA;
 
@@ -87,6 +99,38 @@ export default function App() {
   };
   const resumeFromReentry = (id: string) => { setReentry(null); goProject(id); };
 
+  // ── Regroup orchestration ────────────────────────────────────────────────
+  // Entry points (all three converge here): the persistent "Stuck?" pill,
+  // distress detected in the input bar, and voice — which routes its transcript
+  // through the exact same detection.
+  const openRegroup = (opts: RegroupState = {}) => setRegroup(opts);
+
+  // Free-text from any input (typed or dictated) is screened for distress before
+  // it runs the normal ask/capture flow. Safety language always wins.
+  const handleUserInput = async (text: string) => {
+    const local = detectIntent(text);
+    if (local === "safety") return openRegroup({ safety: true, text });
+    if (local === "distress") return openRegroup({ preValidated: true, text });
+    // Server-side intent check — the fallback for phrasing the keyword list misses.
+    try {
+      const res = await fetch("/api/regroup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ mode: "detect", text }),
+      });
+      if (res.ok) {
+        const { intent } = (await res.json()) as { intent?: string };
+        if (intent === "safety") return openRegroup({ safety: true, text });
+        if (intent === "distress") return openRegroup({ preValidated: true, text });
+      }
+    } catch {
+      /* offline — fall through to normal capture */
+    }
+    // Not distress → treat it as an ask/capture: seed Memory search with it.
+    setSearchSeed(text);
+    setRoute("search");
+  };
+
   // Avoid a flash before persisted prefs resolve.
   if (!loaded) return <div style={{ height: "100vh", background: "var(--canvas)" }} />;
 
@@ -94,36 +138,57 @@ export default function App() {
   const idea = ideaId ? D.ideas.find((i) => i.id === ideaId) : null;
 
   return (
-    <div className="app">
-      <Sidebar
-        route={route}
-        projectId={projectId}
-        theme={theme}
-        setTheme={setTheme}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((c) => !c)}
-        userName={IDENTITY.name}
-        userEmail={IDENTITY.email}
-        onNav={goNav}
-        onProject={onProjectClick}
-        onAsk={() => goNav("search")}
-      />
-      <main className="main" ref={mainRef}>
-        {route === "home" && <HomeScreen onProject={goProject} onNav={goNav} onContinue={onContinue} />}
-        {route === "today" && <TodayScreen onProject={goProject} />}
-        {route === "projects" && <ProjectsScreen onProject={onProjectClick} onContinue={onContinue} />}
-        {route === "project" && project && (
-          <ProjectScreen project={project} onContinue={onContinue} onBrainstorm={() => setBrainstorm(project)} onAsk={() => setAskProject(project)} onOpenDoc={(d, accent) => setDoc({ d, accent })} />
+    <PlanProvider>
+      <div className="app">
+        <Sidebar
+          route={route}
+          projectId={projectId}
+          theme={theme}
+          setTheme={setTheme}
+          collapsed={collapsed}
+          onToggle={() => setCollapsed((c) => !c)}
+          userName={IDENTITY.name}
+          userEmail={IDENTITY.email}
+          onNav={goNav}
+          onProject={onProjectClick}
+          onAsk={() => goNav("search")}
+        />
+        <main className="main" ref={mainRef}>
+          {route === "home" && <HomeScreen onProject={goProject} onNav={goNav} onRegroup={(m) => openRegroup({ mode: m })} onInput={handleUserInput} />}
+          {route === "today" && <TodayScreen onProject={goProject} />}
+          {route === "projects" && <ProjectsScreen onProject={onProjectClick} onContinue={onContinue} />}
+          {route === "project" && project && (
+            <ProjectScreen project={project} onContinue={onContinue} onBrainstorm={() => setBrainstorm(project)} onAsk={() => setAskProject(project)} onOpenDoc={(d, accent) => setDoc({ d, accent })} />
+          )}
+          {route === "ideas" && <IdeasScreen onIdea={goIdea} />}
+          {route === "idea" && idea && <IdeaDetail idea={idea} onProject={goProject} onBack={() => goNav("ideas")} />}
+          {route === "lab" && <LabScreen />}
+          {route === "search" && <SearchScreen onProject={goProject} initialQuery={searchSeed} />}
+        </main>
+
+        {/* Persistent "Stuck?" pill — gold, bottom-right, on every screen.
+            Never a badge, never a count: a rescue must not keep score. */}
+        {!regroup && (
+          <button className="stuck-pill" onClick={() => openRegroup({})} title="Regroup">
+            <span className="sp-dot" />Stuck?
+          </button>
         )}
-        {route === "ideas" && <IdeasScreen onIdea={goIdea} />}
-        {route === "idea" && idea && <IdeaDetail idea={idea} onProject={goProject} onBack={() => goNav("ideas")} />}
-        {route === "lab" && <LabScreen />}
-        {route === "search" && <SearchScreen onProject={goProject} initialQuery={searchSeed} />}
-      </main>
-      {reentry && <Reentry project={reentry} onClose={() => setReentry(null)} onResume={resumeFromReentry} />}
-      {brainstorm && <BrainstormPanel project={brainstorm} onClose={() => setBrainstorm(null)} />}
-      {askProject && <AskCOSPanel project={askProject} onClose={() => setAskProject(null)} />}
-      {doc && <DocViewer doc={doc.d} accent={doc.accent} onClose={() => setDoc(null)} />}
-    </div>
+
+        {reentry && <Reentry project={reentry} onClose={() => setReentry(null)} onResume={resumeFromReentry} />}
+        {brainstorm && <BrainstormPanel project={brainstorm} onClose={() => setBrainstorm(null)} />}
+        {askProject && <AskCOSPanel project={askProject} onClose={() => setAskProject(null)} />}
+        {doc && <DocViewer doc={doc.d} accent={doc.accent} onClose={() => setDoc(null)} />}
+        {regroup && (
+          <Regroup
+            onClose={() => setRegroup(null)}
+            initialMode={regroup.mode ?? null}
+            preValidated={regroup.preValidated}
+            safety={regroup.safety}
+            triggerText={regroup.text}
+            onStepIn={goProject}
+          />
+        )}
+      </div>
+    </PlanProvider>
   );
 }
