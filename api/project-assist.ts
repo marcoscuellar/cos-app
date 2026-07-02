@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getProvider, providerConfigured, ProviderError } from "../lib/server/ai/provider.js";
+import { requireUser, unauthorized } from "../lib/server/session.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Project assist — give COS a rough brain-dump about a project and it gathers
@@ -43,6 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
   if (!providerConfigured()) return res.status(503).json({ error: "AI is not configured." });
+  if (!(await requireUser(req))) return unauthorized(res);
 
   const { name, dump } = (req.body ?? {}) as { name?: string; dump?: string };
   const brief = typeof dump === "string" ? dump.trim() : "";

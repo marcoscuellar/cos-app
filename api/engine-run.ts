@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Anthropic from "@anthropic-ai/sdk";
 import { kvConfigured, kvGet, kvSet } from "../lib/server/kv.js";
+import { requireUser, unauthorized } from "../lib/server/session.js";
+import { ensureOwnerMigrated } from "../lib/server/migrate.js";
 import { getEngine, todayLabel, ENGINE_IDS } from "../lib/server/engines.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -14,11 +16,10 @@ import { getEngine, todayLabel, ENGINE_IDS } from "../lib/server/engines.js";
 
 export const config = { maxDuration: 300 };
 
-const OWNER = "me";
 // Engines default to Sonnet 4.6 — strong at research + synthesis, ~40% cheaper
 // and faster than Opus (which also dodges function timeouts). Override with ENGINE_MODEL.
 const MODEL = process.env.ENGINE_MODEL || "claude-sonnet-4-6";
-const runsKey = (engineId: string) => `engine:runs:${OWNER}:${engineId}`;
+const runsKey = (uid: string, engineId: string) => `user:${uid}:engine:runs:${engineId}`;
 
 interface EngineRun {
   id: string;
@@ -97,15 +98,19 @@ async function runEngine(
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!kvConfigured()) return res.status(503).json({ error: "Storage is not configured." });
 
+  const uid = await requireUser(req);
+  if (!uid) return unauthorized(res);
+  await ensureOwnerMigrated();
+
   try {
     if (req.method === "GET") {
       const engineId = String(req.query.engine ?? "");
       // Single engine, unless ?all=1 (or no engine) → aggregate every engine's runs.
       if (engineId && req.query.all !== "1") {
-        const runs = (await kvGet<EngineRun[]>(runsKey(engineId))) ?? [];
+        const runs = (await kvGet<EngineRun[]>(runsKey(uid, engineId))) ?? [];
         return res.status(200).json({ runs });
       }
-      const lists = await Promise.all(ENGINE_IDS.map((id) => kvGet<EngineRun[]>(runsKey(id))));
+      const lists = await Promise.all(ENGINE_IDS.map((id) => kvGet<EngineRun[]>(runsKey(uid, id))));
       const all = lists
         .flatMap((l) => l ?? [])
         .sort((a, b) => b.createdAt - a.createdAt)
@@ -118,7 +123,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const engineId = String(body.engineId ?? "");
       const runId = String(body.runId ?? "");
       if (!engineId || !runId) return res.status(400).json({ error: "Missing engineId or runId." });
-      const runs = (await kvGet<EngineRun[]>(runsKey(engineId))) ?? [];
+      const runs = (await kvGet<EngineRun[]>(runsKey(uid, engineId))) ?? [];
       const next = runs.map((r) =>
         r.id === runId
           ? {
@@ -128,7 +133,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
           : r,
       );
-      await kvSet(runsKey(engineId), next);
+      await kvSet(runsKey(uid, engineId), next);
       return res.status(200).json({ runs: next });
     }
 
@@ -141,7 +146,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Built-in engines live in lib/server; user-authored ones live in KV.
       let engine = getEngine(engineId);
       if (!engine) {
-        const customs = (await kvGet<{ id: string; version?: number; system?: string }[]>(`engines:${OWNER}`)) ?? [];
+        const customs = (await kvGet<{ id: string; version?: number; system?: string }[]>(`user:${uid}:engines`)) ?? [];
         const c = customs.find((e) => e.id === engineId);
         if (c && typeof c.system === "string" && c.system.trim()) {
           engine = { id: c.id, version: typeof c.version === "number" ? c.version : 1, system: c.system };
@@ -172,9 +177,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         createdAt: Date.now(),
         draft,
       };
-      const runs = (await kvGet<EngineRun[]>(runsKey(engine.id))) ?? [];
+      const runs = (await kvGet<EngineRun[]>(runsKey(uid, engine.id))) ?? [];
       const next = [run, ...runs].slice(0, 50);
-      await kvSet(runsKey(engine.id), next);
+      await kvSet(runsKey(uid, engine.id), next);
       return res.status(200).json({ run, runs: next });
     }
 

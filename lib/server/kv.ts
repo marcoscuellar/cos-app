@@ -59,9 +59,37 @@ export async function kvSAdd(key: string, member: string): Promise<void> {
   await command(["SADD", key, member]);
 }
 
+export async function kvSRem(key: string, member: string): Promise<number> {
+  const res = await command(["SREM", key, member]);
+  return typeof res === "number" ? res : 0;
+}
+
+export async function kvSIsMember(key: string, member: string): Promise<boolean> {
+  const res = await command(["SISMEMBER", key, member]);
+  return res === 1 || res === "1";
+}
+
+export async function kvSCard(key: string): Promise<number> {
+  const res = await command(["SCARD", key]);
+  return typeof res === "number" ? res : 0;
+}
+
 export async function kvSMembers(key: string): Promise<string[]> {
   const res = await command(["SMEMBERS", key]);
   return Array.isArray(res) ? (res as string[]) : [];
+}
+
+/** Enumerate keys matching a glob pattern (SCAN loop — safe for the modest key counts here). */
+export async function kvScan(match: string): Promise<string[]> {
+  const keys: string[] = [];
+  let cursor = "0";
+  do {
+    const res = (await command(["SCAN", cursor, "MATCH", match, "COUNT", 200])) as [string, string[]] | null;
+    if (!Array.isArray(res)) break;
+    cursor = String(res[0]);
+    if (Array.isArray(res[1])) keys.push(...res[1]);
+  } while (cursor !== "0");
+  return keys;
 }
 
 export async function kvMGet(keys: string[]): Promise<(string | null)[]> {
