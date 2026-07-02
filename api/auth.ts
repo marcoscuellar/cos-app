@@ -48,12 +48,12 @@ const CODE_FAIL_TTL_SEC = 15 * 60;
 const ACTIVE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 // Open signup is capped at FOUNDING_CAP accounts (invite/owner bypass it). The
-// first FOUNDING_MEMBER_MAX accounts overall are flagged foundingMember.
+// first FOUNDING_CAP accounts overall are flagged foundingMember — the founding
+// cohort and the cap are the same set.
 const FOUNDING_CAP = (() => {
   const n = parseInt(process.env.FOUNDING_CAP ?? "", 10);
   return Number.isFinite(n) && n > 0 ? n : 15;
 })();
-const FOUNDING_MEMBER_MAX = 50;
 const FULL_MSG = "The Founding 15 is full — join the waitlist at ollin.space and you'll be first in line.";
 
 const REG_COOKIE = "cos_reg";
@@ -303,7 +303,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           await kvSet(userMetaKey(pending.uid), {
             createdAt: Date.now(),
             lastActive: Date.now(),
-            founding: ordinal <= FOUNDING_MEMBER_MAX,
+            founding: ordinal <= FOUNDING_CAP,
           } as UserMeta);
         } else {
           await touchActive(pending.uid);
