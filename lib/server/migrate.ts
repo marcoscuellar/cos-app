@@ -43,7 +43,7 @@ export async function ensureOwnerMigrated(): Promise<void> {
       if ((await kvGetRaw(credKey(legacy.credential.id))) === null) {
         await kvSet(credKey(legacy.credential.id), OWNER_UID);
       }
-      await kvSet(userMetaKey(OWNER_UID), { createdAt: legacy.createdAt ?? Date.now(), lastActive: Date.now() });
+      await kvSet(userMetaKey(OWNER_UID), { createdAt: legacy.createdAt ?? Date.now(), lastActive: Date.now(), founding: true });
       await kvSAdd(USERS_KEY, OWNER_UID);
     }
     await rekey(`projects:${OWNER_UID}`, `user:${OWNER_UID}:projects`);

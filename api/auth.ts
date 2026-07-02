@@ -12,7 +12,7 @@ import type {
   AuthenticatorTransportFuture,
 } from "@simplewebauthn/server";
 import {
-  kvGet, kvGetRaw, kvSet, kvDel,
+  kvGet, kvGetRaw, kvSet, kvDel, kvIncr, kvDecr,
   kvSAdd, kvSRem, kvSIsMember, kvSCard, kvSMembers, kvMGet,
 } from "../lib/server/kv.js";
 import {
@@ -41,10 +41,20 @@ const SETUP_CODE_HASH = "f70e638e9ae262665a9274aa5e3471a5f6b7724ad4f2f88a4494c0a
 
 const INVITES_KEY = "ollin:invites";
 const USERS_KEY = "ollin:users";
+const COUNT_KEY = "ollin:users:count"; // atomic account counter — the race-free source for the cap
 const CODEFAIL_KEY = "ollin:codefail"; // throttles online guessing of the setup code
 const CODE_MAX_FAILS = 15;
 const CODE_FAIL_TTL_SEC = 15 * 60;
 const ACTIVE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+
+// Open signup is capped at FOUNDING_CAP accounts (invite/owner bypass it). The
+// first FOUNDING_MEMBER_MAX accounts overall are flagged foundingMember.
+const FOUNDING_CAP = (() => {
+  const n = parseInt(process.env.FOUNDING_CAP ?? "", 10);
+  return Number.isFinite(n) && n > 0 ? n : 15;
+})();
+const FOUNDING_MEMBER_MAX = 50;
+const FULL_MSG = "The Founding 15 is full — join the waitlist at ollin.space and you'll be first in line.";
 
 const REG_COOKIE = "cos_reg";
 const LOGIN_COOKIE = "cos_login";
@@ -58,9 +68,22 @@ interface StoredCredential {
   counter: number;
   transports?: string[];
 }
-interface UserMeta { createdAt: number; lastActive: number }
-interface PendingReg { uid: string; invite: string | null; challenge: string }
+interface UserMeta { createdAt: number; lastActive: number; founding?: boolean }
+type RegMode = "add-device" | "invite" | "owner" | "open";
+interface PendingReg { uid: string; invite: string | null; mode: RegMode; challenge: string }
 interface PendingLogin { challenge: string }
+
+// Lazily seed the atomic counter from the current membership, once (NX so
+// concurrent cold starts converge). After this, INCR/DECR keep it in sync.
+async function ensureMemberCount(): Promise<void> {
+  if ((await kvGet<number>(COUNT_KEY)) === null) {
+    await kvSet(COUNT_KEY, await kvSCard(USERS_KEY), { nx: true });
+  }
+}
+async function currentMemberCount(): Promise<number> {
+  const c = await kvGet<number>(COUNT_KEY);
+  return typeof c === "number" ? c : await kvSCard(USERS_KEY);
+}
 
 const b64url = (b: Buffer | Uint8Array) => Buffer.from(b).toString("base64url");
 const fromB64url = (s: string) => new Uint8Array(Buffer.from(s, "base64url"));
@@ -165,24 +188,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── begin registration ──
     if (action === "register-options") {
-      // Identity precedence: signed-in (add a device) → valid invite → owner setup
-      // code. Invite is checked BEFORE the code so normal sign-ups never touch the
-      // setup-code fail counter (which would let anyone lock the owner out).
+      // Identity precedence:
+      //   signed-in         → add a passkey to the current account
+      //   valid invite      → owner override, bypasses the cap
+      //   a code was given  → owner setup code (throttled)
+      //   otherwise         → OPEN signup, allowed until the founding cap is full
+      // A code is only tried when one is actually provided AND it isn't a valid
+      // invite, so ordinary open sign-ups never touch the setup-code fail counter.
       const sessionUid = await requireUser(req);
       const invite = String(req.body?.invite ?? "").trim().toUpperCase();
+      const codeGiven = String(req.body?.code ?? "").trim() !== "";
       let uid: string;
+      let mode: RegMode;
       let inviteToConsume: string | null = null;
 
       if (sessionUid) {
         uid = sessionUid;
+        mode = "add-device";
       } else if (invite && (await kvSIsMember(INVITES_KEY, invite))) {
         uid = newUid();
+        mode = "invite";
         inviteToConsume = invite;
-      } else {
+      } else if (codeGiven) {
         const g = await checkOwnerCode(req);
         if (g === "locked") return res.status(429).json({ error: "Too many attempts — try again later." });
-        if (g !== "ok") return res.status(403).json({ error: "You need a valid invite code to create an account." });
+        if (g !== "ok") return res.status(403).json({ error: "That invite code isn't valid." });
         uid = OWNER_UID;
+        mode = "owner";
+      } else {
+        // Open signup — soft-check the cap here for good UX; the authoritative,
+        // race-free check happens atomically at register-verify.
+        if ((await currentMemberCount()) >= FOUNDING_CAP) return res.status(403).json({ error: FULL_MSG });
+        uid = newUid();
+        mode = "open";
       }
 
       const existing = (await kvGet<StoredCredential[]>(userCredsKey(uid))) ?? [];
@@ -197,7 +235,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       const n = nonce();
-      await kvSet(`reg:${n}`, { uid, invite: inviteToConsume, challenge: options.challenge } as PendingReg, { ttlSec: 300 });
+      await kvSet(`reg:${n}`, { uid, invite: inviteToConsume, mode, challenge: options.challenge } as PendingReg, { ttlSec: 300 });
       shortCookie(res, REG_COOKIE, n, 300, secure);
       return res.status(200).json(options);
     }
@@ -235,6 +273,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (removed === 0) return res.status(409).json({ error: "That invite was already used." });
       }
 
+      // A brand-new account (no meta yet) takes a capacity slot. Reserve it with an
+      // ATOMIC increment — this is the race-free gate: two simultaneous open signups
+      // can't both slip past the cap, because INCR serializes them. Invite/owner
+      // accounts still count toward the total but bypass the cap check. `ordinal`
+      // (1-based creation order) also decides founding-member status.
+      const isNew = (await kvGetRaw(userMetaKey(pending.uid))) === null;
+      let ordinal = 0;
+      if (isNew) {
+        await ensureMemberCount();
+        ordinal = await kvIncr(COUNT_KEY);
+        if (pending.mode === "open" && ordinal > FOUNDING_CAP) {
+          await kvDecr(COUNT_KEY); // release the slot we just reserved
+          return res.status(403).json({ error: FULL_MSG });
+        }
+      }
+
       try {
         const cred: StoredCredential = {
           id: c.id,
@@ -245,15 +299,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const creds = (await kvGet<StoredCredential[]>(userCredsKey(pending.uid))) ?? [];
         await kvSet(userCredsKey(pending.uid), [...creds.filter((x) => x.id !== cred.id), cred]);
         await kvSet(credKey(cred.id), pending.uid);
-        if (!(await kvGetRaw(userMetaKey(pending.uid)))) {
-          await kvSet(userMetaKey(pending.uid), { createdAt: Date.now(), lastActive: Date.now() } as UserMeta);
+        if (isNew) {
+          await kvSet(userMetaKey(pending.uid), {
+            createdAt: Date.now(),
+            lastActive: Date.now(),
+            founding: ordinal <= FOUNDING_MEMBER_MAX,
+          } as UserMeta);
         } else {
           await touchActive(pending.uid);
         }
         await kvSAdd(USERS_KEY, pending.uid);
       } catch (persistErr) {
-        // A mid-write failure must not burn the invite — put it back so the user can retry.
+        // A mid-write failure must not leave a burned invite or a reserved slot.
         if (pending.invite) await kvSAdd(INVITES_KEY, pending.invite);
+        if (isNew) await kvDecr(COUNT_KEY);
         throw persistErr;
       }
       await kvDel(`reg:${n}`);
