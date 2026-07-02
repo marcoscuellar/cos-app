@@ -123,7 +123,7 @@ export function BrainstormPanel({ project, onClose }: BrainstormProps) {
           <div className="chatbar" style={{ padding: "12px 14px", boxShadow: "none" }}>
             <input value={input} onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") send(); }}
-              placeholder={"Riff with COS about " + p.name + "…"} />
+              placeholder={"Riff with Ollin about " + p.name + "…"} />
             <button className="mic" title="Voice"><Icon.mic /></button>
             <button className="send" title="Send" onClick={() => send()}><Icon.send /></button>
           </div>

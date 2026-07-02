@@ -48,7 +48,7 @@ export async function saveProjects(projects: Project[]): Promise<void> {
   }
 }
 
-/** Ask COS to draft the context + major next steps from a brain-dump. */
+/** Ask Ollin to draft the context + major next steps from a brain-dump. */
 export async function assistProject(name: string, dump: string): Promise<{ assist?: ProjectAssist; error?: string }> {
   if (IS_DEMO) return { error: "This is a read-only demo." };
   try {

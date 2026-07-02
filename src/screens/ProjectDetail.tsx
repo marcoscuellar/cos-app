@@ -9,7 +9,7 @@ import { IS_DEMO } from "../session";
 // ─────────────────────────────────────────────────────────────────────────────
 // Project room (redesign · page 03). Two columns: a dark identity cover (left)
 // and the context column (right), re-ordered so the single NEXT action leads —
-// then pick-up, then blockers (collapsed until wanted). Ask COS is folded in so
+// then pick-up, then blockers (collapsed until wanted). Ask Ollin is folded in so
 // "Start" works without the legacy app shell. Source: ProjectRoomPage.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -41,7 +41,7 @@ export function ProjectScreen({ project: p, onNav, onSave, onDelete, onArchive }
           {/* LEFT — dark identity cover */}
           <aside className="room-cover">
             <div className="rc-top">
-              <button className="rc-chip" onClick={() => onNav("projects")}>COS</button>
+              <button className="rc-chip" onClick={() => onNav("projects")}>Ōllin</button>
               <div className="rc-top-r">
                 <span className="rc-room"><i className="bdot" style={{ background: "var(--gold-bright)" }} />{p.name} · Room</span>
                 <span className="rc-cos">CONTEXT OPERATING SYSTEM</span>
@@ -60,7 +60,7 @@ export function ProjectScreen({ project: p, onNav, onSave, onDelete, onArchive }
             <span className="rc-touched">LAST TOUCHED {p.lastActivity.toUpperCase()}</span>
             <div className="rc-btns">
               {!IS_DEMO && <button className="rc-edit" onClick={() => setEdit(true)}>Edit</button>}
-              <button className="rc-tidy" onClick={() => setAsk(true)}>Let COS tidy this room</button>
+              <button className="rc-tidy" onClick={() => setAsk(true)}>Let Ollin tidy this room</button>
             </div>
           </aside>
 

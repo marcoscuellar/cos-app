@@ -43,13 +43,13 @@ const icsEsc = (s: string) => s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").repl
 // Standards-compliant .ics — drops straight into Apple/Google Calendar.
 function buildIcs(blocks: Block[], y: string, mo: string, d: string): string {
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//COS//Day Plan//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Ollin//Day Plan//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
   blocks.forEach((b, i) => {
     const sm = toMin(b.start);
     if (sm === null) return;
     const em = toMin(b.end) ?? sm + 30;
     const at = (mins: number) => `${y}${mo}${d}T${pad2(Math.floor(mins / 60) % 24)}${pad2(mins % 60)}00`;
-    const desc = [b.walkIn ? `Walk in with: ${b.walkIn}` : "", "Planned by COS"].filter(Boolean).join(" · ");
+    const desc = [b.walkIn ? `Walk in with: ${b.walkIn}` : "", "Planned by Ollin"].filter(Boolean).join(" · ");
     lines.push(
       "BEGIN:VEVENT",
       `UID:cos-${y}${mo}${d}-${i}@costhread.app`,
@@ -102,13 +102,13 @@ const DEMO_PLAN: DayPlan = {
   blocks: DEMO_BLOCKS,
   deferred: [],
   intention: "A full but breathable day — two real focus blocks, honest breaks, and you're protected before dinner.",
-  note: "COS kept your evening light — you've got real downtime before dinner, so you arrive rested, not frazzled.",
+  note: "Ollin kept your evening light — you've got real downtime before dinner, so you arrive rested, not frazzled.",
   createdAt: Date.now(),
   todos: [
     { id: "d1", text: "Finish the Lantern onboarding flow", done: false, createdAt: 0, when: "Morning", hint: "Pick up where you left off — screen 4.", essential: true, steps: [{ text: "Open the file, reread screen 3", done: true }, { text: "Build screen 4 — empty states", done: false }, { text: "Skim once, then share with the team", done: false }] },
     { id: "d2", text: "Send the research summary to the team", done: false, createdAt: 0, when: "Afternoon", hint: "Two minutes once the synthesis is in." },
     { id: "d3", text: "Reply to design with the spacing decision", done: false, createdAt: 0, when: "Before 11:30", hint: "They just need a yes / no.", essential: true },
-    { id: "d4", text: "Protect time to rest before dinner", done: false, createdAt: 0, when: "Evening", hint: "So you arrive rested, not running on empty.", essential: true, cos: "COS added · from your 7 PM dinner" },
+    { id: "d4", text: "Protect time to rest before dinner", done: false, createdAt: 0, when: "Evening", hint: "So you arrive rested, not running on empty.", essential: true, cos: "Ollin added · from your 7 PM dinner" },
     { id: "d5", text: "Grab a bottle of wine for dinner", done: false, createdAt: 0, cos: "COS added · linked to dinner tonight" },
     { id: "d0", text: "Take morning meds & water", done: true, createdAt: 0 },
   ],
@@ -430,7 +430,7 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
                   className="cos-field"
                   value={cmd}
                   disabled={building || IS_DEMO}
-                  placeholder={planned ? "Add a task… or tell COS to adjust your day" : "Plan my day — gym, deep work on Lantern, call the team, dinner…"}
+                  placeholder={planned ? "Add a task… or tell Ollin to adjust your day" : "Plan my day — gym, deep work on Lantern, call the team, dinner…"}
                   onChange={(e) => setCmd(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); cmdSubmit(); } }}
                 />
@@ -442,7 +442,7 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
                 {building ? "Building your day — focused sprints, real breaks, evening protected…"
                   : error ? error
                   : planned ? "Same box — now for quick adds. Tap the mic to talk, or type and press ↵."
-                  : "Brain-dump everything — messy is fine. Tap the mic to talk. COS builds your schedule and pulls out the to-dos."}
+                  : "Brain-dump everything — messy is fine. Tap the mic to talk. Ollin builds your schedule and pulls out the to-dos."}
               </p>
             </div>
 
@@ -473,7 +473,7 @@ export function TodayScreen({ onProject, onNav, seedDump, onSeedConsumed }: Prop
                 </p>
               )}
 
-              {planned && <p className="tdy-foot">COS reads your calendar and the shape of your day, then adds what you'd forget — including time to rest. Nothing here is a demand.</p>}
+              {planned && <p className="tdy-foot">Ollin reads your calendar and the shape of your day, then adds what you'd forget — including time to rest. Nothing here is a demand.</p>}
             </div>
 
             {/* FINISHED */}

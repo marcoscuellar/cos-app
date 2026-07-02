@@ -4,7 +4,7 @@ import { Icon } from "../components/Icon";
 // Maps a doc kind to where the original actually lives.
 const DOC_SOURCE: Record<string, string> = {
   Draft: "Google Docs", Doc: "Google Docs", Spec: "Google Docs", List: "Apple Notes",
-  Decision: "COS · Decisions", Wireframe: "Figma", Note: "Apple Notes", Idea: "COS · Ideas",
+  Decision: "Ōllin · Decisions", Wireframe: "Figma", Note: "Apple Notes", Idea: "Ōllin · Ideas",
   Rubric: "Google Sheets", Research: "Saved research",
 };
 
@@ -33,11 +33,11 @@ export function DocViewer({ doc, accent, onClose }: DocViewerProps) {
           </div>
           <a className="doc-open" href="#" onClick={(e) => e.preventDefault()}>Open original <Icon.arrow /></a>
           <div className="card" style={{ marginTop: 18 }}>
-            <div className="card-eyebrow">What COS remembers</div>
+            <div className="card-eyebrow">What Ollin remembers</div>
             <div style={{ fontSize: 15, color: "var(--ink-2)", lineHeight: 1.6 }}>{doc.summary}</div>
           </div>
           <div style={{ marginTop: 16, fontSize: 13, color: "var(--ink-4)", lineHeight: 1.6 }}>
-            The full document lives in {src}. COS keeps the thread — what it is, why it matters, and where you left it — so you can find and reopen it in one move, even months later.
+            The full document lives in {src}. Ollin keeps the thread — what it is, why it matters, and where you left it — so you can find and reopen it in one move, even months later.
           </div>
         </div>
       </div>

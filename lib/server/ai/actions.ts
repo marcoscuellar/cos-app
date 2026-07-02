@@ -6,7 +6,7 @@ import { getProvider, type AIProvider } from "./provider.js";
 //
 // Actions are NOT separate agents. Each is the same context-aware request with a
 // different instruction layered on the SAME workspace context. Every action
-// receives { context, input, action } and returns an AI response. Ask COS V1 is
+// receives { context, input, action } and returns an AI response. Ask Ollin V1 is
 // just the first action ("ask"); the rest reuse this engine unchanged.
 //
 // To add an action: add one entry to ACTIONS. No new endpoint, no new context
@@ -88,7 +88,7 @@ export async function runAction(req: ActionRequest, provider: AIProvider = getPr
   // COS already lives inside the workspace — it must never ask the user to
   // re-explain where they are or what they're working on.
   const system =
-    `You are COS, a calm, sharp thinking partner embedded directly inside the user's workspace. ` +
+    `You are Ollin, a calm, sharp thinking partner embedded directly inside the user's workspace. ` +
     `You ALREADY have the full context of their workspace below — never ask them to explain where ` +
     `they are, what the project is, or to provide background; you already know it. Ground every ` +
     `answer in the specifics of this workspace (its notes, documents, decisions, and activity), ` +

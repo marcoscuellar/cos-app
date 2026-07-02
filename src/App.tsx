@@ -4,7 +4,6 @@ import { HomeScreen } from "./screens/Home";
 import { TodayScreen } from "./screens/Today";
 import { TodaySummary } from "./screens/TodaySummary";
 import { ConversationScreen } from "./screens/Conversation";
-import { HelpScreen } from "./screens/Help";
 import { ProjectsScreen } from "./screens/Projects";
 import { ProjectScreen } from "./screens/ProjectDetail";
 import { IdeasScreen } from "./screens/Ideas";
@@ -17,8 +16,19 @@ import { loadState, saveState } from "./storage";
 import { loadProjects, saveProjects } from "./projectsApi";
 import type { Project } from "./types";
 import { IS_DEMO } from "./session";
+import { Regroup } from "./overlays/Regroup";
+import { detectIntent, type RegroupMode } from "./regroup";
+import type { Energy } from "./screens/Home";
 
-type Route = "home" | "today" | "summary" | "projects" | "project" | "ideas" | "idea" | "lab" | "search" | "conversation" | "help";
+type Route = "home" | "today" | "summary" | "projects" | "project" | "ideas" | "idea" | "lab" | "search" | "conversation";
+
+// Session-only Regroup state — how the rescue takeover was opened. Never stored.
+interface RegroupState {
+  mode?: RegroupMode | null;
+  preValidated?: boolean;
+  safety?: boolean;
+  text?: string;
+}
 
 export default function App() {
   const [route, setRoute] = useState<Route>("home");
@@ -28,6 +38,9 @@ export default function App() {
   const [searchSeed, setSearchSeed] = useState("");
   const [todaySeed, setTodaySeed] = useState("");
   const [convoSeed, setConvoSeed] = useState("");
+  const [regroup, setRegroup] = useState<RegroupState | null>(null);
+  const [energy, setEnergy] = useState<Energy | null>(null);
+  const [restMode, setRestMode] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const D = COS_DATA;
 
@@ -88,9 +101,41 @@ export default function App() {
   const goNav = (r: string) => { if (r === "search") setSearchSeed(""); if (r === "today") setTodaySeed(""); setRoute(r as Route); };
   const goTalk = (text: string) => { setConvoSeed(text); setRoute("conversation"); };
 
-  // Front-door command router. Names a room → jump in; "create my day…" → the
-  // Calendar builder; distress → the Help rescue room; everything else opens
-  // into Conversation (the spine).
+  // ── Regroup: the app's one rescue flow ────────────────────────────────────
+  const openRegroup = (opts: RegroupState = {}) => setRegroup(opts);
+
+  // main's original distress wiring, kept as a fast fallback for phrasing the
+  // keyword tiers miss (safety terms are checked first, and always win).
+  const MAIN_DISTRESS =
+    /adhd|kicking my ass|winning today|overwhelm|can'?t (start|focus)|too much|i'?m stuck|help me start|falling apart|drowning|paraly/i;
+
+  // Every free-text entry (typed or dictated) is screened for distress BEFORE the
+  // normal command router runs. This is the single convergence point for all
+  // rescue entry points — the Home input bar, voice, and the "Help me start" chip.
+  const handleUserInput = async (text: string) => {
+    const local = detectIntent(text);
+    if (local === "safety") return openRegroup({ safety: true, text });
+    if (local === "distress" || MAIN_DISTRESS.test(text)) return openRegroup({ preValidated: true, text });
+    // Server-side intent check — the fallback for phrasing the keyword list misses.
+    try {
+      const res = await fetch("/api/regroup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ mode: "detect", text }),
+      });
+      if (res.ok) {
+        const { intent } = (await res.json()) as { intent?: string };
+        if (intent === "safety") return openRegroup({ safety: true, text });
+        if (intent === "distress") return openRegroup({ preValidated: true, text });
+      }
+    } catch {
+      /* offline — fall through to the normal router */
+    }
+    onHomeCommand(text);
+  };
+
+  // Front-door command router (non-distress). Names a room → jump in;
+  // "create my day…" → the Calendar builder; everything else → Conversation.
   const onHomeCommand = (text: string) => {
     const t = text.trim().toLowerCase();
     const named = projects.find((p) => p.name.toLowerCase() === t || p.id.toLowerCase() === t);
@@ -105,12 +150,16 @@ export default function App() {
     }
     const day = text.trim().match(/^(?:create|build|plan|make|generate)\s+(?:my\s+)?day\b[\s,:.\-–—]*(.*)$/i);
     if (day) { setTodaySeed(day[1].trim()); setRoute("today"); return; }
-    if (/adhd|kicking my ass|winning today|overwhelm|can'?t (start|focus)|too much|i'?m stuck|help me start|falling apart|drowning|paraly/i.test(t)) {
-      setRoute("help");
-      return;
-    }
     setConvoSeed(text);
     setRoute("conversation");
+  };
+
+  // The Doorway energy answer is load-bearing: "It broke" hands straight to
+  // Regroup at the re-entry move. PRACTICE: energy-matched activation.
+  const onEnergy = (e: Energy) => {
+    setEnergy(e);
+    setRestMode(false);
+    if (e === "broke") openRegroup({ mode: "broke" });
   };
 
   // Avoid a flash before persisted prefs resolve.
@@ -126,17 +175,49 @@ export default function App() {
   else if (route === "today") screen = <TodayScreen onProject={goProject} onNav={goNav} seedDump={todaySeed} onSeedConsumed={() => setTodaySeed("")} />;
   else if (route === "summary") screen = <TodaySummary onNav={goNav} />;
   else if (route === "conversation") screen = <ConversationScreen seed={convoSeed} onNav={goNav} />;
-  else if (route === "help") screen = <HelpScreen onNav={goNav} onTalk={goTalk} />;
   else if (route === "ideas") screen = <IdeasScreen onIdea={goIdea} onNav={goNav} />;
   else if (route === "idea" && idea) screen = <IdeaDetail idea={idea} onProject={goProject} onBack={() => goNav("ideas")} onNav={goNav} onTalk={goTalk} />;
   else if (route === "lab") screen = <LabScreen onNav={goNav} />;
   else if (route === "search") screen = <SearchScreen onProject={goProject} onNav={goNav} initialQuery={searchSeed} />;
-  else screen = <HomeScreen onCommand={onHomeCommand} onNav={goNav} />;
+  else screen = (
+    <HomeScreen
+      onCommand={handleUserInput}
+      onNav={goNav}
+      projects={projects}
+      onProject={goProject}
+      energy={energy}
+      onEnergy={onEnergy}
+      restMode={restMode}
+      onRegroup={(m) => openRegroup({ mode: m })}
+    />
+  );
 
   return (
     <AppLock>
       {screen}
       {IS_DEMO && <DemoBadge />}
+
+      {/* Persistent "Stuck?" pill — gold, bottom-right, on every screen. One of the
+          three converging entry points into the single Regroup rescue flow. Never
+          a badge, never a count: a rescue must not keep score. */}
+      {!regroup && (
+        <button className="stuck-pill" onClick={() => openRegroup({})} title="Regroup">
+          <span className="sp-dot" />Stuck?
+        </button>
+      )}
+      {regroup && (
+        <Regroup
+          onClose={() => setRegroup(null)}
+          projects={projects}
+          initialMode={regroup.mode ?? null}
+          preValidated={regroup.preValidated}
+          safety={regroup.safety}
+          triggerText={regroup.text}
+          onStepIn={goProject}
+          onTalk={goTalk}
+          onRested={() => setRestMode(true)}
+        />
+      )}
     </AppLock>
   );
 }

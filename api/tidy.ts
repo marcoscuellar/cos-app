@@ -32,7 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const roomLabel = typeof room === "string" && room.trim() ? room.trim() : "this room";
 
   const system = [
-    `You are COS, tidying a founder's messy personal notes for the "${roomLabel}" room.`,
+    `You are Ollin, tidying a founder's messy personal notes for the "${roomLabel}" room.`,
     `Rewrite them into a clean, organized brief in their own voice. Do NOT invent facts — only organize what's there.`,
     `Group related thoughts under short ALL-CAPS section labels. Pull out action items and people if they appear.`,
     `Format as PLAIN TEXT only — no markdown, no #, no **, no backticks. Use "• " for bullets and "[ ] " for action items.`,

@@ -57,7 +57,7 @@ export function SearchScreen({ onProject, onNav, initialQuery }: Props) {
         title="Search."
         quote="The palest ink is better than the best memory."
         author="CHINESE PROVERB"
-        sub="NOTHING IS LOST · COS REMEMBERS SO YOU DON'T HAVE TO"
+        sub="NOTHING IS LOST · Ollin REMEMBERS SO YOU DON'T HAVE TO"
       />
       <div className="sx-field">
         <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.2-3.2" /></svg>

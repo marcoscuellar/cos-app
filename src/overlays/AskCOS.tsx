@@ -11,10 +11,10 @@ import {
 } from "../askContext";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Ask COS — the side panel.
+// Ask Ollin — the side panel.
 //
 // This is NOT chat. One question, full workspace context, one grounded answer.
-// The user only ever provides the question; COS supplies everything else
+// The user only ever provides the question; Ollin supplies everything else
 // (notes, documents, ideas, tasks, decisions, activity) automatically and
 // invisibly. No conversation history, no model selector, no settings.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -100,9 +100,9 @@ export function AskCOSPanel({ project, onClose }: AskCOSProps) {
       <div className={"bs-drawer ac-" + p.accent} onClick={(e) => e.stopPropagation()}>
         <div className="bs-head">
           <div>
-            <div className="bs-eye"><span className="d" />Ask COS · {p.name}</div>
-            <div className="bs-title">Ask COS</div>
-            <div className="bs-sub">COS already knows this workspace. Just ask — no need to explain where you are.</div>
+            <div className="bs-eye"><span className="d" />Ask Ollin · {p.name}</div>
+            <div className="bs-title">Ask Ollin</div>
+            <div className="bs-sub">Ollin already knows this workspace. Just ask — no need to explain where you are.</div>
           </div>
           <button className="bs-x" onClick={onClose}><Icon.x /></button>
         </div>
@@ -113,7 +113,7 @@ export function AskCOSPanel({ project, onClose }: AskCOSProps) {
               <div className="ask-empty-mark"><Icon.spark style={{ width: 18, height: 18 }} /></div>
               <div className="ask-empty-title">What do you want to know?</div>
               <div className="ask-empty-sub">
-                COS has your notes, documents, ideas, tasks, decisions, and recent activity for{" "}
+                Ollin has your notes, documents, ideas, tasks, decisions, and recent activity for{" "}
                 <strong>{p.name}</strong> — all included automatically.
               </div>
             </div>

@@ -51,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // COS is a supporting character: it brainstorms, drafts, and pokes holes only
   // when invited, and never silently authors decisions. Keep replies brief.
   const system =
-    `You are COS, a calm, sharp thinking partner helping the user brainstorm inside ` +
+    `You are Ollin, a calm, sharp thinking partner helping the user brainstorm inside ` +
     `their project "${name}"${why ? ` — ${why}` : ""}.` +
     (notes ? ` Project notes: ${notes}.` : "") +
     ` The user is riffing, not asking for a lecture. Offer concrete drafts, hooks, or angles. ` +

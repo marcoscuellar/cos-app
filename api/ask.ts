@@ -5,7 +5,7 @@ import { requireUser, unauthorized } from "../lib/server/session.js";
 import type { WorkspaceContext } from "../lib/server/ai/context.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Ask COS — HTTP entry point. Deliberately thin.
+// Ask Ollin — HTTP entry point. Deliberately thin.
 //
 //   Workspace → Context Builder (client) → [Action Engine → Provider Adapter] → LLM
 //

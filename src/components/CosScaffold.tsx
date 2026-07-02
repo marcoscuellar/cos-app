@@ -46,7 +46,7 @@ const RAIL: { key: string; d: string; route: string }[] = [
 export function Rail({ active, onNav, initial = "M" }: { active: string; onNav: (r: string) => void; initial?: string }) {
   return (
     <div className="rail">
-      <button className="rail-mark" onClick={() => onNav("home")}>COS</button>
+      <button className="rail-mark" onClick={() => onNav("home")}>Ōllin</button>
       <button className="rail-chev"><Ico d={P.chevron} s={16} sw={2.2} /></button>
       <button className="rail-search" onClick={() => onNav("search")} aria-label="Search"><Ico d={P.search} s={17} /></button>
       <div className="rail-group">
