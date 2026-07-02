@@ -608,7 +608,7 @@ h2.disp{font-family:var(--display);font-weight:700;letter-spacing:-.03em;line-he
   color:#fff;background:var(--ink);border-radius:11px;padding:11px 17px;transition:transform .12s}
 .bs-cta:hover{transform:translateY(-1px)}.bs-cta svg{width:15px;height:15px;stroke:#fff}
 
-/* Ask COS panel — empty state, re-ask, and the (subtle) context affordance */
+/* Ask Ollin panel — empty state, re-ask, and the (subtle) context affordance */
 .ask-empty{text-align:center;padding:18px 8px 6px;display:flex;flex-direction:column;align-items:center;gap:9px}
 .ask-empty-mark{width:42px;height:42px;border-radius:13px;background:var(--ac-bg,var(--paper-3));color:var(--ac,var(--ink-3));
   display:grid;place-items:center}
@@ -1849,3 +1849,148 @@ input,textarea,select{border-radius:0!important}
 .pg .md .note-card{border:1px solid var(--md-line);border-radius:14px;padding:15px 17px}
 .pg .md .note-card .nt-time{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--md-faint);margin-bottom:7px}
 .pg .md .note-card .nt-body{font-size:14px;color:var(--md-ink-2);line-height:1.6;white-space:pre-wrap}
+
+/* ============================================================
+   OLLIN — Regroup (the one rescue flow) · Stuck pill · Companion Home graft
+   The rescue takeover is a calm sanctuary on green; the Home graft speaks
+   main's own mood tokens (--ink/--ac/--muted) so it fits dark or cream.
+   Zero red. Exactly one gold CTA per beat. Squared edges.
+   ============================================================ */
+:root{
+  --ollin-green:#2d4a30;
+  --ollin-green-2:#3d5f41;
+  --ollin-green-deep:#22392a;
+  --ollin-gold:#d9a441;
+  --ollin-gold-bg:#f6edd8;
+  --on-green:#ffffff;
+  --on-green-2:#dfe6df;
+  --on-green-3:#b9c6ba;
+  --on-green-line:rgba(255,255,255,.16);
+}
+
+/* ---- persistent "Stuck?" pill — gold, bottom-right, above the input bar ---- */
+.stuck-pill{position:fixed;right:26px;bottom:26px;z-index:80;
+  display:inline-flex;align-items:center;gap:9px;
+  background:var(--ollin-gold);color:#241c07;
+  font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:-.01em;
+  padding:13px 20px;border-radius:999px;border:0;cursor:pointer;
+  box-shadow:0 6px 22px -6px rgba(217,164,65,.55),0 2px 6px rgba(16,16,20,.18);
+  transition:transform .14s,box-shadow .14s}
+.stuck-pill:hover{transform:translateY(-2px);box-shadow:0 12px 30px -8px rgba(217,164,65,.6),0 3px 8px rgba(16,16,20,.24)}
+.stuck-pill .sp-dot{width:8px;height:8px;border-radius:50%;background:#241c07;opacity:.8}
+@media(max-width:560px){.stuck-pill{right:16px;bottom:20px;padding:11px 17px;font-size:13px}}
+
+/* ---- Regroup takeover — a modal panel on green, ONE thing per beat ---- */
+.regroup-scrim{position:fixed;inset:0;z-index:120;background:rgba(15,26,17,.55);
+  backdrop-filter:blur(4px);display:grid;place-items:center;padding:26px;animation:rgFade .22s ease}
+@keyframes rgFade{from{opacity:0}to{opacity:1}}
+.regroup{position:relative;width:min(540px,100%);max-height:92vh;overflow-y:auto;
+  background:var(--ollin-green);color:var(--on-green);padding:40px 40px 34px;border-radius:4px;
+  box-shadow:0 40px 100px -30px rgba(0,0,0,.6);animation:rgIn .3s cubic-bezier(.2,.9,.3,1)}
+@keyframes rgIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.regroup .rg-x{position:absolute;top:18px;right:18px;width:34px;height:34px;border:0;background:transparent;
+  cursor:pointer;border-radius:8px;display:grid;place-items:center;color:var(--on-green-3);transition:background .12s,color .12s}
+.regroup .rg-x:hover{background:rgba(255,255,255,.08);color:var(--on-green)}
+.regroup .rg-x svg{width:18px;height:18px;stroke:currentColor}
+.rg-rule{height:3px;width:46px;background:var(--ollin-gold);margin-bottom:22px;border-radius:1px}
+
+.rg-validate{font-family:var(--serif);font-weight:400;font-size:clamp(24px,4vw,30px);
+  line-height:1.32;color:var(--on-green);letter-spacing:0;max-width:24ch}
+.rg-lead{font-size:14px;color:var(--on-green-2);margin:20px 0 16px;font-weight:500}
+.rg-tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:460px){.rg-tiles{grid-template-columns:1fr}}
+.rg-tile{display:flex;flex-direction:column;gap:5px;text-align:left;background:var(--ollin-green-deep);
+  border:1px solid var(--on-green-line);color:var(--on-green);border-radius:3px;padding:20px 18px;cursor:pointer;
+  transition:border-color .14s,transform .14s,background .14s}
+.rg-tile:hover{border-color:var(--ollin-gold);transform:translateY(-2px);background:#284434}
+.rg-tile .t{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em}
+.rg-tile .s{font-size:12.5px;color:var(--on-green-3);font-weight:500}
+
+.rg-move-head{font-family:var(--serif);font-weight:400;font-size:clamp(21px,3.4vw,26px);
+  line-height:1.34;color:var(--on-green);letter-spacing:0;max-width:26ch}
+.rg-move-card{margin-top:22px;background:var(--ollin-green-deep);border:1px solid var(--on-green-line);
+  border-radius:3px;padding:22px 22px 24px}
+.rg-move-card .rg-move-label{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ollin-gold);margin-bottom:11px}
+.rg-move-card .rg-move-body{font-size:16px;line-height:1.5;color:var(--on-green);font-weight:500}
+.rg-move-card .rg-move-sub{font-size:13px;color:var(--on-green-3);margin-top:8px;line-height:1.5}
+.rg-moved-list{margin-top:14px;display:flex;flex-direction:column;gap:2px}
+.rg-moved-list .mv{font-size:13px;color:var(--on-green-3);display:flex;gap:9px;align-items:baseline;padding:3px 0}
+.rg-moved-list .mv .mk{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--on-green-3);opacity:.7}
+
+.rg-cta{margin-top:22px;display:inline-flex;align-items:center;gap:9px;background:var(--ollin-gold);color:#241c07;
+  border:0;cursor:pointer;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em;
+  padding:14px 22px;border-radius:999px;transition:transform .12s,filter .12s}
+.rg-cta:hover{transform:translateY(-1px);filter:brightness(1.04)}
+.rg-cta svg{width:16px;height:16px;stroke:#241c07}
+
+.rg-close{font-family:var(--serif);font-weight:400;font-size:clamp(22px,3.6vw,28px);line-height:1.34;color:var(--on-green);max-width:22ch}
+.rg-close-sub{font-size:13.5px;color:var(--on-green-3);margin-top:14px}
+.rg-done{margin-top:24px;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--on-green-line);
+  color:var(--on-green-2);background:transparent;cursor:pointer;font-family:var(--display);font-weight:600;font-size:14px;
+  padding:12px 20px;border-radius:999px;transition:border-color .14s,color .14s}
+.rg-done:hover{border-color:var(--on-green-2);color:var(--on-green)}
+.rg-back{margin-top:24px;display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;cursor:pointer;
+  font-size:12.5px;color:var(--on-green-3);font-weight:600;transition:color .12s}
+.rg-back:hover{color:var(--on-green)}
+.rg-back svg{width:14px;height:14px;stroke:currentColor;transform:rotate(180deg)}
+
+/* Safety Net — served instead of any productivity move */
+.rg-safety .rg-safe-lead{font-family:var(--serif);font-weight:400;font-size:clamp(22px,3.6vw,27px);line-height:1.36;color:var(--on-green);max-width:28ch}
+.rg-safe-sub{font-size:14px;color:var(--on-green-2);margin:18px 0 6px;line-height:1.55;max-width:44ch}
+.rg-resources{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+.rg-resource{display:block;text-align:left;background:var(--ollin-green-deep);border:1px solid var(--on-green-line);
+  border-radius:3px;padding:15px 17px;color:var(--on-green);text-decoration:none;transition:border-color .14s}
+.rg-resource:hover{border-color:var(--ollin-gold)}
+.rg-resource .rr-name{font-family:var(--display);font-weight:700;font-size:15px}
+.rg-resource .rr-note{font-size:12.5px;color:var(--on-green-3);margin-top:3px}
+.rg-resource .rr-num{font-family:var(--display);font-weight:700;color:var(--ollin-gold)}
+
+/* ---- Home graft: the rail wordmark, energy answers, and the Front Page ---- */
+/* Rail mark reads as the Ōllin wordmark (matches the lock screen), not a boxed COS. */
+.cos-home .cos-rail-mark{border-color:transparent;padding:6px 4px;letter-spacing:.1em;font-size:12px}
+.cos-home .cos-rail-mark:hover{border-color:transparent;color:var(--ac)}
+
+/* energy answers — under the gold question, load-bearing */
+.cos-home .h-energy{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.cos-home .energy-pill{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;cursor:pointer;
+  border:1px solid var(--rail-line,rgba(255,255,255,.16));background:transparent;color:var(--ink);border-radius:12px;
+  padding:11px 16px;transition:border-color .14s,transform .14s}
+.cos-home .energy-pill:hover{border-color:var(--ac);transform:translateY(-1px)}
+.cos-home .energy-pill.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset}
+.cos-home .energy-pill .ep-t{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em}
+.cos-home .energy-pill .ep-s{font-size:11.5px;color:var(--muted)}
+
+/* When there's a day to show, Home scrolls and the Front Page flows beneath the hero. */
+.cos-home.has-today{height:auto;min-height:100vh;overflow-y:auto}
+.cos-home.has-today .h-stage{position:relative;inset:auto;min-height:100vh;justify-content:center;padding:70px 24px 90px}
+.cos-home .h-today{width:700px;max-width:100%;margin:44px auto 0;border-top:1px solid var(--rail-line,rgba(255,255,255,.14));padding-top:30px}
+.cos-home .ht-eyebrow{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.cos-home .ht-onething{margin-bottom:30px}
+.cos-home .ht-onething-line{font-family:var(--serif);font-weight:400;font-size:clamp(26px,4vw,38px);line-height:1.14;color:var(--ink);letter-spacing:-.01em;max-width:22ch}
+.cos-home .ht-start{margin-top:18px;display:inline-flex;align-items:center;gap:9px;background:var(--ollin-gold);color:#241c07;
+  border:0;cursor:pointer;font-family:var(--display);font-weight:700;font-size:14.5px;padding:12px 22px;border-radius:999px;transition:transform .12s,filter .12s}
+.cos-home .ht-start:hover{transform:translateY(-1px);filter:brightness(1.04)}
+.cos-home .ht-start svg{width:15px;height:15px}
+.cos-home .ht-block{margin-bottom:28px}
+.cos-home .ht-thread{display:flex;align-items:baseline;gap:12px;width:100%;text-align:left;cursor:pointer;background:transparent;border:0;
+  border-bottom:1px solid var(--rail-line,rgba(255,255,255,.1));padding:12px 4px;color:var(--ink)}
+.cos-home .ht-thread:last-child{border-bottom:0}
+.cos-home .ht-thread:hover .ht-thread-name{color:var(--ac)}
+.cos-home .ht-thread-name{font-family:var(--display);font-weight:700;font-size:15px;flex-shrink:0;transition:color .12s}
+.cos-home .ht-thread-pick{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.cos-home .ht-thread-when{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);white-space:nowrap;flex-shrink:0}
+.cos-home .ht-today-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:10px}
+.cos-home .ht-lighter{border:0;background:transparent;cursor:pointer;font-family:var(--display);font-weight:700;font-size:12.5px;color:var(--ac);padding:4px 0}
+.cos-home .ht-lighter:hover{filter:brightness(1.1)}
+.cos-home .ht-todo{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--rail-line,rgba(255,255,255,.08));font-size:14.5px;color:var(--ink)}
+.cos-home .ht-todo:last-child{border-bottom:0}
+.cos-home .ht-todo-mark{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--muted);flex-shrink:0}
+.cos-home .ht-buffer{margin-top:10px;font-family:var(--serif);font-style:italic;font-size:13px;color:var(--muted)}
+.cos-home .ht-spark{display:inline-flex;align-items:center;gap:9px;border:1px dashed var(--rail-line,rgba(255,255,255,.18));background:transparent;cursor:pointer;
+  border-radius:999px;padding:8px 15px;font-size:12.5px;color:var(--muted)}
+.cos-home .ht-spark:hover{border-color:var(--ac);color:var(--ink)}
+.cos-home .ht-spark-dot{width:6px;height:6px;border-radius:50%;background:var(--ac)}
+.cos-home .ht-spark-label{font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cos-home .h-rest .ht-rest-line{font-family:var(--serif);font-size:clamp(20px,3.2vw,26px);line-height:1.34;color:var(--ink);max-width:26ch}
+.cos-home .h-rest .ht-lighter{margin-top:16px}
