@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getProvider, providerConfigured, ProviderError } from "../lib/server/ai/provider.js";
+import { requireUser, unauthorized } from "../lib/server/session.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Engine assist — draft a whole engine from a one-line description. Returns the
@@ -65,6 +66,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
   if (!providerConfigured()) return res.status(503).json({ error: "AI is not configured." });
+  if (!(await requireUser(req))) return unauthorized(res);
 
   const { name, desc } = (req.body ?? {}) as { name?: string; desc?: string };
   const description = typeof desc === "string" ? desc.trim() : "";

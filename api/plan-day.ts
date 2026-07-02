@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { kvConfigured, kvGet, kvSet } from "../lib/server/kv.js";
+import { requireUser, unauthorized } from "../lib/server/session.js";
 import { getProvider, providerConfigured, ProviderError } from "../lib/server/ai/provider.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -13,7 +14,6 @@ import { getProvider, providerConfigured, ProviderError } from "../lib/server/ai
 // authed user id when multi-user auth returns — the key shape already carries it.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const OWNER = "me";
 const PACING = new Set(["breathing-room", "tight", "deep-work"]);
 
 interface PlannedBlock {
@@ -148,12 +148,12 @@ function dateKey(d: Date = new Date()): string {
   // YYYY-MM-DD in the user's home timezone, so "today" is correct everywhere.
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(d);
 }
-const planKey = (key: string = dateKey()) => `plan:${OWNER}:${key}`;
+const planKey = (uid: string, key: string = dateKey()) => `user:${uid}:plan:${key}`;
 const yesterdayKey = () => dateKey(new Date(Date.now() - 24 * 60 * 60 * 1000));
 
 // Yesterday's still-open to-dos — offered back as today's "From yesterday" carry-over.
-async function loadCarryover(): Promise<TodoItem[]> {
-  const prev = await kvGet<DayPlan>(planKey(yesterdayKey()));
+async function loadCarryover(uid: string): Promise<TodoItem[]> {
+  const prev = await kvGet<DayPlan>(planKey(uid, yesterdayKey()));
   if (!prev?.todos) return [];
   return prev.todos.filter((t) => !t.done).slice(0, 12);
 }
@@ -282,16 +282,19 @@ function normalize(
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!kvConfigured()) return res.status(503).json({ error: "Storage is not configured." });
 
+  const uid = await requireUser(req);
+  if (!uid) return unauthorized(res);
+
   try {
     if (req.method === "GET") {
-      const plan = await kvGet<DayPlan>(planKey());
+      const plan = await kvGet<DayPlan>(planKey(uid));
       // Offer yesterday's unfinished work back, unless they've already answered today.
-      const carryover = plan?.carryDone ? [] : await loadCarryover();
+      const carryover = plan?.carryDone ? [] : await loadCarryover(uid);
       return res.status(200).json({ plan: plan ?? null, carryover });
     }
 
     if (req.method === "DELETE") {
-      await kvSet(planKey(), null);
+      await kvSet(planKey(uid), null);
       return res.status(200).json({ plan: null });
     }
 
@@ -316,7 +319,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const hasJournal = Array.isArray(body.journal);
       const hasCarry = typeof body.carryDone === "boolean";
       if ((hasTodos || hasNotes || hasJournal || hasCarry) && !body.dump) {
-        const existing = await kvGet<DayPlan>(planKey());
+        const existing = await kvGet<DayPlan>(planKey(uid));
         const base: DayPlan = existing ?? { dump: "", blocks: [], deferred: [], createdAt: Date.now() };
         const updated: DayPlan = {
           ...base,
@@ -325,25 +328,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ...(hasJournal ? { journal: sanitizeJournal(body.journal) } : {}),
           ...(hasCarry ? { carryDone: body.carryDone === true } : {}),
         };
-        await kvSet(planKey(), updated);
+        await kvSet(planKey(uid), updated);
         return res.status(200).json({ plan: updated });
       }
 
       // Edit just the intention on the existing plan — no AI needed.
       if (typeof body.intention === "string" && !body.dump) {
-        const existing = await kvGet<DayPlan>(planKey());
+        const existing = await kvGet<DayPlan>(planKey(uid));
         if (!existing) return res.status(404).json({ error: "No plan to update." });
         const updated: DayPlan = { ...existing, intention: body.intention.trim().slice(0, 200) || undefined };
-        await kvSet(planKey(), updated);
+        await kvSet(planKey(uid), updated);
         return res.status(200).json({ plan: updated });
       }
 
       // Save an edited blocks array (reschedule / rename / check off / add / delete) — no AI.
       if (Array.isArray(body.blocks) && !body.dump) {
-        const existing = await kvGet<DayPlan>(planKey());
+        const existing = await kvGet<DayPlan>(planKey(uid));
         if (!existing) return res.status(404).json({ error: "No plan to update." });
         const updated: DayPlan = { ...existing, blocks: sanitizeBlocks(body.blocks) };
-        await kvSet(planKey(), updated);
+        await kvSet(planKey(uid), updated);
         return res.status(200).json({ plan: updated });
       }
 
@@ -371,7 +374,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Preserve every to-do the user already has (checked-off progress, carried-over
         // items, hand-added tasks, things parked for tomorrow) — a rebuild only ADDS the
         // new AI items whose text isn't already on the list. Carry journal + carry flag too.
-        const existing = await kvGet<DayPlan>(planKey());
+        const existing = await kvGet<DayPlan>(planKey(uid));
         const prior = existing?.todos ?? [];
         const seen = new Set(prior.map((t) => t.text.toLowerCase()));
         const merged = [...prior, ...todos.filter((t) => !seen.has(t.text.toLowerCase()))];
@@ -390,7 +393,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(502).json({ error: "Couldn't build a clean schedule from that — try again." });
       }
 
-      await kvSet(planKey(), plan);
+      await kvSet(planKey(uid), plan);
       return res.status(200).json({ plan });
     }
 

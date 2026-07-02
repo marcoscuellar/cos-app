@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { requireUser, unauthorized } from "../lib/server/session.js";
 
 // The ANTHROPIC_API_KEY is read from the environment (set in Vercel) and never
 // leaves the server — the client only ever talks to this function.
@@ -24,6 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(503).json({ error: "AI is not configured." });
   }
+  if (!(await requireUser(req))) return unauthorized(res);
 
   const body = req.body as BrainstormBody;
   const project = body?.project ?? {};

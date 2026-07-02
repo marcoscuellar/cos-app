@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getProvider, providerConfigured, ProviderError } from "../lib/server/ai/provider.js";
+import { requireUser, unauthorized } from "../lib/server/session.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tidy — turn a room's raw, messy notes into a clean brief.
@@ -19,6 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!providerConfigured()) {
     return res.status(503).json({ error: "AI is not configured." });
   }
+  if (!(await requireUser(req))) return unauthorized(res);
 
   const { notes, room } = (req.body ?? {}) as { notes?: string[]; room?: string };
   const list = Array.isArray(notes)

@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { runAction, isActionId, ACTIONS } from "../lib/server/ai/actions.js";
 import { providerConfigured, ProviderError } from "../lib/server/ai/provider.js";
+import { requireUser, unauthorized } from "../lib/server/session.js";
 import type { WorkspaceContext } from "../lib/server/ai/context.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -28,6 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!providerConfigured()) {
     return res.status(503).json({ error: "AI is not configured." });
   }
+  if (!(await requireUser(req))) return unauthorized(res);
 
   const body = (req.body ?? {}) as AskBody;
   const context = body.context ?? {};
