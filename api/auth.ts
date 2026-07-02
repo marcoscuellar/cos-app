@@ -12,13 +12,14 @@ import type {
   AuthenticatorTransportFuture,
 } from "@simplewebauthn/server";
 import {
-  kvGet, kvGetRaw, kvSet, kvDel, kvScan,
+  kvGet, kvGetRaw, kvSet, kvDel,
   kvSAdd, kvSRem, kvSIsMember, kvSCard, kvSMembers, kvMGet,
 } from "../lib/server/kv.js";
 import {
   getSecret, signSession, setSessionCookie, clearSessionCookie, readCookie,
   requireUser, SESSION_TTL_MS, OWNER_UID,
 } from "../lib/server/session.js";
+import { ensureOwnerMigrated } from "../lib/server/migrate.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Private accounts — passkey auth (WebAuthn), one signed session cookie per user.
@@ -40,7 +41,9 @@ const SETUP_CODE_HASH = "fdb2da9675f1b906cff67d216d88585d9772467f2eb4c911750b557
 
 const INVITES_KEY = "ollin:invites";
 const USERS_KEY = "ollin:users";
-const LEGACY_OWNER_KEY = "cos-auth:owner";
+const CODEFAIL_KEY = "ollin:codefail"; // throttles online guessing of the setup code
+const CODE_MAX_FAILS = 15;
+const CODE_FAIL_TTL_SEC = 15 * 60;
 const ACTIVE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 const REG_COOKIE = "cos_reg";
@@ -82,46 +85,19 @@ function shortCookie(res: VercelResponse, name: string, value: string, maxAgeSec
 }
 
 // rpID = registrable domain; origin = page origin. Derived per-request so the same
-// code works on costhread.app, preview URLs, and localhost.
+// code works on our own hosts + previews. rpID/origin are pinned to an ALLOWLIST
+// rather than trusted from the Host/Origin headers, so a spoofed Host can't make
+// us verify assertions for a foreign relying party.
+const RP_CANONICAL = process.env.RP_ID || "costhread.app";
+const RP_ALLOW = [/^localhost$/, /^costhread\.app$/, /(^|\.)vercel\.app$/];
 function relyingParty(req: VercelRequest): { rpID: string; origin: string; secure: boolean } {
-  const host = (req.headers.host || "localhost").split(":")[0];
-  const origin = (req.headers.origin as string) || `https://${req.headers.host || host}`;
-  return { rpID: host, origin, secure: origin.startsWith("https://") };
-}
-
-// ── one-time owner migration: cos-auth:owner + *:me → user:me:* ────────────────
-async function rekey(oldKey: string, newKey: string): Promise<void> {
-  if ((await kvGetRaw(newKey)) !== null) return; // never clobber already-migrated data
-  const raw = await kvGetRaw(oldKey);
-  if (raw === null) return;
-  await kvSet(newKey, raw); // raw is already the stored JSON string
-  await kvDel(oldKey);
-}
-
-async function migrateOwnerIfNeeded(): Promise<void> {
-  const legacy = await kvGet<{ credential: StoredCredential; createdAt?: number }>(LEGACY_OWNER_KEY);
-  if (!legacy?.credential) return; // nothing to migrate (already done or never set)
-
-  if ((await kvGetRaw(userCredsKey(OWNER_UID))) === null) {
-    await kvSet(userCredsKey(OWNER_UID), [legacy.credential]);
-    await kvSet(credKey(legacy.credential.id), OWNER_UID);
-    await kvSet(userMetaKey(OWNER_UID), { createdAt: legacy.createdAt ?? Date.now(), lastActive: Date.now() } as UserMeta);
-    await kvSAdd(USERS_KEY, OWNER_UID);
-  }
-
-  await rekey(`projects:${OWNER_UID}`, `user:${OWNER_UID}:projects`);
-  await rekey(`engines:${OWNER_UID}`, `user:${OWNER_UID}:engines`);
-  for (const k of await kvScan(`plan:${OWNER_UID}:*`)) {
-    await rekey(k, `user:${OWNER_UID}:plan:${k.slice(`plan:${OWNER_UID}:`.length)}`);
-  }
-  for (const k of await kvScan(`notes:${OWNER_UID}:*`)) {
-    await rekey(k, `user:${OWNER_UID}:notes:${k.slice(`notes:${OWNER_UID}:`.length)}`);
-  }
-  for (const k of await kvScan(`engine:runs:${OWNER_UID}:*`)) {
-    await rekey(k, `user:${OWNER_UID}:engine:runs:${k.slice(`engine:runs:${OWNER_UID}:`.length)}`);
-  }
-
-  await kvDel(LEGACY_OWNER_KEY); // done — this guard is now false forever
+  const rawHost = (req.headers.host || "").split(":")[0];
+  const allowed = RP_ALLOW.some((re) => re.test(rawHost));
+  const rpID = allowed ? rawHost : RP_CANONICAL;
+  const secure = rpID !== "localhost";
+  // Build the origin from the validated host (with its port) — never the raw header.
+  const origin = allowed ? `${secure ? "https" : "http"}://${req.headers.host}` : `https://${RP_CANONICAL}`;
+  return { rpID, origin, secure };
 }
 
 async function touchActive(uid: string): Promise<void> {
@@ -130,14 +106,25 @@ async function touchActive(uid: string): Promise<void> {
   await kvSet(userMetaKey(uid), meta);
 }
 
-const ownerCode = (req: VercelRequest) => sha256hex(String(req.body?.code ?? "").trim().toUpperCase()) === SETUP_CODE_HASH;
+// Verify the owner setup code, throttled: too many wrong tries locks the
+// setup-code actions for a window, so the code can't be guessed online.
+async function checkOwnerCode(req: VercelRequest): Promise<"ok" | "bad" | "locked"> {
+  const fails = (await kvGet<number>(CODEFAIL_KEY)) ?? 0;
+  if (fails >= CODE_MAX_FAILS) return "locked";
+  if (sha256hex(String(req.body?.code ?? "").trim().toUpperCase()) === SETUP_CODE_HASH) {
+    await kvDel(CODEFAIL_KEY);
+    return "ok";
+  }
+  await kvSet(CODEFAIL_KEY, fails + 1, { ttlSec: CODE_FAIL_TTL_SEC });
+  return "bad";
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const action = (req.query.action as string) || (req.body && req.body.action) || "status";
   const { rpID, origin, secure } = relyingParty(req);
 
   try {
-    await migrateOwnerIfNeeded();
+    await ensureOwnerMigrated();
 
     // ── status: is this session signed in? ──
     if (action === "status") {
@@ -150,9 +137,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ ok: true });
     }
 
-    // ── owner: mint an invite code (gated by the setup code) ──
+    // ── owner: mint an invite code (gated by the throttled setup code) ──
     if (action === "invite-create") {
-      if (!ownerCode(req)) return res.status(403).json({ error: "Not authorized." });
+      const g = await checkOwnerCode(req);
+      if (g === "locked") return res.status(429).json({ error: "Too many attempts — try again later." });
+      if (g !== "ok") return res.status(403).json({ error: "Not authorized." });
       const invite = makeInvite();
       await kvSAdd(INVITES_KEY, invite);
       return res.status(200).json({ invite });
@@ -160,7 +149,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── owner: aggregate stats only — never any content ──
     if (action === "stats") {
-      if (!ownerCode(req)) return res.status(403).json({ error: "Not authorized." });
+      const g = await checkOwnerCode(req);
+      if (g === "locked") return res.status(429).json({ error: "Too many attempts — try again later." });
+      if (g !== "ok") return res.status(403).json({ error: "Not authorized." });
       const uids = await kvSMembers(USERS_KEY);
       const metas = uids.length ? await kvMGet(uids.map(userMetaKey)) : [];
       const now = Date.now();
@@ -174,7 +165,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── begin registration ──
     if (action === "register-options") {
-      // Identity precedence: signed-in (add a device) → owner setup code → invite.
+      // Identity precedence: signed-in (add a device) → valid invite → owner setup
+      // code. Invite is checked BEFORE the code so normal sign-ups never touch the
+      // setup-code fail counter (which would let anyone lock the owner out).
       const sessionUid = await requireUser(req);
       const invite = String(req.body?.invite ?? "").trim().toUpperCase();
       let uid: string;
@@ -182,13 +175,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (sessionUid) {
         uid = sessionUid;
-      } else if (ownerCode(req)) {
-        uid = OWNER_UID;
       } else if (invite && (await kvSIsMember(INVITES_KEY, invite))) {
         uid = newUid();
         inviteToConsume = invite;
       } else {
-        return res.status(403).json({ error: "You need a valid invite code to create an account." });
+        const g = await checkOwnerCode(req);
+        if (g === "locked") return res.status(429).json({ error: "Too many attempts — try again later." });
+        if (g !== "ok") return res.status(403).json({ error: "You need a valid invite code to create an account." });
+        uid = OWNER_UID;
       }
 
       const existing = (await kvGet<StoredCredential[]>(userCredsKey(uid))) ?? [];
@@ -226,30 +220,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: "Couldn't register that passkey." });
       }
 
+      const c = verification.registrationInfo.credential;
+      // Never repoint another account's credential index. attestation is "none",
+      // so a malicious authenticator could present a chosen id; refuse if it's
+      // already claimed by a different user.
+      const claimedBy = await kvGet<string>(credKey(c.id));
+      if (claimedBy && claimedBy !== pending.uid) {
+        return res.status(409).json({ error: "That passkey is already registered to an account." });
+      }
+
       // Consume the invite ONLY now, atomically — SREM returns 0 if already used.
       if (pending.invite) {
         const removed = await kvSRem(INVITES_KEY, pending.invite);
         if (removed === 0) return res.status(409).json({ error: "That invite was already used." });
       }
-      await kvDel(`reg:${n}`);
 
-      const c = verification.registrationInfo.credential;
-      const cred: StoredCredential = {
-        id: c.id,
-        publicKey: b64url(c.publicKey),
-        counter: c.counter,
-        transports: response.response.transports,
-      };
-      const creds = (await kvGet<StoredCredential[]>(userCredsKey(pending.uid))) ?? [];
-      const merged = [...creds.filter((x) => x.id !== cred.id), cred];
-      await kvSet(userCredsKey(pending.uid), merged);
-      await kvSet(credKey(cred.id), pending.uid);
-      if (!(await kvGetRaw(userMetaKey(pending.uid)))) {
-        await kvSet(userMetaKey(pending.uid), { createdAt: Date.now(), lastActive: Date.now() } as UserMeta);
-      } else {
-        await touchActive(pending.uid);
+      try {
+        const cred: StoredCredential = {
+          id: c.id,
+          publicKey: b64url(c.publicKey),
+          counter: c.counter,
+          transports: response.response.transports,
+        };
+        const creds = (await kvGet<StoredCredential[]>(userCredsKey(pending.uid))) ?? [];
+        await kvSet(userCredsKey(pending.uid), [...creds.filter((x) => x.id !== cred.id), cred]);
+        await kvSet(credKey(cred.id), pending.uid);
+        if (!(await kvGetRaw(userMetaKey(pending.uid)))) {
+          await kvSet(userMetaKey(pending.uid), { createdAt: Date.now(), lastActive: Date.now() } as UserMeta);
+        } else {
+          await touchActive(pending.uid);
+        }
+        await kvSAdd(USERS_KEY, pending.uid);
+      } catch (persistErr) {
+        // A mid-write failure must not burn the invite — put it back so the user can retry.
+        if (pending.invite) await kvSAdd(INVITES_KEY, pending.invite);
+        throw persistErr;
       }
-      await kvSAdd(USERS_KEY, pending.uid);
+      await kvDel(`reg:${n}`);
 
       setSessionCookie(res, signSession(await getSecret(), pending.uid, Date.now() + SESSION_TTL_MS), secure);
       return res.status(200).json({ ok: true });
@@ -305,7 +312,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── owner break-glass: setup code clears the owner's passkeys to re-enroll ──
     if (action === "recover") {
-      if (!ownerCode(req)) return res.status(403).json({ error: "That setup code isn't right." });
+      const g = await checkOwnerCode(req);
+      if (g === "locked") return res.status(429).json({ error: "Too many attempts — try again later." });
+      if (g !== "ok") return res.status(403).json({ error: "That setup code isn't right." });
       const creds = (await kvGet<StoredCredential[]>(userCredsKey(OWNER_UID))) ?? [];
       for (const c of creds) await kvDel(credKey(c.id));
       await kvDel(userCredsKey(OWNER_UID));

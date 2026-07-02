@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { randomUUID } from "node:crypto";
 import { kvConfigured, kvGet, kvSet } from "../lib/server/kv.js";
 import { requireUser, unauthorized } from "../lib/server/session.js";
+import { ensureOwnerMigrated } from "../lib/server/migrate.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Notes — the first piece of real, persisted user content.
@@ -37,6 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const uid = await requireUser(req);
   if (!uid) return unauthorized(res);
+  await ensureOwnerMigrated();
 
   try {
     if (req.method === "GET") {

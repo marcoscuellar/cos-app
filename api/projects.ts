@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { kvConfigured, kvGet, kvSet } from "../lib/server/kv.js";
 import { requireUser, unauthorized } from "../lib/server/session.js";
+import { ensureOwnerMigrated } from "../lib/server/migrate.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Projects — the signed-in user's editable room list, private to their account.
@@ -15,6 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const uid = await requireUser(req);
   if (!uid) return unauthorized(res);
+  await ensureOwnerMigrated();
 
   try {
     if (req.method === "GET") {

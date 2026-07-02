@@ -21,12 +21,14 @@ export const OWNER_UID = "me";
 const LEGACY_OWNER_SUB = "owner";
 
 export async function getSecret(): Promise<string> {
-  let s = await kvGet<string>(SECRET_KEY);
-  if (!s || typeof s !== "string") {
-    s = crypto.randomBytes(32).toString("hex");
-    await kvSet(SECRET_KEY, s);
-  }
-  return s;
+  const s = await kvGet<string>(SECRET_KEY);
+  if (s && typeof s === "string") return s;
+  // First boot: SET NX so concurrent cold starts converge on ONE secret (last
+  // write can't clobber), then read back whichever value actually landed.
+  const candidate = crypto.randomBytes(32).toString("hex");
+  await kvSet(SECRET_KEY, candidate, { nx: true });
+  const winner = await kvGet<string>(SECRET_KEY);
+  return typeof winner === "string" && winner ? winner : candidate;
 }
 
 export function signSession(secret: string, uid: string, exp: number): string {
