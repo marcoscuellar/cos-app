@@ -55,6 +55,18 @@ export async function kvDel(key: string): Promise<void> {
   await command(["DEL", key]);
 }
 
+/** Atomic increment — returns the new value. Used for race-free capacity counting. */
+export async function kvIncr(key: string): Promise<number> {
+  const res = await command(["INCR", key]);
+  return typeof res === "number" ? res : Number(res) || 0;
+}
+
+/** Atomic decrement — returns the new value. Used to release a reserved slot. */
+export async function kvDecr(key: string): Promise<number> {
+  const res = await command(["DECR", key]);
+  return typeof res === "number" ? res : Number(res) || 0;
+}
+
 export async function kvSAdd(key: string, member: string): Promise<void> {
   await command(["SADD", key, member]);
 }

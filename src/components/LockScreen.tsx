@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { registerPasskey, loginPasskey, recover } from "../auth";
+import { registerOpen, registerPasskey, loginPasskey, recover } from "../auth";
 
 // The gate over a private account. Passkey-first (Touch ID / Face ID / device
 // key). New members create an account with an invite code; returning members
@@ -23,10 +23,11 @@ type Mode = "unlock" | "register" | "recover";
 export function LockScreen({ onUnlocked }: { onUnlocked: () => void }) {
   const [mode, setMode] = useState<Mode>("unlock");
   const [code, setCode] = useState("");
+  const [showInvite, setShowInvite] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const go = (m: Mode) => { setMode(m); setErr(null); setCode(""); };
+  const go = (m: Mode) => { setMode(m); setErr(null); setCode(""); setShowInvite(false); };
 
   const unlock = async () => {
     setBusy(true); setErr(null);
@@ -35,7 +36,14 @@ export function LockScreen({ onUnlocked }: { onUnlocked: () => void }) {
     if (r.ok) onUnlocked(); else setErr(r.error ?? "Couldn't sign you in.");
   };
 
-  const doRegister = async () => {
+  const doRegisterOpen = async () => {
+    setBusy(true); setErr(null);
+    const r = await registerOpen();
+    setBusy(false);
+    if (r.ok) onUnlocked(); else setErr(r.error ?? "Couldn't create your account.");
+  };
+
+  const doRegisterInvite = async () => {
     setBusy(true); setErr(null);
     const r = await registerPasskey(code.trim());
     setBusy(false);
@@ -62,7 +70,7 @@ export function LockScreen({ onUnlocked }: { onUnlocked: () => void }) {
             <button className="lock-btn lock-btn--passkey" onClick={unlock} disabled={busy}>
               <Finger /> {busy ? "Waiting for you…" : "Sign in"}
             </button>
-            <button className="lock-link" onClick={() => go("register")}>Have an invite? Create your account.</button>
+            <button className="lock-link" onClick={() => go("register")}>Create your account — free for the Founding 15.</button>
             <button className="lock-link" onClick={() => go("recover")}>Lost your device?</button>
           </>
         )}
@@ -70,18 +78,30 @@ export function LockScreen({ onUnlocked }: { onUnlocked: () => void }) {
         {mode === "register" && (
           <>
             <h1 className="lock-title">Create your account.</h1>
-            <p className="lock-sub">Enter your invite code, then add a passkey to this device. Your rooms are yours alone.</p>
-            <input
-              className="lock-input"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="INVITE CODE"
-              autoFocus
-              onKeyDown={(e) => { if (e.key === "Enter") doRegister(); }}
-            />
-            <button className="lock-btn lock-btn--passkey" onClick={doRegister} disabled={busy || !code.trim()}>
-              <Finger /> {busy ? "Follow your device…" : "Create account"}
-            </button>
+            <p className="lock-sub">Free for the Founding 15 — add a passkey to this device and your rooms are yours alone.</p>
+            {!showInvite ? (
+              <>
+                <button className="lock-btn lock-btn--passkey" onClick={doRegisterOpen} disabled={busy}>
+                  <Finger /> {busy ? "Follow your device…" : "Create account"}
+                </button>
+                <button className="lock-link" onClick={() => { setShowInvite(true); setErr(null); }}>Have an invite code?</button>
+              </>
+            ) : (
+              <>
+                <input
+                  className="lock-input"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  placeholder="INVITE CODE"
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === "Enter") doRegisterInvite(); }}
+                />
+                <button className="lock-btn lock-btn--passkey" onClick={doRegisterInvite} disabled={busy || !code.trim()}>
+                  <Finger /> {busy ? "Follow your device…" : "Create account"}
+                </button>
+                <button className="lock-link" onClick={() => { setShowInvite(false); setCode(""); setErr(null); }}>Back</button>
+              </>
+            )}
             <button className="lock-link" onClick={() => go("unlock")}>Already have an account? Sign in.</button>
           </>
         )}

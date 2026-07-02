@@ -22,15 +22,11 @@ export async function authStatus(): Promise<AuthStatus> {
   }
 }
 
-/**
- * Create an account: enroll a passkey against an invite code. The same field also
- * accepts the owner's setup code (the server disambiguates), so the one form works
- * for a new member OR for the owner (re-)enrolling. On success a session is set.
- */
-export async function registerPasskey(code: string): Promise<{ ok?: boolean; error?: string }> {
+// Shared passkey-enrollment dance; `body` selects the path server-side
+// (empty → open signup; {invite,code} → invite or owner override).
+async function enroll(body: Record<string, unknown>): Promise<{ ok?: boolean; error?: string }> {
   try {
-    // Sent as both `invite` and `code`; the server tries owner-code, then invite.
-    const optRes = await post("register-options", { invite: code, code });
+    const optRes = await post("register-options", body);
     const opt = await optRes.json();
     if (!optRes.ok) return { error: opt.error || "Couldn't start setup." };
 
@@ -44,6 +40,15 @@ export async function registerPasskey(code: string): Promise<{ ok?: boolean; err
     return { error: humanError(e) };
   }
 }
+
+/** Open signup: create an account with a passkey, no code. Server enforces the cap. */
+export const registerOpen = () => enroll({});
+
+/**
+ * Create an account with an invite code — the owner override that bypasses the cap.
+ * The same field also accepts the owner's setup code (the server disambiguates).
+ */
+export const registerPasskey = (code: string) => enroll({ invite: code, code });
 
 /** Unlock with the registered passkey (Touch ID / Face ID / Windows Hello). */
 export async function loginPasskey(): Promise<{ ok?: boolean; error?: string }> {
