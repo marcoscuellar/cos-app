@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { setupPasskey, loginPasskey, recover, type AuthStatus } from "../auth";
+import { registerPasskey, loginPasskey, recover } from "../auth";
 
-// The lock over the real account. Passkey-first (fingerprint / Face ID), with a
-// one-time setup code for the very first enrollment and a recovery path if the
-// device is ever lost. Demo never reaches here (AppLock lets it straight through).
+// The gate over a private account. Passkey-first (Touch ID / Face ID / device
+// key). New members create an account with an invite code; returning members
+// sign in with their passkey. Owner break-glass lives behind "Lost your device?".
+// Same design language as the app: white, DM Sans, straight edges, olive accent.
 
 const Finger = () => (
   <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -17,78 +18,79 @@ const Finger = () => (
   </svg>
 );
 
-type Mode = "unlock" | "setup" | "recover";
+type Mode = "unlock" | "register" | "recover";
 
-export function LockScreen({ status, onUnlocked }: { status: AuthStatus; onUnlocked: () => void }) {
-  const [mode, setMode] = useState<Mode>(status.ownerSet ? "unlock" : "setup");
+export function LockScreen({ onUnlocked }: { onUnlocked: () => void }) {
+  const [mode, setMode] = useState<Mode>("unlock");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  const go = (m: Mode) => { setMode(m); setErr(null); setCode(""); };
 
   const unlock = async () => {
     setBusy(true); setErr(null);
     const r = await loginPasskey();
     setBusy(false);
-    if (r.ok) onUnlocked(); else setErr(r.error ?? "Couldn't unlock.");
+    if (r.ok) onUnlocked(); else setErr(r.error ?? "Couldn't sign you in.");
   };
 
-  const doSetup = async () => {
+  const doRegister = async () => {
     setBusy(true); setErr(null);
-    const r = await setupPasskey(code.trim());
+    const r = await registerPasskey(code.trim());
     setBusy(false);
-    if (r.error) { setErr(r.error); return; }
-    onUnlocked();
+    if (r.ok) onUnlocked(); else setErr(r.error ?? "Couldn't create your account.");
   };
 
   const doRecover = async () => {
     setBusy(true); setErr(null);
     const r = await recover(code.trim());
     setBusy(false);
-    if (r.ok) { setCode(""); setMode("setup"); setErr(null); }
+    if (r.ok) { setCode(""); setErr(null); setMode("register"); }
     else setErr(r.error ?? "Reset failed.");
   };
 
   return (
     <div className="lock-wrap">
       <div className="lock-card">
-        <div className="lock-mark">COS</div>
+        <div className="lock-mark">Ōllin</div>
 
         {mode === "unlock" && (
           <>
             <h1 className="lock-title">Welcome back.</h1>
-            <p className="lock-sub">Unlock with your passkey — Touch ID, Face ID, or your device PIN.</p>
+            <p className="lock-sub">Sign in with your passkey — Touch ID, Face ID, or your device key.</p>
             <button className="lock-btn lock-btn--passkey" onClick={unlock} disabled={busy}>
-              <Finger /> {busy ? "Waiting for you…" : "Unlock"}
+              <Finger /> {busy ? "Waiting for you…" : "Sign in"}
             </button>
-            <button className="lock-link" onClick={() => { setMode("recover"); setErr(null); setCode(""); }}>
-              Lost your device?
-            </button>
+            <button className="lock-link" onClick={() => go("register")}>Have an invite? Create your account.</button>
+            <button className="lock-link" onClick={() => go("recover")}>Lost your device?</button>
           </>
         )}
 
-        {mode === "setup" && (
+        {mode === "register" && (
           <>
-            <h1 className="lock-title">Set up your lock.</h1>
-            <p className="lock-sub">Enter your one-time setup code, then add this device's passkey.</p>
+            <h1 className="lock-title">Create your account.</h1>
+            <p className="lock-sub">Enter your invite code, then add a passkey to this device. Your rooms are yours alone.</p>
             <input
               className="lock-input"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="SETUP CODE"
+              placeholder="INVITE CODE"
               autoFocus
-              onKeyDown={(e) => { if (e.key === "Enter") doSetup(); }}
+              onKeyDown={(e) => { if (e.key === "Enter") doRegister(); }}
             />
-            <button className="lock-btn lock-btn--passkey" onClick={doSetup} disabled={busy || !code.trim()}>
-              <Finger /> {busy ? "Follow your device…" : "Add this passkey"}
+            <button className="lock-btn lock-btn--passkey" onClick={doRegister} disabled={busy || !code.trim()}>
+              <Finger /> {busy ? "Follow your device…" : "Create account"}
             </button>
+            <button className="lock-link" onClick={() => go("unlock")}>Already have an account? Sign in.</button>
           </>
         )}
 
         {mode === "recover" && (
           <>
             <h1 className="lock-title">Lost your device?</h1>
-            <p className="lock-sub">Your passkey is normally saved to iCloud or Google, so a new phone
-              restores it on its own. If you're truly locked out, enter your setup code to start fresh.</p>
+            <p className="lock-sub">Passkeys usually sync via iCloud or Google, so a new phone restores yours on its
+              own. If you're truly locked out, enter your setup code to start fresh.</p>
             <input
               className="lock-input"
               value={code}
@@ -100,9 +102,7 @@ export function LockScreen({ status, onUnlocked }: { status: AuthStatus; onUnloc
             <button className="lock-btn" onClick={doRecover} disabled={busy || !code.trim()}>
               {busy ? "Checking…" : "Reset & start over"}
             </button>
-            <button className="lock-link" onClick={() => { setMode("unlock"); setErr(null); setCode(""); }}>
-              Back to unlock
-            </button>
+            <button className="lock-link" onClick={() => go("unlock")}>Back to sign in.</button>
           </>
         )}
 

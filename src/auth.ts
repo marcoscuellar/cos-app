@@ -3,7 +3,7 @@ import { startRegistration, startAuthentication } from "@simplewebauthn/browser"
 // Client for /api/auth — the passkey lock on the real account. Each call resolves
 // to a small result the LockScreen can render; errors come back as readable text.
 
-export interface AuthStatus { ownerSet: boolean; authed: boolean }
+export interface AuthStatus { authed: boolean }
 
 const post = (action: string, body?: unknown) =>
   fetch(`/api/auth?action=${action}`, {
@@ -15,23 +15,28 @@ const post = (action: string, body?: unknown) =>
 export async function authStatus(): Promise<AuthStatus> {
   try {
     const r = await fetch("/api/auth?action=status");
-    if (!r.ok) return { ownerSet: false, authed: false };
+    if (!r.ok) return { authed: false };
     return (await r.json()) as AuthStatus;
   } catch {
-    return { ownerSet: false, authed: false };
+    return { authed: false };
   }
 }
 
-/** Enroll the first passkey using the one-time setup code. */
-export async function setupPasskey(setupCode: string): Promise<{ ok?: boolean; error?: string }> {
+/**
+ * Create an account: enroll a passkey against an invite code. The same field also
+ * accepts the owner's setup code (the server disambiguates), so the one form works
+ * for a new member OR for the owner (re-)enrolling. On success a session is set.
+ */
+export async function registerPasskey(code: string): Promise<{ ok?: boolean; error?: string }> {
   try {
-    const optRes = await post("register-options", { setupCode });
+    // Sent as both `invite` and `code`; the server tries owner-code, then invite.
+    const optRes = await post("register-options", { invite: code, code });
     const opt = await optRes.json();
     if (!optRes.ok) return { error: opt.error || "Couldn't start setup." };
 
     const attestation = await startRegistration({ optionsJSON: opt });
 
-    const verRes = await post("register-verify", { setupCode, response: attestation });
+    const verRes = await post("register-verify", { response: attestation });
     const ver = await verRes.json();
     if (!verRes.ok) return { error: ver.error || "Couldn't finish setup." };
     return { ok: true };

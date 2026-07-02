@@ -22,7 +22,7 @@ export function AppLock({ children }: { children: ReactNode }) {
   if (!status) return <div style={{ height: "100vh", background: "#14271d" }} />;
 
   if (!status.authed) {
-    return <LockScreen status={status} onUnlocked={() => setStatus({ ...status, authed: true })} />;
+    return <LockScreen onUnlocked={() => setStatus({ authed: true })} />;
   }
 
   return <>{children}</>;

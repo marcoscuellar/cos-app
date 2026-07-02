@@ -359,6 +359,26 @@ const REAL_COS_DATA: COSData = {
   },
 };
 
-// The active workspace. The public demo (session.ts) swaps in a fictional,
-// read-only dataset; everything downstream imports COS_DATA and is none the wiser.
-export const COS_DATA: COSData = IS_DEMO ? DEMO_DATA : REAL_COS_DATA;
+// A brand-new private account starts EMPTY — no seed rooms, ideas, lab, activity,
+// or search content, so nothing of anyone else's (or the sample workspace's) is
+// ever shown. Only generic, non-user scaffolding is kept (the doorway quotes and
+// prompt chips are the same for everyone and hold no personal data). A user's real
+// rooms/plans/notes load from their own KV namespace via the API clients.
+const EMPTY_DATA: COSData = {
+  user: { name: "", initials: "", greetingName: "" },
+  doorway: REAL_COS_DATA.doorway,
+  sparks: REAL_COS_DATA.sparks,
+  today: { date: "", calendar: "", blocks: [] },
+  projects: [],
+  ideas: [],
+  activity: [],
+  searchPeople: [],
+  searchKnowledge: [],
+  searchDecisions: [],
+  lab: { agents: [], experiments: [], shelves: [], reports: [] },
+};
+
+// The active workspace. `?demo=1` swaps in the fictional read-only dataset;
+// a signed-in account gets EMPTY_DATA and fills its rooms from its own KV.
+// (REAL_COS_DATA is retained above as the reference seed / owner re-seed source.)
+export const COS_DATA: COSData = IS_DEMO ? DEMO_DATA : EMPTY_DATA;
