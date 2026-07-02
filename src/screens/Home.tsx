@@ -1,250 +1,290 @@
+import { useState } from "react";
 import { COS_DATA } from "../data";
-import { ChatBar } from "../components/shared";
 import { Icon } from "../components/Icon";
-import { foyerGreeting, foyerStamp, pickQuote } from "../brief";
+import { usePlan, type Energy } from "../plan";
+import { useDictation } from "../dictation";
+import { COPY, type RegroupMode } from "../regroup";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HOME — the "Companion Front Page".
+//
+//  Beat 1 · The Doorway (green)  — an energy check-in shown when energy is unknown.
+//  Beat 2 · The Front Page (cream) — the working home after check-in.
+//
+// The energy answer is LOAD-BEARING: it shrinks the plan (low tank), keeps it
+// whole (moving), or hands off to Regroup (it broke).
+// PRACTICE: energy-matched activation; time + load externalization.
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface HomeProps {
   onProject: (id: string) => void;
   onNav: (route: string) => void;
-  onContinue: (id: string, fromInside?: boolean) => void;
+  /** Open the Regroup rescue flow (optionally straight to a matched move). */
+  onRegroup: (mode?: RegroupMode) => void;
+  /** Route free-text (rant/ask) through distress detection. */
+  onInput: (text: string) => void;
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  "in-motion": "In motion",
-  blocked: "Blocked",
-  dormant: "Dormant",
+// "Thursday, July 2" — the small masthead date (home timezone).
+function frontDate(): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(new Date());
+}
+
+const ENERGY_LABEL: Record<Energy, string> = {
+  moving: "Moving",
+  low: "Low tank",
+  broke: "It broke",
 };
 
-// Quick links to the tools you live in — open in a new tab. Easy to edit/reorder.
-const LINKS: { label: string; url: string }[] = [
-  { label: "LinkedIn", url: "https://www.linkedin.com/feed/" },
-  { label: "Sales Nav", url: "https://www.linkedin.com/sales/home" },
-  { label: "Gmail", url: "https://mail.google.com" },
-  { label: "Claude", url: "https://claude.ai" },
-  { label: "ChatGPT", url: "https://chatgpt.com" },
-  { label: "Gemini", url: "https://gemini.google.com/app" },
-  { label: "Grok", url: "https://grok.com" },
-  { label: "Discord", url: "https://discord.com/app" },
-];
+export function HomeScreen({ onProject, onNav, onRegroup, onInput }: HomeProps) {
+  const { energy, plan, setEnergy, reopenCheckin, restMode, movedCount, clearRest } = usePlan();
+  const name = COS_DATA.user.greetingName;
 
-export function HomeScreen({ onProject, onNav, onContinue }: HomeProps) {
-  const D = COS_DATA;
-  const T = D.today;
-  const projOf = (id: string) => D.projects.find((x) => x.id === id);
-  // Greeting, datestamp + quote follow the user's home timezone (Central) and a
-  // daily seed, so the doorway is correct from any device and rotates day to day.
-  const greeting = foyerGreeting(D.user.greetingName);
-  const stamp = foyerStamp();
-  const DW = D.doorway;
-  const quote = pickQuote(DW.quotes);
-  const door = projOf("cos") || D.projects[0]; // the warm room
-  const recent = [projOf("cos"), projOf("brand"), projOf("glve")].filter(
-    Boolean,
-  ) as NonNullable<ReturnType<typeof projOf>>[]; // recently touched rooms
-  const inMotion = D.projects.filter((p) => p.status !== "dormant");
-  const dormant = D.projects.filter((p) => p.status === "dormant");
-  const attention = [
-    { t: "GLVE is blocked", d: "Waiting on pricing input from finance.", proj: "glve", accent: "violet" },
-    { t: "Ōllin has gone quiet", d: "Untouched for 3 weeks — pick up or let rest.", proj: "ollin", accent: "amber" },
-  ];
-  // The doorway is a brand + motivation moment that drops you into the day — it
-  // doesn't navigate; it smooth-scrolls down to reveal the rest of the floor.
-  const enterFoyer = () => {
-    const m = document.querySelector(".main");
-    if (m) m.scrollBy({ top: Math.round((window.innerHeight || 700) * 0.9), behavior: "smooth" });
-  };
+  // Doorway shown on first open / when energy is unknown.
+  if (energy === null) {
+    return <Doorway name={name} onEnergy={setEnergy} onRegroup={onRegroup} onNav={onNav} onInput={onInput} />;
+  }
 
   return (
-    <div className="wrap home-arch">
-      <div className="stagger">
-        {/* FOYER — the place you enter before a room */}
-        <div className="foyer">
-          <div className="foyer-mark">
-            <span className="cos-logo">COS</span>
-            <span className="mono-meta">FOYER</span>
+    <div className="frontpage">
+      <div className="fp-wrap">
+        {/* 1 — Masthead (small). Content starts immediately after. */}
+        <div className="fp-masthead">
+          <div className="fp-mast-l">
+            <span className="fp-mast-logo">Ōllin</span>
+            <span className="fp-mast-date">{frontDate()}</span>
           </div>
-          <span className="mono-meta q">{stamp}</span>
+          <button className="fp-energy-badge" onClick={reopenCheckin} title="Re-answer">
+            <span className="eb-dot" />{ENERGY_LABEL[energy]}
+          </button>
         </div>
 
-        {/* DOORWAY — architectural briefing: CEO quote · motto · enter */}
-        <h1 className="arch-hero">{greeting}</h1>
-
-        <button className={"doorway ac-" + door.accent} onClick={enterFoyer}>
-          <div className="dw-body">
-            <div className="dw-left">
-              <div className="dw-rule" />
-              <span className="chip">Let's keep going</span>
-              <div className="dw-name">{door.name}</div>
-            </div>
-            <div className="dw-quotewrap">
-              <div className="dw-quote">“{quote.t}”</div>
-              <div className="dw-cite">— {quote.who} · {quote.role}</div>
+        {restMode ? (
+          // "Rest. Ollin's got it" — today's pressure UI cleared until tomorrow.
+          // PRACTICE: pacing / energy-based activation over push-through.
+          <div className="fp-section">
+            <div className="fp-rest">
+              <div className="fr-line">{COPY.tired}</div>
+              <div className="fr-sub">Your plan, your rooms, every thread — all held exactly as they are. Come back when the tank's back up.</div>
+              <button className="fr-undo" onClick={clearRest}>Actually, show me today</button>
             </div>
           </div>
-          <div className="dw-foot">
-            <span className="dw-mono">{DW.motto}</span>
-            <span className="dw-closer">Enter the foyer <Icon.arrow style={{ transform: "rotate(90deg)" }} /></span>
-          </div>
-        </button>
-
-        <div className="spacer-m" />
-
-        <ChatBar big placeholder="Ask COS, or capture a thought…" onFocusNav={() => onNav("search")} />
-
-        <div className="spacer-l" />
-
-        {/* LAUNCHPAD — quick links to the tools you live in */}
-        <div className="arch-sec"><span className="chip">Launchpad</span></div>
-        <div className="launchpad">
-          {LINKS.map((l) => (
-            <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="launch-tile">
-              <span className="lt-name">{l.label}</span>
-              <Icon.arrow className="lt-arrow" />
-            </a>
-          ))}
-        </div>
-
-        <div className="spacer-l" />
-
-        {/* TWO-UP: your day (calendar) + recently touched rooms */}
-        <div className="home-split">
-          {/* LEFT — the day */}
-          <div className="home-col">
-            <div className="arch-sec">
-              <span className="chip">Today</span>
-              <button className="more" onClick={() => onNav("today")}>Open <Icon.arrow style={{ width: 13, height: 13 }} /></button>
-            </div>
-            <div className="card ac-blue home-cal-card">
-              <div className="home-cal-list">
-                {T.blocks.map((b, idx) => {
-                  const p = b.proj ? projOf(b.proj) : null;
-                  const accent = p ? p.accent : "blue";
-                  return (
-                    <button key={idx} className={"home-cal-row ac-" + accent}
-                      onClick={() => (p ? onProject(p.id) : onNav("today"))}>
-                      <span className="hc-time">{b.start}</span>
-                      <span className="hc-title">{b.title}{idx === 1 && <span className="hc-now">NOW</span>}</span>
-                      {p ? <span className="hc-proj"><span className="pd" />{p.name}</span>
-                         : <span className="hc-proj" style={{ color: "var(--ink-4)" }}>{b.kind}</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT — recently touched rooms */}
-          <div className="home-col">
-            <div className="arch-sec">
-              <span className="chip">Recent</span>
-            </div>
-            {recent.map((p) => (
-              <div key={p.id} className={"card click ac-" + p.accent} style={{ padding: "18px 20px" }} onClick={() => onContinue(p.id)}>
-                <div className="arch-card-head" style={{ marginBottom: 12 }}>
-                  <span className="mono-meta">Last touched · {p.lastActivity}</span>
-                  <span className="recent-dot" style={{ width: 8, height: 8, background: "var(--ac)", flexShrink: 0 }} />
+        ) : (
+          <>
+            {/* 2 — THE ONE THING. Biggest element. Serif. One gold Start pill. */}
+            <div className="fp-section fp-onething">
+              {plan.oneThing.roomName && (
+                <div className="fp-ot-room" style={{ ["--ac" as string]: `var(--a-${plan.oneThing.accent})` }}>
+                  <span className="otd" />{plan.oneThing.roomName}
                 </div>
-                <div className="card-title" style={{ fontSize: 22 }}>{p.name}</div>
-                <div className="card-body" style={{ marginTop: 6 }}>You were {p.lastVerb}.</div>
-                <div className="mono-meta" style={{ marginTop: 14 }}>{STATUS_LABEL[p.status]} · {p.pct}%</div>
+              )}
+              <h1 className="fp-ot-title">
+                {plan.oneThing.micro && <span className="micro-flag">Just this — nothing after it</span>}
+                {plan.oneThing.title}
+              </h1>
+              <button
+                className="fp-start"
+                onClick={() => (plan.oneThing.roomId ? onProject(plan.oneThing.roomId) : onNav("today"))}
+              >
+                Start <Icon.arrow />
+              </button>
+            </div>
+
+            {/* 3 — THE THREAD. Rooms as one-liners; tap = room. */}
+            {plan.thread.length > 0 && (
+              <div className="fp-section">
+                <div className="fp-eyebrow">The thread</div>
+                {plan.thread.map((r) => (
+                  <button
+                    key={r.id}
+                    className="fp-thread-row"
+                    style={{ ["--ac" as string]: `var(--a-${r.accent})` }}
+                    onClick={() => onProject(r.id)}
+                  >
+                    <span className="tr-name"><span className="trd" />{r.name}</span>
+                    <span className="tr-pick">pick up: <b>{r.pick}</b></span>
+                    <span className="tr-when">{r.when}</span>
+                  </button>
+                ))}
               </div>
+            )}
+
+            {/* 4 — TODAY, LIGHTLY. Max 3 + the promoted "make it lighter" link. */}
+            <div className="fp-section">
+              <div className="fp-today-head">
+                <div className="fp-eyebrow" style={{ marginBottom: 0 }}>Today, lightly</div>
+                {/* PRACTICE: cognitive-load capping — one tap collapses the day. */}
+                <button className="fp-lighter" onClick={() => onRegroup("toomuch")}>
+                  Too much? Make it lighter
+                </button>
+              </div>
+              {plan.todos.map((t) => (
+                <div key={t.id} className="fp-todo">
+                  <span className="td-mark" />
+                  <span>{t.title}</span>
+                  {t.roomName && <span className="td-room">{t.roomName}</span>}
+                </div>
+              ))}
+              {movedCount > 0 && <div className="fp-buffer">{COPY.tooMuch} — {movedCount} waiting for tomorrow.</div>}
+              {plan.buffer && movedCount === 0 && (
+                <div className="fp-buffer">Low tank — kept it short, with room to breathe.</div>
+              )}
+            </div>
+
+            {/* 5 — ONE SPARK. A single, tiny rotating idea. */}
+            {plan.spark && (
+              <div className="fp-section">
+                <button className="fp-spark" onClick={() => onNav("ideas")}>
+                  <span className="fs-dot" /><span className="fs-label">Spark</span>{plan.spark}
+                </button>
+              </div>
+            )}
+
+            <div className="fp-voice">Small is still forward.</div>
+          </>
+        )}
+      </div>
+
+      {/* persistent input bar — rant, ask, or think out loud */}
+      <FrontPageInput onInput={onInput} />
+    </div>
+  );
+}
+
+// ── Beat 1 — the Doorway (green) ─────────────────────────────────────────────
+function Doorway({
+  name,
+  onEnergy,
+  onRegroup,
+  onNav,
+  onInput,
+}: {
+  name: string;
+  onEnergy: (e: Energy) => void;
+  onRegroup: (mode?: RegroupMode) => void;
+  onNav: (route: string) => void;
+  onInput: (text: string) => void;
+}) {
+  const [text, setText] = useState("");
+  const dictation = useDictation((t) => onInput(t));
+
+  const submit = () => {
+    const v = text.trim();
+    if (!v) return;
+    setText("");
+    onInput(v);
+  };
+
+  const answer = (e: Energy) => {
+    onEnergy(e);
+    // "It broke" hands straight to Regroup at Beat 3/broke.
+    // PRACTICE: context reinstatement — drop them back where the thread snapped.
+    if (e === "broke") onRegroup("broke");
+  };
+
+  // Existing chips stay under the input.
+  const chips: { label: string; run: () => void }[] = [
+    { label: "Plan my day", run: () => onNav("today") },
+    { label: "My projects", run: () => onNav("projects") },
+    { label: "Unload an idea", run: () => onNav("ideas") },
+    { label: "Remind me", run: () => onNav("today") },
+    { label: "Help me start", run: () => onRegroup("cantstart") },
+  ];
+
+  return (
+    <div className="ollin-doorway">
+      <div className="od-inner">
+        <div className="od-mark">
+          <span className="od-logo">Ōllin</span>
+          <span className="od-stamp">{frontDate()}</span>
+        </div>
+
+        <h1 className="od-greeting">Hey, {name}.</h1>
+        <div className="od-ask">{COPY.doorwayAsk}</div>
+
+        <div className="od-answers">
+          <button className="od-answer" onClick={() => answer("moving")}>
+            <span className="oa-t">Moving</span>
+            <span className="oa-s">Tank's good. Let's go.</span>
+          </button>
+          <button className="od-answer" onClick={() => answer("low")}>
+            <span className="oa-t">Low tank</span>
+            <span className="oa-s">Here, but running light.</span>
+          </button>
+          <button className="od-answer" onClick={() => answer("broke")}>
+            <span className="oa-t">It broke</span>
+            <span className="oa-s">Lost the thread.</span>
+          </button>
+        </div>
+
+        <div className="od-chatwrap">
+          <div className="od-chatbar">
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submit()}
+              placeholder="Rant, ask, or just think out loud…"
+            />
+            {dictation.supported && (
+              <button
+                className="oc-btn"
+                onClick={dictation.toggle}
+                title="Voice"
+                style={dictation.listening ? { background: "rgba(217,164,65,.25)" } : undefined}
+              >
+                <Icon.mic />
+              </button>
+            )}
+            <button className="oc-btn" onClick={submit} title="Send"><Icon.send /></button>
+          </div>
+          <div className="od-chips">
+            {chips.map((c) => (
+              <button key={c.label} className="od-chip" onClick={c.run}>{c.label}</button>
             ))}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
 
-        <div className="spacer-l" />
+// ── The persistent Front Page input ──────────────────────────────────────────
+function FrontPageInput({ onInput }: { onInput: (text: string) => void }) {
+  const [text, setText] = useState("");
+  const dictation = useDictation((t) => onInput(t));
 
-        {/* THE FLOOR — wings of the building */}
-        <div className="arch-sec">
-          <span className="chip">The Floor</span>
-          <span className="mono-meta q">{D.projects.length} ROOMS · {inMotion.length} IN MOTION</span>
-        </div>
-        <div className="grid-2">
-          {/* Projects in motion */}
-          <div className="card ac-violet">
-            <div className="arch-card-head">
-              <span className="chip">In motion</span>
-              <span className="mono-meta">{inMotion.length} ACTIVE · {dormant.length} DORMANT</span>
-            </div>
-            <div className="panel-body" style={{ padding: "2px 0 0" }}>
-              {inMotion.map((p) => (
-                <button key={p.id} className={"prog-row ac-" + p.accent} onClick={() => onProject(p.id)}>
-                  <span className="pr-dot" />
-                  <span className="pr-name">{p.name}</span>
-                  <span className="pbar"><i style={{ width: (p.pct || 0) + "%" }} /></span>
-                  <span className="pr-pct">{p.pct || 0}%</span>
-                </button>
-              ))}
-              {dormant.map((p) => (
-                <button key={p.id} className="prog-row" onClick={() => onContinue(p.id)} style={{ opacity: 0.65 }}>
-                  <span className="pr-dot" />
-                  <span className="pr-name dim">{p.name}</span>
-                  <span className="pbar"><i style={{ width: (p.pct || 0) + "%", background: "var(--ink-4)" }} /></span>
-                  <span className="pr-pct">{p.pct || 0}%</span>
-                </button>
-              ))}
-            </div>
-            <button className="card-link" onClick={() => onNav("projects")}>All projects <Icon.arrow style={{ width: 13, height: 13 }} /></button>
-          </div>
+  const submit = () => {
+    const v = text.trim();
+    if (!v) return;
+    setText("");
+    onInput(v);
+  };
 
-          {/* Needs attention */}
-          <div className="card ac-coral">
-            <div className="arch-card-head">
-              <span className="chip">Attention</span>
-              <span className="mono-meta">{attention.length} {attention.length === 1 ? "ITEM" : "ITEMS"}</span>
-            </div>
-            <div className="panel-body" style={{ padding: 0 }}>
-              {attention.map((a, idx) => (
-                <button key={idx} className={"prow ac-" + a.accent} onClick={() => onContinue(a.proj)}>
-                  <span className="pdot" />
-                  <span>
-                    <span className="ptitle">{a.t}</span>
-                    <span className="psub">{a.d}</span>
-                  </span>
-                  <Icon.arrow className="arrow-ic" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Ideas brewing */}
-          <div className="card ac-amber">
-            <div className="arch-card-head">
-              <span className="chip">Brewing</span>
-              <span className="mono-meta">{D.ideas.length} ACTIVE</span>
-            </div>
-            <div className="panel-body" style={{ padding: 0 }}>
-              {D.ideas.map((i) => (
-                <button key={i.id} className="prow ac-amber" onClick={() => onNav("ideas")}>
-                  <span className="pdot" />
-                  <span>
-                    <span className="ptitle">{i.name}</span>
-                    <span className="psub">{i.stage} · {i.why}</span>
-                  </span>
-                  <Icon.arrow className="arrow-ic" />
-                </button>
-              ))}
-            </div>
-            <button className="card-link" onClick={() => onNav("ideas")}>Open incubator <Icon.arrow style={{ width: 13, height: 13 }} /></button>
-          </div>
-
-          {/* Recent activity */}
-          <div className="card ac-mint">
-            <div className="arch-card-head">
-              <span className="chip">Activity</span>
-              <span className="mono-meta">THIS WEEK</span>
-            </div>
-            <div className="panel-body" style={{ padding: 0 }}>
-              {D.activity.map((a, idx) => (
-                <div key={idx} className={"act ac-" + a.accent} style={{ borderColor: "var(--line-2)" }}>
-                  <span className="ad" />
-                  <span className="atx"><span className="ap">{a.proj}</span> — {a.verb.toLowerCase()} <b>{a.what}</b></span>
-                  <span className="aw">{a.when}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+  return (
+    <div className="fp-inputbar">
+      <div className="fp-inputbar-inner">
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+          placeholder="Rant, ask, or just think out loud…"
+        />
+        {dictation.supported && (
+          <button
+            className="fi-btn"
+            onClick={dictation.toggle}
+            title="Voice"
+            style={dictation.listening ? { background: "var(--ollin-gold-bg)" } : undefined}
+          >
+            <Icon.mic />
+          </button>
+        )}
+        <button className="fi-btn" onClick={submit} title="Send"><Icon.send /></button>
       </div>
     </div>
   );

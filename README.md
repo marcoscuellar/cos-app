@@ -31,10 +31,12 @@ bundle never sees an API key — it only calls the serverless functions under
   sidebar state) in **Vercel KV** via its REST API (native `fetch`, no SDK
   dependency), keyed by an opaque per-browser id. Reads `KV_REST_API_URL` /
   `KV_REST_API_TOKEN` from the environment.
-- **`api/brainstorm.ts`** and **`api/ask.ts`** — power the Brainstorm panel and
-  Ask COS by calling Claude (`claude-opus-4-8`) through the official
-  `@anthropic-ai/sdk`, using `ANTHROPIC_API_KEY`. The key is read from
-  `process.env` on the server only.
+- **`api/brainstorm.ts`**, **`api/ask.ts`** and **`api/regroup.ts`** — power the
+  Brainstorm panel, Ask COS, and the **Regroup** rescue flow by calling Claude
+  (`claude-opus-4-8`) through the official `@anthropic-ai/sdk`, using
+  `ANTHROPIC_API_KEY`. The key is read from `process.env` on the server only.
+  Regroup degrades fully: with no key (or plain `vite` dev), the client computes
+  its matched move offline from the plan it already holds — nothing breaks.
 
 The frontend talks to these via `src/storage.ts` (state) and a `fetch` in
 `src/overlays/Brainstorm.tsx` (AI). Both degrade gracefully: if the API is
@@ -47,7 +49,7 @@ These are configured on the Vercel project and consumed only by `api/`:
 
 | Variable | Used by | Purpose |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | `api/brainstorm.ts`, `api/ask.ts` | Authenticates the Claude call |
+| `ANTHROPIC_API_KEY` | `api/brainstorm.ts`, `api/ask.ts`, `api/regroup.ts` | Authenticates the Claude call |
 | `KV_REST_API_URL` | `api/state.ts` | Vercel KV REST endpoint |
 | `KV_REST_API_TOKEN` | `api/state.ts` | Vercel KV REST token |
 
