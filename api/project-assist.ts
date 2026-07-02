@@ -8,7 +8,7 @@ import { requireUser, unauthorized } from "../lib/server/session.js";
 // project editor's "Help me think this through". Returns strict JSON.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SYSTEM = `You are COS, a calm, sharp chief-of-staff. The founder gives you a rough brain-dump about a project. Distill it.
+const SYSTEM = `You are Ollin, a calm, sharp chief-of-staff. The founder gives you a rough brain-dump about a project. Distill it.
 
 Reply with ONLY strict, minified JSON — no markdown, no prose, no code fences — matching exactly:
 {"why":string,"nextAction":string,"nextSteps":string[],"lastMovement":string}

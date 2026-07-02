@@ -5,7 +5,7 @@ import type { ActivityItem, Project } from "./types";
 //
 // Philosophy: the user should never need to explain context. The workspace IS
 // the context. This module turns a workspace (Project) into a structured
-// payload that travels with every "Ask COS" request, so the user only ever
+// payload that travels with every "Ask Ollin" request, so the user only ever
 // supplies the question — never the surrounding situation.
 //
 // `buildWorkspaceContext` is intentionally a pure function with no UI coupling:
@@ -124,7 +124,7 @@ export interface AskAction {
 }
 
 export const ASK_ACTIONS: AskAction[] = [
-  { id: "ask", label: "Ask COS" },
+  { id: "ask", label: "Ask Ollin" },
   { id: "continue", label: "Continue", prompt: "Pick up where I left off." },
   { id: "summarize", label: "Summarize", prompt: "Summarize where this workspace stands." },
   { id: "challenge", label: "Challenge", prompt: "Pressure-test my thinking here." },

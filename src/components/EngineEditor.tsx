@@ -90,7 +90,7 @@ export function EngineEditor({ engine, onSave, onClose, onDelete }: Props) {
         <input className="ed-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Competitor Watch" />
 
         <div className="ed-assist">
-          <label className="ed-k">Describe what it should do — COS drafts the rest</label>
+          <label className="ed-k">Describe what it should do — Ollin drafts the rest</label>
           <textarea
             className="ed-area"
             rows={2}

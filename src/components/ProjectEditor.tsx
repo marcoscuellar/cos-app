@@ -69,7 +69,7 @@ export function ProjectEditor({ project, onSave, onClose, onDelete, onArchive }:
         </div>
 
         <div className="ed-assist">
-          <label className="ed-k">Brain-dump it — let COS draft the rest</label>
+          <label className="ed-k">Brain-dump it — let Ollin draft the rest</label>
           <textarea
             className="ed-area"
             rows={3}
@@ -103,7 +103,7 @@ export function ProjectEditor({ project, onSave, onClose, onDelete, onArchive }:
 
         {steps.length > 0 && (
           <div className="ed-steps">
-            <span className="ed-k">COS suggests these next moves — tap one to make it the next action</span>
+            <span className="ed-k">Ollin suggests these next moves — tap one to make it the next action</span>
             {steps.map((s, i) => (
               <button key={i} className="ed-step" onClick={() => setNextAction(s)}>{s}</button>
             ))}

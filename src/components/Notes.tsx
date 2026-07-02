@@ -101,7 +101,7 @@ export function NotesPanel({ projectId, projectName }: { projectId: string; proj
       {notes && notes.length > 0 && (
         <div className="notes-tools">
           <button className="notes-tidy-btn" onClick={tidy} disabled={tidying}>
-            <Icon.spark /> {tidying ? "Tidying…" : "Tidy with COS"}
+            <Icon.spark /> {tidying ? "Tidying…" : "Tidy with Ollin"}
           </button>
         </div>
       )}
@@ -109,7 +109,7 @@ export function NotesPanel({ projectId, projectName }: { projectId: string; proj
       {tidied && (
         <div className="notes-tidied">
           <div className="tidied-head">
-            <span className="card-eyebrow" style={{ margin: 0 }}>COS tidied this up</span>
+            <span className="card-eyebrow" style={{ margin: 0 }}>Ollin tidied this up</span>
             <button className="note-del" style={{ opacity: 1 }} title="Close" onClick={() => setTidied(null)}>
               <Icon.x />
             </button>

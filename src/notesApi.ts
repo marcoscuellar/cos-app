@@ -34,7 +34,7 @@ export async function addNote(project: string, text: string): Promise<Note[] | n
   }
 }
 
-/** Ask COS to organize a room's raw notes into a clean brief. Raw notes are
+/** Ask Ollin to organize a room's raw notes into a clean brief. Raw notes are
  *  never modified — this returns plain text to display alongside them. */
 export async function tidyNotes(room: string, notes: string[]): Promise<string | null> {
   if (IS_DEMO) return null;

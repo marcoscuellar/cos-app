@@ -34,7 +34,7 @@ export function ChatBar({
 }) {
   return (
     <div className="chatbar" style={big ? { padding: "18px 20px" } : undefined}>
-      <input placeholder={placeholder || "Ask COS, or capture a thought…"} onFocus={onFocusNav} />
+      <input placeholder={placeholder || "Ask Ollin, or capture a thought…"} onFocus={onFocusNav} />
       <button className="mic" title="Voice"><Icon.mic /></button>
       <button className="send" title="Send"><Icon.send /></button>
     </div>

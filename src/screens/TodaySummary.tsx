@@ -32,7 +32,7 @@ export function TodaySummary({ onNav }: Props) {
         label="TODAY"
         title="Today."
         quote="You don't have to do it all. Just the next true thing."
-        author="COS"
+        author="Ollin"
         sub="THREE THINGS · NOTHING URGENT"
       />
       <div className="td-line"><span className="cos-serif">Here's a lighter version of today.</span></div>

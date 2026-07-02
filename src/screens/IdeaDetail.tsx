@@ -25,7 +25,7 @@ export function IdeaDetail({ idea: i, onProject, onBack, onNav, onTalk }: Props)
       <div className="room">
         <aside className="room-cover">
           <div className="rc-top">
-            <button className="rc-chip" onClick={onBack}>COS</button>
+            <button className="rc-chip" onClick={onBack}>Ōllin</button>
             <div className="rc-top-r">
               <span className="rc-room"><i className="bdot" style={{ background: "var(--gold-bright)" }} />{i.name} · Idea</span>
               <span className="rc-cos">COGNITIVE OPERATING SYSTEM</span>

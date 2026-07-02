@@ -36,7 +36,7 @@ export interface EngineDraft {
   system: string;
 }
 
-/** Ask COS to draft a whole engine (prompt, inputs, stages) from a description. */
+/** Ask Ollin to draft a whole engine (prompt, inputs, stages) from a description. */
 export async function assistEngine(name: string, desc: string): Promise<{ draft?: EngineDraft; error?: string }> {
   if (IS_DEMO) return { error: "This is a read-only demo." };
   try {

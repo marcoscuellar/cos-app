@@ -22,7 +22,7 @@ export const DEMO_DATA: COSData = {
     calendar: "Sample · Demo Calendar",
     blocks: [
       { start: "9:00", end: "9:30", title: "Morning re-entry", kind: "ritual", proj: null,
-        walkIn: "Plan the day. COS lays out where you left off across every project." },
+        walkIn: "Plan the day. Ollin lays out where you left off across every project." },
       { start: "9:30", end: "11:00", title: "Polish the reader view", kind: "focus", proj: "lantern",
         walkIn: "Typography pass on the reader — the spec is open at the spacing notes." },
       { start: "11:30", end: "12:00", title: "Sync with Mara — beta invites", kind: "meeting", proj: "tidepool", who: "Mara Quinn",
