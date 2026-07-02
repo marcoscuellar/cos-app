@@ -37,7 +37,7 @@ import { ensureOwnerMigrated } from "../lib/server/migrate.js";
 // ─────────────────────────────────────────────────────────────────────────────
 
 // sha256 of the one-time owner setup / recovery code, delivered out-of-band.
-const SETUP_CODE_HASH = "fdb2da9675f1b906cff67d216d88585d9772467f2eb4c911750b557651837803";
+const SETUP_CODE_HASH = "f70e638e9ae262665a9274aa5e3471a5f6b7724ad4f2f88a4494c0a77479c9ec";
 
 const INVITES_KEY = "ollin:invites";
 const USERS_KEY = "ollin:users";
